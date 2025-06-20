@@ -1,3 +1,5 @@
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -16,13 +18,12 @@ xlim = (-30, 30)            #x軸の限界
 ylim = (-30, 30)            #y軸の限界
 R=4                         #targetとAgentの理想の距離
 d_i=np.pi/3                 #Agentiとその隣接Agenti+-の理想角度
-l1=7                        #プロトコル(12)の制御パラメータ
+l1=7                      #プロトコル(12)の制御パラメータ
 l2=7                        #プロトコル(12)の制御パラメータ
 frame_time = 0.05           # interval=50msの場合
 fps = 1 / frame_time
 omega_target = 0.12 /fps        # targetの角速度0.12
-omega = 0.12 / fps               # 各Agentの理想角速度0.12
-Omega = 2 / fps               # Ω=2
+Omega = 2 / fps               # 各Agentの理想角速度Ω=2
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -40,11 +41,13 @@ ax.add_patch(circle)
 
 # --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_6 < 2π） ---
 num_agents = 6
-angles = np.sort(np.random.uniform(0, 2 * np.pi, num_agents))  # 昇順
-agent_positions = np.column_stack([
-    center[0] + radius * np.cos(angles),
-    center[1] + radius * np.sin(angles)
-])
+angles=np.random.dirichlet(np.ones(num_agents))*(2*np.pi)
+angles = np.sort(angles)  # 昇順
+# 軌道上ではなく、ランダムな半径で配置（角距離条件は維持）
+agent_radii = np.random.uniform(radius - 8, radius + 8, num_agents)
+agent_positions = np.column_stack(
+    [center[0] + agent_radii * np.cos(angles), center[1] + agent_radii * np.sin(angles)]
+)
 agent_ids = list(range(1, num_agents+1))  # 1~6のエージェント番号
 # 色分け用カラーマップ（tab10を利用）
 agent_colors = plt.get_cmap('tab10').colors[:num_agents]
@@ -73,7 +76,6 @@ for i in range(num_agents):
     dist_right = np.linalg.norm(agent_positions[i] - agent_positions[right_idx])
 
 
-
 # --- アニメーション関数 ---
 # ro_i（targetと各Agentの距離）表示用テキスト（グラフ外右側に配置）
 roi_text = ax.text(0.05, 0.10, '', transform=ax.transAxes, ha='left', va='center', fontsize=8, color='black')
@@ -89,12 +91,14 @@ def angular_distance_rad(angle1, angle2):
     return min(diff, 2 * np.pi - diff)
 
 # --- グラフ用データ保存リスト ---
-ro_i_history = [[] for _ in range(num_agents)]
-eta_i_history = [[] for _ in range(num_agents)]
-omega_i_history = [[] for _ in range(num_agents)]
-alpha_i_history = [[] for _ in range(num_agents)]
-u_vec_history = [[] for _ in range(num_agents)]
-a_vec_history = [[] for _ in range(num_agents)]
+ro_i_history:list = [[] for _ in range(num_agents)]
+eta_i_history:list = [[] for _ in range(num_agents)]
+omega_i_history:list = [[] for _ in range(num_agents)]
+alpha_i_history:list = [[] for _ in range(num_agents)]
+u_vec_history:list = [[] for _ in range(num_agents)]
+a_vec_history:list = [[] for _ in range(num_agents)]
+relative_velocity_history:list = [[] for _ in range(num_agents)]
+
 
 def animate(i):
     theta = omega_target * i
@@ -118,13 +122,12 @@ def animate(i):
             animate.prev_theta = np.zeros(num_agents)
         omega_i = theta_now - animate.prev_theta[j]
         omega_i = (omega_i + np.pi) % (2 * np.pi) - np.pi
-        ro_i = np.linalg.norm(vec)
+        ro_i = np.linalg.norm(vec)      #agentとtargetとの間の距離をベクトルの計算で求めた
+        
         animate.prev_theta[j] = theta_now
         # ro_i>0 の場合のみ処理を行う
         if ro_i > 0:
-            # etaの式をR-ro_iに変更
-            eta = R - ro_i
-            eta_norm = abs(eta)
+            
             # 隣接エージェントとの角距離・角速度
             idx_plus = (j+1) % num_agents
             idx_minus = (j-1) % num_agents
@@ -145,6 +148,9 @@ def animate(i):
             animate.prev_theta_minus[j] = theta_minus
             alpha_i = angular_distance_rad(theta_now, theta_plus)
             alpha_i_minus = angular_distance_rad(theta_now, theta_minus)
+
+            
+
             # --- fi, zi の計算と表示 ---
             fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
             zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
@@ -153,53 +159,43 @@ def animate(i):
             # 放射方向・接線方向の単位ベクトル
             e_r = vec / ro_i
             e_theta = np.array([-e_r[1], e_r[0]])
+
+            # targetの速度ベクトルを計算
+            target_velocity = np.array([
+                -radius * omega_target * np.cos(theta),  # x方向の速度成分
+                -radius * omega_target * np.sin(theta)   # y方向の速度成分
+            ])
+
+            # エージェントの速度ベクトルを計算
+            agent_velocity = (agent_positions[j] - animate.prev_agent_pos[j]) / frame_time
+
+            # 相対速度の計算
+            relative_velocity = agent_velocity - target_velocity
+
+            # 相対速度をローカル座標系（極座標）に変換
+            relative_velocity_r = np.dot(relative_velocity, e_r)
+            relative_velocity_theta = np.dot(relative_velocity, e_theta)
+
+            # etaをローカル相対速度の動径方向成分に変更
+            eta = relative_velocity_r
+            eta_norm = abs(eta)
+
             # u_iの各成分
-            u_r = -ro_i*omega_i**2  - eta_norm - l1 * np.sign(ro_i - R + eta_norm)
+            u_r = -ro_i*omega_i**2 - eta_norm - l1 * np.sign(ro_i - R + eta_norm)
             u_theta = (omega_i + Omega + fi) * eta_norm + zi * ro_i + l2 * np.sign(fi + Omega - omega_i)
+
             # 合成速度ベクトル
             u_vec = u_r * e_r + u_theta * e_theta
+
             # 位置更新（タイムステップdt=0.05）
-            agent_positions[j] += u_vec * 0.05
+            agent_positions[j] += u_vec * frame_time
 
-            # 位置更新後、targetとの距離がR未満ならRに補正
-            vec_new = agent_positions[j] - np.array([x, y])
-            ro_i_new = np.linalg.norm(vec_new)
-            if ro_i_new < R:
-                agent_positions[j] = np.array([x, y]) + R * vec_new / (ro_i_new + 1e-8)
-
-            # --- ここからR未満への侵入を防ぐ ---
-            # target位置
-            target_pos = np.array([x, y])
-            # 更新後のエージェント位置とtargetの距離
-            vec_new = agent_positions[j] - target_pos
-            ro_i_new = np.linalg.norm(vec_new)
-            if ro_i_new < R:
-                # targetから見た方向ベクトル
-                e_r_new = vec_new / (ro_i_new if ro_i_new != 0 else 1)
-                # targetから距離Rの位置に修正
-                agent_positions[j] = target_pos + R * e_r_new
-            # --- ここまで追加 ---
-
-            # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
+            # omega_iを[rad/sec]に変換
             omega_i_sec = omega_i * fps
-            omega_i_plus_sec = omega_i_plus * fps
-            omega_i_minus_sec = omega_i_minus * fps
-            # u_r, u_theta, u_vecを[m/sec]に変換
-            u_r_sec = u_r * fps
-            u_theta_sec = u_theta * fps
+
+            #  u_vecを[m/sec]に変換
             u_vec_sec = u_vec * fps
-            omega_target_sec = omega_target * fps
-            omega_sec = omega * fps
-            Omega_sec = Omega * fps
-            roi_lines.append(f"Agent{j+1}")
-            roi_lines.append(f"  ro_i={ro_i:.2f}, |eta|={eta_norm:.3f}")
-            roi_lines.append(f"  omega_i={omega_i_sec:.3f} [rad/sec]")
-            roi_lines.append(f"  alpha(-隣)={alpha_i_minus:.3f} [rad], omega_i-={omega_i_minus_sec:.3f} [rad/sec]")
-            roi_lines.append(f"  alpha(+隣)={alpha_i:.3f} [rad], omega_i+={omega_i_plus_sec:.3f} [rad/sec]")
-            roi_lines.append(f"  fi={fi:.3f}, zi={zi:.3f}")
-            roi_lines.append(f"  u_r={u_r_sec:.3f} [m/sec], u_theta={u_theta_sec:.3f} [m/sec]")
-            roi_lines.append(f"  u_vec=({u_vec_sec[0]:.3f}, {u_vec_sec[1]:.3f}) [m/sec]")
-            roi_lines.append(f"  omega_target={omega_target:.3f} [rad/frame], omega={omega:.3f} [rad/frame], Omega={Omega:.3f} [rad/frame]")
+            
             ro_i_history[j].append(ro_i)
             eta_i_history[j].append(eta)
             omega_i_history[j].append(omega_i_sec)  # [rad/sec]で保存
@@ -216,12 +212,7 @@ def animate(i):
             roi_lines.append(f"Agent{j+1}")
             roi_lines.append(f"  ro_i={ro_i:.2f} (<=0, skipped)")
             roi_lines.append(f"  --- skipped ---")
-            ro_i_history[j].append(ro_i)
-            eta_i_history[j].append(0.0)
-            omega_i_history[j].append(0.0)
-            alpha_i_history[j].append(0.0)
-            u_vec_history[j].append(np.zeros(2))
-            a_vec_history[j].append(0.0)
+            
     roi_text.set_text('\n'.join(roi_lines))
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])
@@ -245,7 +236,7 @@ class AnimationControl:
             self.anim.event_source.start()
         self.running = not self.running
 
-button_ax = plt.axes([0.85, 0.05, 0.1, 0.075])
+button_ax = plt.axes((0.85, 0.05, 0.1, 0.075))
 button = Button(button_ax, '再生/停止')
 control = AnimationControl(ani)
 button.on_clicked(control.toggle)
