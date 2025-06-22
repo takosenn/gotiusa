@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Target:
     def __init__(self, init_pos=None):
         if init_pos is None:
