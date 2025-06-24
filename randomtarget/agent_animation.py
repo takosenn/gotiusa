@@ -98,6 +98,14 @@ def agent_animate_update(
                 + zi * ro_i
                 + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
             )
+            if ro_i > 1.1 * R or ro_i < 0.9 * R:
+                u_r = u_r * 0.25
+            else:
+                u_r = u_r * 0.05
+            if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
+                u_theta = u_theta * 1
+            else:
+                u_theta = u_theta * 0.1
             theta_global = np.arctan2(e_r[1], e_r[0])
             A = np.array(
                 [

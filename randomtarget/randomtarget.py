@@ -24,7 +24,6 @@ omega_target = 0.12 / fps  # targetの角速度0.12
 Omega = 2 / fps  # Ω=2
 num_agents = 6  # agentの数6
 
-
 # --- 初期化 ---
 fig, ax = plt.subplots()
 ax.set_xlim(xlim)
@@ -243,7 +242,7 @@ def animate(i):
             else:
                 u_r = u_r * 0.1
             if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
-                u_theta = u_theta * 1
+                u_theta = u_theta * 2
             else:
                 u_theta = u_theta * 1
             # --- ローカル→グローバル変換 ---

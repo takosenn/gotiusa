@@ -52,16 +52,25 @@ def init():
 # --- animate関数（元のrandomtarget.pyからほぼそのまま移植） ---
 def animate(i):
     global target_pos, target_velocity, agent_positions
-    target_pos[:], target_velocity[:] = update_target(
-        target_pos, target_velocity, random_walk_sigma, max_speed, frame_time
+    target_pos[:], target_velocity[:], appeared = update_target(
+        target_pos, target_velocity, random_walk_sigma, max_speed, frame_time, i
     )
     x, y = target_pos
+    if not appeared:
+        # ターゲット未出現時は点を非表示
+        point.set_data([], [])
+        agent_dots.set_offsets(agent_positions)
+        agent_dots.set_color(agent_colors)
+        roi_text.set_text("")
+        return point, agent_dots, roi_text
     point.set_data([x], [y])
     agent_dots.set_offsets(agent_positions)
     agent_dots.set_color(agent_colors)
+    # agent_animate_updateで返された最新のagent_positionsを必ず反映
     agent_animate_update(
         i, agent_positions, target_pos, target_velocity, agent_colors, roi_text
     )
+    agent_dots.set_offsets(agent_positions)  # ここで再度反映
     return point, agent_dots, roi_text
 
 
