@@ -289,11 +289,6 @@ def animate(i):
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )
-# plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))  # ←重複防止のため削除
-
-# --- アニメーション終了後にro_i, eta_iのグラフを表示 ---
-# （グラフ表示機能を削除）
-
 
 # --- 再生/停止ボタンのみ ---
 class AnimationControl:
