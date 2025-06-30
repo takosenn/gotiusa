@@ -51,7 +51,7 @@ radius = 20  # targetの軌道半径
 frames = 10000
 xlim = (-30, 30)  # x軸の限界
 ylim = (-30, 30)  # y軸の限界
-R = 5  # targetとAgentの理想の距離
+R = 4  # targetとAgentの理想の距離
 d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.05  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
@@ -270,21 +270,13 @@ def animate(i):
                 d_i * (omega_i_plus_local - omega_i_local)
                 - d_i * (omega_i_local - omega_i_minus_local)
             ) / (2 * d_i)
-            u_r = (
-                -ro_i * omega_i_local**2
-                - eta_norm
-                - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
-            )
-            u_theta = (
-                (omega_i_local + Omega + fi) * eta_norm
-                + zi * ro_i
-                + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
-            )
-            if ro_i > 1.2 * R or ro_i < 0.8 * R:
+            u_r = (-ro_i * omega_i_local**2 - eta_norm - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm))
+            u_theta = ((omega_i_local + Omega + fi) * eta_norm+ zi * ro_i+ e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local))
+            if ro_i > 1.3 * R or ro_i < 0.7 * R:
                 u_r = u_r * 0.5
             else:
                 u_r = u_r * 0.1
-            if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
+            if alpha_i_local < np.pi / 3.2 or alpha_i_local > np.pi / 2.8:
                 u_theta = u_theta * 2
             else:
                 u_theta = u_theta * 1
