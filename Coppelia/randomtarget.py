@@ -25,7 +25,9 @@ drone_handles = []
 # ドローンハンドル取得
 for i in range(num_agents):
     object_name = f"Quadcopter[{i+1}]"  # Quadcopter[1] ~ Quadcopter[6]
-    drone_handle = sim.getObject(f"/{object_name}")
+    drone_handle = sim.getObject(
+        f"/{object_name}/target"
+    )  # シーン内のオブジェクト名に合わせて修正
     drone_handles.append(drone_handle)
     print(f"取得: {object_name}")
 
@@ -71,16 +73,18 @@ ax.set_title("Example1")
 # )
 # ax.add_patch(circle)
 
-# --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_6 < 2π） ---
+# --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_n < 2π, 和が2π） ---
 angles = np.random.dirichlet(np.ones(num_agents)) * (2 * np.pi)
 angles = np.sort(angles)  # 昇順（角距離条件は維持）
 
-# すべてのAgentの初期角距離の和が2πになるように、円周上に配置
-agent_radii = np.random.uniform(
-    radius - 2, radius + 2, num_agents
-)  # 半径はtarget近傍でランダム
+# すべてのAgentの初期角距離の和が2πになるように、円周上に配置し、さらに-10~10の範囲に収める
+radius_limit = 3
+agent_radii = np.random.uniform(radius_limit * 0.7, radius_limit, num_agents)
 agent_positions = np.column_stack(
-    [center[0] + agent_radii * np.cos(angles), center[1] + agent_radii * np.sin(angles)]
+    [
+        np.clip(center[0] + agent_radii * np.cos(angles), -radius_limit, radius_limit),
+        np.clip(center[1] + agent_radii * np.sin(angles), -radius_limit, radius_limit),
+    ]
 )
 agent_ids = list(range(1, num_agents + 1))  # 1~6のエージェント番号
 # 色分け用カラーマップ（tab10を利用）

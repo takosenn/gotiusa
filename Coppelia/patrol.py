@@ -1,3 +1,4 @@
+
 # targetとAgentが合体
 
 import numpy as np
@@ -114,10 +115,6 @@ target_velocity = np.zeros(2)  # 初期速度
 random_walk_sigma = 0.5  # 1フレームごとの速度変化の標準偏差
 max_speed = 2.0  # targetの最大速度
 
-# エージェント間の反発力パラメータ
-min_agent_distance = 2.0  # エージェント間の最小距離
-repulsion_strength = 1.0  # 反発力の強度
-
 
 def init():
     point.set_data([0], [radius])
@@ -129,29 +126,6 @@ def init():
 def angular_distance_rad(angle1, angle2):
     diff = abs(angle1 - angle2)
     return min(diff, 2 * np.pi - diff)
-
-
-# エージェント間の反発力を計算する関数
-def calculate_repulsion_force(agent_positions, agent_idx):
-    """
-    指定されたエージェントに対する他のエージェントからの反発力を計算
-    """
-    repulsion_force = np.zeros(2)
-    current_pos = agent_positions[agent_idx]
-    
-    for other_idx in range(len(agent_positions)):
-        if other_idx != agent_idx:
-            other_pos = agent_positions[other_idx]
-            distance = np.linalg.norm(current_pos - other_pos)
-            
-            if distance < min_agent_distance and distance > 0:
-                # 反発力の方向（現在のエージェントから他のエージェントへの方向の逆）
-                direction = (current_pos - other_pos) / distance
-                # 距離が近いほど強い反発力（距離の逆数に比例）
-                force_magnitude = repulsion_strength * (1.0 / distance - 1.0 / min_agent_distance)
-                repulsion_force += direction * force_magnitude
-    
-    return repulsion_force
 
 
 # --- グラフ用データ保存リスト ---
