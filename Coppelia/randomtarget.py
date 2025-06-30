@@ -73,20 +73,28 @@ ax.set_title("Example1")
 # )
 # ax.add_patch(circle)
 
-# --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_n < 2π, 和が2π） ---
-angles = np.random.dirichlet(np.ones(num_agents)) * (2 * np.pi)
-angles = np.sort(angles)  # 昇順（角距離条件は維持）
+# --- エージェントの初期角度を第i象限に配置（i=1:第1象限, i=2:第2象限, ...） ---
+agent_positions = np.zeros((num_agents, 2))
+radius_limit = 3  # 配置半径（中心からの距離）
 
-# すべてのAgentの初期角距離の和が2πになるように、円周上に配置し、さらに-10~10の範囲に収める
-radius_limit = 3
-agent_radii = np.random.uniform(radius_limit * 0.7, radius_limit, num_agents)
-agent_positions = np.column_stack(
-    [
-        np.clip(center[0] + agent_radii * np.cos(angles), -radius_limit, radius_limit),
-        np.clip(center[1] + agent_radii * np.sin(angles), -radius_limit, radius_limit),
-    ]
-)
-agent_ids = list(range(1, num_agents + 1))  # 1~6のエージェント番号
+for i in range(num_agents):
+    # 各象限の中心角度
+    if i == 0:
+        theta = np.pi / 4  # 第1象限: 45度
+    elif i == 1:
+        theta = 3 * np.pi / 4  # 第2象限: 135度
+    elif i == 2:
+        theta = 5 * np.pi / 4  # 第3象限: 225度
+    elif i == 3:
+        theta = 7 * np.pi / 4  # 第4象限: 315度
+    else:
+        theta = 2 * np.pi * i / num_agents  # 5台以上の場合は等分割
+
+    r = np.random.uniform(radius_limit * 0.7, radius_limit)  # 半径はランダム
+    agent_positions[i, 0] = center[0] + r * np.cos(theta)
+    agent_positions[i, 1] = center[1] + r * np.sin(theta)
+
+agent_ids = list(range(1, num_agents + 1))  # 1~nのエージェント番号
 # 色分け用カラーマップ（tab10を利用）
 agent_colors = plt.get_cmap("tab10").colors[:num_agents]
 agent_dots = ax.scatter(
