@@ -24,17 +24,18 @@ drone_handles = []
 
 # ドローンハンドル取得
 for i in range(num_agents):
-    object_name = f"Quadcopter[{i+1}]"  # Quadcopter[1] ~ Quadcopter[6]
+    object_name = f"Quadcopter[{i+1}]"  # Quadcopter[1] ~ Quadcopter[4]
     drone_handle = sim.getObject(
         f"/{object_name}/target"
     )  # シーン内のオブジェクト名に合わせて修正
     drone_handles.append(drone_handle)
-    print(f"取得: {object_name}")
+    print("取得: Agent")
 
 # Targetオブジェクト取得（ここをループ外で1回だけ！）
-target_handle = sim.getObject("/target")  # シーン内のtarget名に合わせて修正
+target_handle = sim.getObject(
+    "/Quadcopter[0]/target"
+)  # シーン内のtarget名に合わせて修正
 print("取得: target")
-
 
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
@@ -44,14 +45,13 @@ if sim.getSimulationState() == sim.simulation_stopped:
 
     time.sleep(1.0)  # 少し待つ
 
-
 # --- パラメータ設定（論文 Example1 Fig.3 準拠） ---
 center = (0, 0)
 radius = 20  # targetの軌道半径
 frames = 10000
 xlim = (-30, 30)  # x軸の限界
 ylim = (-30, 30)  # y軸の限界
-R = 4  # targetとAgentの理想の距離
+R = 1  # targetとAgentの理想の距離
 d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.05  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
@@ -68,29 +68,15 @@ ax.set_title("Example1")
 
 # 目標の軌道
 (point,) = ax.plot([0], [radius], "ro", label="Target")
-# circle = Circle(
-#     center, radius, fill=False, linestyle="dashed", color="blue", label="軌道"
-# )
-# ax.add_patch(circle)
 
 # --- エージェントの初期角度を第i象限に配置（i=1:第1象限, i=2:第2象限, ...） ---
 agent_positions = np.zeros((num_agents, 2))
-radius_limit = 3  # 配置半径（中心からの距離）
+radius_limit = 2  # 配置半径（中心からの距離）
 
 for i in range(num_agents):
-    # 各象限の中心角度
-    if i == 0:
-        theta = np.pi / 4  # 第1象限: 45度
-    elif i == 1:
-        theta = 3 * np.pi / 4  # 第2象限: 135度
-    elif i == 2:
-        theta = 5 * np.pi / 4  # 第3象限: 225度
-    elif i == 3:
-        theta = 7 * np.pi / 4  # 第4象限: 315度
-    else:
-        theta = 2 * np.pi * i / num_agents  # 5台以上の場合は等分割
+    theta = 2 * np.pi * i / num_agents
 
-    r = np.random.uniform(radius_limit * 0.7, radius_limit)  # 半径はランダム
+    r = radius_limit  # ランダム性を排除し、一定の半径で配置
     agent_positions[i, 0] = center[0] + r * np.cos(theta)
     agent_positions[i, 1] = center[1] + r * np.sin(theta)
 
@@ -270,16 +256,27 @@ def animate(i):
                 d_i * (omega_i_plus_local - omega_i_local)
                 - d_i * (omega_i_local - omega_i_minus_local)
             ) / (2 * d_i)
-            u_r = (-ro_i * omega_i_local**2 - eta_norm - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm))
-            u_theta = ((omega_i_local + Omega + fi) * eta_norm+ zi * ro_i+ e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local))
-            if ro_i > 1.3 * R or ro_i < 0.7 * R:
-                u_r = u_r * 0.5
+            u_r = (
+                -ro_i * omega_i_local**2
+                - eta_norm
+                - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
+            )
+            u_theta = (
+                (omega_i_local + Omega + fi) * eta_norm
+                + zi * ro_i
+                + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
+            )
+            if ro_i > 1.5 * R or ro_i < 0.5 * R:
+                u_r = u_r * 0.6
             else:
-                u_r = u_r * 0.1
-            if alpha_i_local < np.pi / 3.2 or alpha_i_local > np.pi / 2.8:
-                u_theta = u_theta * 2
+                u_r = u_r * 0.2
+            if alpha_i_local < 2*np.pi / num_agents+(2*np.pi/num_agents)*0.3 or alpha_i_local > 2*np.pi / num_agents-(2*np.pi/num_agents)*0.3:
+                u_theta = u_theta * 3
             else:
                 u_theta = u_theta * 1
+            if u_theta>2*Omega:
+                u_theta = 2 * Omega
+
             # --- ローカル→グローバル変換 ---
             theta_global = np.arctan2(e_r[1], e_r[0])
             A = np.array(
@@ -290,7 +287,39 @@ def animate(i):
             )
             u_vec_local = np.array([u_r, u_theta])
             u_vec = A @ u_vec_local
-            agent_positions[j] += u_vec * frame_time
+            # --- 衝突回避（リパルション） ---
+            repulsion = np.zeros(2)
+            min_dist = 1  # この距離以下で反発開始（必要に応じて調整）
+            repulsion_strength = 6.0  # 反発の強さ（必要に応じて調整）
+            for k in range(num_agents):
+                if k == j:
+                    continue
+                diff = agent_positions[j] - agent_positions[k]
+                dist = np.linalg.norm(diff)
+                if dist < min_dist:
+                    repulsion += (
+                        (diff / dist)
+                        * repulsion_strength
+                        * (min_dist - dist)
+                        / min_dist
+                    )
+            # 反発ベクトルを速度ベクトルに加算
+            u_vec += repulsion
+            # --- targetとの衝突回避 ---
+            min_target_dist = R / 3  # targetからこの距離以内に入れない
+            if ro_i < min_target_dist:
+                # targetから離れる方向に強い反発力を加える
+                repulsion_from_target = (
+                    (e_r / ro_i) * 12.0 * (min_target_dist - ro_i) / min_target_dist
+                )
+                u_vec += repulsion_from_target
+                # さらに近い場合は位置更新を抑制
+                if ro_i < min_target_dist * 0.7:
+                    agent_positions[j] += u_vec * frame_time * 0.2
+                else:
+                    agent_positions[j] += u_vec * frame_time
+            else:
+                agent_positions[j] += u_vec * frame_time
 
             # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
             omega_i_sec = omega_i_local * fps
