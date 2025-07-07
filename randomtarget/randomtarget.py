@@ -7,10 +7,14 @@ from matplotlib.patches import Circle
 import matplotlib
 from matplotlib.widgets import Button
 from matplotlib.lines import Line2D
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient 
+from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
+
+# CoppeliaSim 接続
+client = RemoteAPIClient()
+sim = client.require("sim")
 
 # --- パラメータ設定（論文 Example1 Fig.3 準拠） ---
 center = (0, 0)
@@ -20,11 +24,33 @@ xlim = (-30, 30)  # x軸の限界
 ylim = (-30, 30)  # y軸の限界
 R = 8  # targetとAgentの理想の距離
 num_agents = 6  # agentの数6
-d_i = 2*np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
+d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.05  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
 omega_target = 0.12 / fps  # targetの角速度0.12
 Omega = 2 / fps  # Ω=2
+
+drone_handles = []
+for i in range(num_agents):
+    object_name = f"Quadcopter[{i+1}]"  # Quadcopter[1] ~ Quadcopter[4]
+    drone_handle = sim.getObject(
+        f"/{object_name}/target"
+    )  # シーン内のオブジェクト名に合わせて修正
+    drone_handles.append(drone_handle)
+    print("取得: Agent")
+
+# Targetオブジェクト取得（ここをループ外で1回だけ！）
+target_handle = sim.getObject(
+    "/Quadcopter[0]/target"
+)  # シーン内のtarget名に合わせて修正
+print("取得: target")
+
+if sim.getSimulationState() == sim.simulation_stopped:
+    sim.startSimulation()
+    print("Simulation started")
+    import time
+
+
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -42,14 +68,9 @@ ax.set_title("Example1")
 # )
 # ax.add_patch(circle)
 
-# --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_6 < 2π） ---
-angles = np.random.dirichlet(np.ones(num_agents)) * (2 * np.pi)
-angles = np.sort(angles)  # 昇順（角距離条件は維持）
-
-# すべてのAgentの初期角距離の和が2πになるように、円周上に配置
-agent_radii = np.random.uniform(
-    radius - 2, radius + 2, num_agents
-)  # 半径はtarget近傍でランダム
+# --- エージェントの初期角度を等間隔で配置（0 <= alpha_1 < ... < alpha_6 < 2π） ---
+angles = np.linspace(0, 2 * np.pi, num_agents, endpoint=False)  # 等間隔
+agent_radii = np.full(num_agents, 5.0)  # 半径5で全エージェント同じ
 agent_positions = np.column_stack(
     [center[0] + agent_radii * np.cos(angles), center[1] + agent_radii * np.sin(angles)]
 )
@@ -240,9 +261,9 @@ def animate(i):
                 + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
             )
             if ro_i > 1.1 * R or ro_i < 0.9 * R:
-                u_r = u_r * 0.5
+                u_r = u_r * 0.6
             else:
-                u_r = u_r * 0.1
+                u_r = u_r * 0.2
             if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
                 u_theta = u_theta * 2
             else:
@@ -285,12 +306,21 @@ def animate(i):
     roi_text.set_text("\n".join(roi_lines))
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])
+
+    # --- CoppeliaSim 側ドローン位置同期 ---
+    for j in range(num_agents):
+        pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]  # 高さ2.0m
+        sim.setObjectPosition(drone_handles[j], -1, pos_3d)
+    # targetも1回だけ更新
+    target_pos_3d = [target_pos[0], target_pos[1], 2.0]
+    sim.setObjectPosition(target_handle, -1, target_pos_3d)
     return point, agent_dots, roi_text
 
 
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )
+
 
 # --- 再生/停止ボタンのみ ---
 class AnimationControl:

@@ -35,6 +35,16 @@ target_handle = sim.getObject(
 )  # シーン内のtarget名に合わせて修正
 print("取得: target")
 
+# 各エージェントのtargetハンドルを取得
+agent_target_handles = [
+    sim.getObject(f"/Quadcopter[{i}]/target") for i in range(1, num_agents + 1)
+]
+
+# VisionSensorハンドルを取得
+visionSensorHandles = [
+    sim.getObject(f"/Quadcopter[{i}]/visionSensor") for i in range(1, num_agents + 1)
+]
+
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
@@ -81,7 +91,7 @@ for i in range(num_agents):
 
 agent_ids = list(range(1, num_agents + 1))  # 1~nのエージェント番号
 # 色分け用カラーマップ（tab10を利用）
-agent_colors = plt.get_cmap("tab10").colors[:num_agents]
+agent_colors = plt.get_cmap("tab10")(np.linspace(0, 1, num_agents))
 agent_dots = ax.scatter(
     agent_positions[:, 0], agent_positions[:, 1], c=agent_colors, label="Agents"
 )
@@ -190,8 +200,40 @@ def animate(i):
 
     roi_lines = []
     for j in range(num_agents):
-        vec = agent_positions[j] - np.array([x, y])
-        ro_i = np.linalg.norm(vec)
+        ro_i = None
+        try:
+            visionSensorHandle = visionSensorHandles[j]
+            result = sim.getVisionSensorDepth(visionSensorHandle)
+            if result is not None:
+                depthBuffer, resolution = result
+                depthArray = np.array(depthBuffer, dtype=np.float64)
+                if len(resolution) == 2:
+                    depthArray = depthArray.reshape(resolution)
+                nearClip = sim.getObjectFloatParam(
+                    visionSensorHandle, sim.visionfloatparam_near_clipping
+                )
+                farClip = sim.getObjectFloatParam(
+                    visionSensorHandle, sim.visionfloatparam_far_clipping
+                )
+                realDepth = nearClip + (farClip - nearClip) * depthArray
+                valid_mask = realDepth < (farClip - 1e-4)
+                if np.any(valid_mask):
+                    minDist = np.min(realDepth[valid_mask])
+                    if np.isfinite(minDist):
+                        ro_i = minDist
+                        print(f"[Drone{j+1}] VisionSensorで検知: ro_i = {ro_i:.2f} m")
+                    else:
+                        print(f"[Drone{j+1}] VisionSensor: 有効な物体なし")
+                else:
+                    print(f"[Drone{j+1}] VisionSensor: 物体未検知")
+        except Exception as e:
+            print(f"[Drone{j+1}] VisionSensor error: {e}")
+
+        if ro_i is None:
+            vec = agent_positions[j] - np.array([x, y])
+            ro_i = np.linalg.norm(vec)
+            print(f"[Drone{j+1}] 計算値: ro_i = {ro_i:.2f} m")
+
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
         if ro_i > 0:
             e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
@@ -266,7 +308,7 @@ def animate(i):
                 + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
             )
             if ro_i > 1.5 * R or ro_i < 0.5 * R:
-                u_r = u_r * 0.5
+                u_r = u_r * 1
             else:
                 u_r = u_r * 0.2
             if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
@@ -312,8 +354,10 @@ def animate(i):
     animate.prev_target_pos = np.array([x, y])
     # --- CoppeliaSim 側ドローン位置同期 ---
     for j in range(num_agents):
-        pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]  # 高さ2.0m
+        pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
         sim.setObjectPosition(drone_handles[j], -1, pos_3d)
+        # 各エージェントのtargetも同じ位置に
+        sim.setObjectPosition(agent_target_handles[j], -1, pos_3d)
     # targetも1回だけ更新
     target_pos_3d = [target_pos[0], target_pos[1], 2.0]
     sim.setObjectPosition(target_handle, -1, target_pos_3d)

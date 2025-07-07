@@ -1,100 +1,6 @@
+# sample_part3.py
+from sample.sample_part2 import *
 
-# targetとAgentが合体
-
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from matplotlib.patches import Circle
-import matplotlib
-from matplotlib.widgets import Button
-from matplotlib.lines import Line2D
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient 
-
-
-matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
-
-# --- パラメータ設定（論文 Example1 Fig.3 準拠） ---
-center = (0, 0)
-radius = 20  # targetの軌道半径
-frames = 10000
-xlim = (-30, 30)  # x軸の限界
-ylim = (-30, 30)  # y軸の限界
-R = 8  # targetとAgentの理想の距離
-num_agents = 6  # agentの数6
-d_i = 2*np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
-frame_time = 0.05  # interval=50msの場合    アニメーション全体の速度を調整
-fps = 1 / frame_time
-omega_target = 0.12 / fps  # targetの角速度0.12
-Omega = 2 / fps  # Ω=2
-
-# --- 初期化 ---
-fig, ax = plt.subplots()
-ax.set_xlim(xlim)
-ax.set_ylim(ylim)
-ax.set_aspect("equal")
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_title("Example1")
-
-# 目標の軌道
-(point,) = ax.plot([0], [radius], "ro", label="Target")
-# circle = Circle(
-#     center, radius, fill=False, linestyle="dashed", color="blue", label="軌道"
-# )
-# ax.add_patch(circle)
-
-# --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_6 < 2π） ---
-angles = np.random.dirichlet(np.ones(num_agents)) * (2 * np.pi)
-angles = np.sort(angles)  # 昇順（角距離条件は維持）
-
-# すべてのAgentの初期角距離の和が2πになるように、円周上に配置
-agent_radii = np.random.uniform(
-    radius - 2, radius + 2, num_agents
-)  # 半径はtarget近傍でランダム
-agent_positions = np.column_stack(
-    [center[0] + agent_radii * np.cos(angles), center[1] + agent_radii * np.sin(angles)]
-)
-agent_ids = list(range(1, num_agents + 1))  # 1~6のエージェント番号
-# 色分け用カラーマップ（tab10を利用）
-agent_colors = plt.get_cmap("tab10").colors[:num_agents]
-agent_dots = ax.scatter(
-    agent_positions[:, 0], agent_positions[:, 1], c=agent_colors, label="Agents"
-)
-# --- エージェント番号と色の凡例を追加 ---
-legend_elements = [
-    Line2D(
-        [0],
-        [0],
-        marker="o",
-        color="w",
-        label=f"Agent {i+1}",
-        markerfacecolor=agent_colors[i],
-        markersize=10,
-    )
-    for i in range(num_agents)
-]
-ax.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5))
-
-# 各エージェントが隣接エージェント（前後の番号）の座標を知る
-neighbor_indices = [
-    ((i - 1) % num_agents, (i + 1) % num_agents) for i in range(num_agents)
-]
-agent_neighbors = []
-for i in range(num_agents):
-    left_idx = (i - 1) % num_agents
-    right_idx = (i + 1) % num_agents
-    left_pos = agent_positions[left_idx]
-    right_pos = agent_positions[right_idx]
-    agent_neighbors.append((left_pos, right_pos))
-# agent_neighbors[i] = (左隣の座標, 右隣の座標)
-
-for i in range(num_agents):
-    left_idx = (i - 1) % num_agents
-    right_idx = (i + 1) % num_agents
-    dist_left = np.linalg.norm(agent_positions[i] - agent_positions[left_idx])
-    dist_right = np.linalg.norm(agent_positions[i] - agent_positions[right_idx])
-
-# --- アニメーション関数 ---
 # ro_i（targetと各Agentの距離）表示用テキスト（グラフ外右側に配置）
 roi_text = ax.text(
     0.05,
@@ -113,7 +19,7 @@ target_velocity = np.zeros(2)  # 初期速度
 
 # ランダムウォークのパラメータ
 random_walk_sigma = 0.5  # 1フレームごとの速度変化の標準偏差
-max_speed = 2.0  # targetの最大速度
+max_speed = 1.5  # targetの最大速度（2.0→1.0に変更し追いつきやすく）
 
 
 def init():
@@ -143,19 +49,14 @@ e_i_2_integral = [0.0 for _ in range(num_agents)]
 
 def animate(i):
     global target_pos, target_velocity
-    # targetのランダムウォーク
-    # 速度にランダムな変化を加える。一瞬で枠外に飛び出さないように
     target_velocity += np.random.normal(0, random_walk_sigma, size=2)
-    # 最大速度制限
     speed = np.linalg.norm(target_velocity)
     if speed > max_speed:
         target_velocity = target_velocity / speed * max_speed
-    # 位置を更新
     target_pos += target_velocity * frame_time
     x, y = target_pos
     point.set_data([x], [y])
     agent_dots.set_offsets(agent_positions)
-    # 色分けを毎フレーム反映
     agent_dots.set_color(agent_colors)
 
     if not hasattr(animate, "prev_agent_pos"):
@@ -165,8 +66,40 @@ def animate(i):
 
     roi_lines = []
     for j in range(num_agents):
-        vec = agent_positions[j] - np.array([x, y])
-        ro_i = np.linalg.norm(vec)
+        ro_i = None
+        try:
+            visionSensorHandle = visionSensorHandles[j]
+            result = sim.getVisionSensorDepth(visionSensorHandle)
+            if result is not None:
+                depthBuffer, resolution = result
+                depthArray = np.array(depthBuffer, dtype=np.float64)
+                if len(resolution) == 2:
+                    depthArray = depthArray.reshape(resolution)
+                nearClip = sim.getObjectFloatParam(
+                    visionSensorHandle, sim.visionfloatparam_near_clipping
+                )
+                farClip = sim.getObjectFloatParam(
+                    visionSensorHandle, sim.visionfloatparam_far_clipping
+                )
+                realDepth = nearClip + (farClip - nearClip) * depthArray
+                valid_mask = realDepth < (farClip - 1e-4)
+                if np.any(valid_mask):
+                    minDist = np.min(realDepth[valid_mask])
+                    if np.isfinite(minDist):
+                        ro_i = minDist
+                        print(f"[Drone{j+1}] VisionSensorで検知: ro_i = {ro_i:.2f} m")
+                    else:
+                        print(f"[Drone{j+1}] VisionSensor: 有効な物体なし")
+                else:
+                    print(f"[Drone{j+1}] VisionSensor: 物体未検知")
+        except Exception as e:
+            print(f"[Drone{j+1}] VisionSensor error: {e}")
+
+        if ro_i is None:
+            vec = agent_positions[j] - np.array([x, y])
+            ro_i = np.linalg.norm(vec)
+            print(f"[Drone{j+1}] 計算値: ro_i = {ro_i:.2f} m")
+
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
         if ro_i > 0:
             e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
@@ -240,10 +173,10 @@ def animate(i):
                 + zi * ro_i
                 + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
             )
-            if ro_i > 1.1 * R or ro_i < 0.9 * R:
-                u_r = u_r * 0.5
+            if ro_i > 1.5 * R or ro_i < 0.5 * R:
+                u_r = u_r * 1
             else:
-                u_r = u_r * 0.1
+                u_r = u_r * 0.2
             if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
                 u_theta = u_theta * 2
             else:
@@ -259,7 +192,6 @@ def animate(i):
             u_vec_local = np.array([u_r, u_theta])
             u_vec = A @ u_vec_local
             agent_positions[j] += u_vec * frame_time
-
             # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
             omega_i_sec = omega_i_local * fps
 
@@ -286,30 +218,13 @@ def animate(i):
     roi_text.set_text("\n".join(roi_lines))
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])
+    # --- CoppeliaSim 側ドローン位置同期 ---
+    for j in range(num_agents):
+        pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
+        sim.setObjectPosition(drone_handles[j], -1, pos_3d)
+        # 各エージェントのtargetも同じ位置に
+        sim.setObjectPosition(agent_target_handles[j], -1, pos_3d)
+    # targetも1回だけ更新
+    target_pos_3d = [target_pos[0], target_pos[1], 2.0]
+    sim.setObjectPosition(target_handle, -1, target_pos_3d)
     return point, agent_dots, roi_text
-
-
-ani = FuncAnimation(
-    fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
-)
-
-# --- 再生/停止ボタンのみ ---
-class AnimationControl:
-    def __init__(self, anim):
-        self.anim = anim
-        self.running = True
-
-    def toggle(self, event):
-        if self.running:
-            self.anim.event_source.stop()
-        else:
-            self.anim.event_source.start()
-        self.running = not self.running
-
-
-button_ax = plt.axes((0.85, 0.05, 0.1, 0.075))
-button = Button(button_ax, "再生/停止")
-control = AnimationControl(ani)
-button.on_clicked(control.toggle)
-
-plt.show()
