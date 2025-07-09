@@ -1,5 +1,5 @@
 # sample_part2.py
-from sample.sample_part1 import *
+from sample_part1 import *
 
 # --- 初期化 ---
 fig, ax = plt.subplots()

@@ -6,14 +6,9 @@ agent_initializer.py
 import numpy as np
 from config import num_agents, radius, center
 
-# --- エージェントの初期角度を昇順で配置（0 <= alpha_1 < ... < alpha_6 < 2π） ---
-angles = np.random.dirichlet(np.ones(num_agents)) * (2 * np.pi)
-angles = np.sort(angles)  # 昇順（角距離条件は維持）
-
-# すべてのAgentの初期角距離の和が2πになるように、円周上に配置
-agent_radii = np.random.uniform(
-    radius - 2, radius + 2, num_agents
-)  # 半径はtarget近傍でランダム
+# --- エージェントの初期角度を等間隔で配置(0 <= alpha_1 < ... < alpha_6 < 2π) ---
+angles = np.linspace(0, 2 * np.pi, num_agents, endpoint=False)  # 等間隔
+agent_radii = np.full(num_agents, 6.0)  # 半径6で全エージェント同じ
 agent_positions = np.column_stack(
     [center[0] + agent_radii * np.cos(angles), center[1] + agent_radii * np.sin(angles)]
 )

@@ -9,8 +9,8 @@ import numpy as np
 center = (0, 0)
 radius = 20  # targetの軌道半径
 frames = 10000
-xlim = (-30, 30)  # x軸の限界
-ylim = (-30, 30)  # y軸の限界
+xlim = (-15, 15)  # x軸の限界
+ylim = (-15, 15)  # y軸の限界
 R = 4  # targetとAgentの理想の距離
 d_i = np.pi / 3  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.05  # interval=50msの場合    アニメーション全体の速度を調整
@@ -20,4 +20,4 @@ Omega = 2 / fps  # Ω=2
 num_agents = 6  # agentの数6
 
 random_walk_sigma = 0.5  # 1フレームごとの速度変化の標準偏差
-max_speed = 2.0  # targetの最大速度
+max_speed = 1  # targetの最大速度

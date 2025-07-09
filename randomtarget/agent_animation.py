@@ -98,14 +98,14 @@ def agent_animate_update(
                 + zi * ro_i
                 + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
             )
-            if ro_i > 1.1 * R or ro_i < 0.9 * R:
-                u_r = u_r * 0.25
+            if ro_i > 1.2 * R or ro_i < 0.8 * R:
+                u_r = u_r * 0.5
             else:
-                u_r = u_r * 0.05
-            if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
+                u_r = u_r * 0.2
+            if alpha_i_local < np.pi / 3.5 or alpha_i_local > np.pi / 2.5:
+                u_theta = u_theta * 2
+            else:
                 u_theta = u_theta * 1
-            else:
-                u_theta = u_theta * 0.1
             theta_global = np.arctan2(e_r[1], e_r[0])
             A = np.array(
                 [
@@ -115,7 +115,15 @@ def agent_animate_update(
             )
             u_vec_local = np.array([u_r, u_theta])
             u_vec = A @ u_vec_local
-            agent_positions[j] += u_vec * frame_time
+            # --- ここから距離R未満に近づかない制御を追加 ---
+            next_pos = agent_positions[j] + u_vec * frame_time
+            vec_next = next_pos - np.array(target_pos)
+            ro_i_next = np.linalg.norm(vec_next)
+            if ro_i_next < R:
+                # Rの円周上に投影
+                next_pos = np.array(target_pos) + R * (vec_next / (ro_i_next + 1e-8))
+            agent_positions[j] = next_pos
+            # --- ここまで追加 ---
             omega_i_sec = omega_i_local * fps
             u_vec_sec = u_vec * fps
             ro_i_history[j].append(ro_i)

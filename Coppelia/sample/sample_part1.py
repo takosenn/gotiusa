@@ -35,21 +35,18 @@ print("取得: target")
 
 # 各エージェントのtargetハンドルを取得
 agent_target_handles = [
-    sim.getObject(f"/Quadcopter[{i}]/target") for i in range(1, num_agents + 1)
+    sim.getObject(f"/Quadcopter[{i}]/target") for i in range(1, num_agents +1)
 ]
 
 # VisionSensorハンドルを取得
 visionSensorHandles = [
-    sim.getObject(f"/Quadcopter[{i}]/visionSensor") for i in range(1, num_agents + 1)
+    sim.getObject(f"/Quadcopter[{i}]/visionSensor") for i in range(1, num_agents +1)
 ]
 
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
     print("Simulation started")
-    import time
-
-    time.sleep(1.0)  # 少し待つ
 
 # --- パラメータ設定（論文 Example1 Fig.3 準拠） ---
 center = (0, 0)

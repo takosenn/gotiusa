@@ -13,7 +13,7 @@ target_appear_time = 0  # 最初から出現
 target_appeared = False
 
 # --- targetのランダムウォーク用初期化 ---
-target_pos = np.random.uniform(-30, 30, size=2)  # 初期位置をランダムに
+target_pos = np.array([0.0, 0.0])  # 初期位置を中心(0,0)に
 target_velocity = np.zeros(2)  # 初期速度
 
 
