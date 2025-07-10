@@ -3,11 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import matplotlib
 from matplotlib.widgets import Button
 from matplotlib.lines import Line2D
-import time
 from parameter import (
     num_agents,
     center,
@@ -22,8 +20,10 @@ from parameter import (
     Omega,
     random_walk_sigma,
     max_speed,
+    target_pos,
+    target_velocity,
 )
-from Handle import Agent_handles, target_handle, sim
+from Handle import Agent_handles, target_handle, sim, visionSensor_handle
 from DataStrage import (
     ro_i_history,
     eta_i_history,
@@ -33,15 +33,14 @@ from DataStrage import (
     e_i_1_integral,
     e_i_2_integral,
 )
+from calculation import calculate_e_i
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
-
 
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
     print("Simulation started")
-    time.sleep(1.0)
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -106,10 +105,6 @@ for i in range(num_agents):
     dist_right = np.linalg.norm(agent_positions[i] - agent_positions[right_idx])
 
 # --- アニメーション関数 ---
-
-# --- targetのランダムウォーク用初期化 ---
-target_pos = np.array([0.0, 0.0])  # 初期位置（円運動の初期値と同じ）
-target_velocity = np.zeros(2)  # 初期速度
 
 
 def init():
@@ -185,16 +180,9 @@ def animate(i):
         # --- 制御プロトコルu_iの計算（ローカル座標系） ---
         eta = relative_velocity_local[0]
         eta_norm = abs(eta)
-        if i == 0:
-            e_i_1 = 0
-            e_i_2 = 0
-        else:
-            tau_i_1 = 0.5
-            tau_i_2 = 0.5
-            e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
-            e_i_2 = tau_i_2 * abs(ro_i * (omega_i_local + Omega - omega_i_local))
-        e_i_1_integral[j] += e_i_1 * frame_time
-        e_i_2_integral[j] += e_i_2 * frame_time
+        e_i = calculate_e_i(i, ro_i, omega_i_local, eta_norm)
+        e_i_1_integral[j] += e_i[0] * frame_time
+        e_i_2_integral[j] += e_i[1] * frame_time
         fi = (d_i * alpha_i_local - d_i * alpha_i_minus_local) / (2 * d_i)
         zi = (
             d_i * (omega_i_plus_local - omega_i_local)

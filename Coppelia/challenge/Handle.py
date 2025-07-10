@@ -15,3 +15,9 @@ for i in range(num_agents):
 # 中央のtargetのハンドル
 target_handle = sim.getObject("/Quadcopter[0]/target")
 print("取得: Quadcopter[0]")
+
+# Agentに搭載しているカメラのハンドル
+for i in range(num_agents):
+    object_name = f"Quadcopter[{i+1}]"
+    visionSensor_handle = sim.getObject(f"/{object_name}/visionSensor")
+    print(f"取得: {object_name}のvisionSensor")
