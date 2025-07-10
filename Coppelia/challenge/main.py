@@ -34,6 +34,7 @@ from DataStrage import (
     e_i_2_integral,
 )
 from calculation import calculate_u
+from coordinate_transformation import coordinate_trans
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
 
@@ -197,14 +198,7 @@ def animate(i):
 
         # --- ローカル→グローバル変換 ---
         theta_global = np.arctan2(e_r[1], e_r[0])
-        A = np.array(
-            [
-                [np.cos(theta_global), -np.sin(theta_global)],
-                [np.sin(theta_global), np.cos(theta_global)],
-            ]
-        )
-        u_vec_local = np.array([u[0], u[1]])
-        u_vec = A @ u_vec_local
+        u_vec = coordinate_trans(theta_global, u)
         # 位置を仮更新
         new_pos = agent_positions[j] + u_vec * frame_time
         # targetとの距離を計算
