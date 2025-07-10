@@ -33,7 +33,7 @@ from DataStrage import (
     e_i_1_integral,
     e_i_2_integral,
 )
-from calculation import calculate_e_i
+from calculation import calculate_u
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
 
@@ -180,32 +180,21 @@ def animate(i):
         # --- 制御プロトコルu_iの計算（ローカル座標系） ---
         eta = relative_velocity_local[0]
         eta_norm = abs(eta)
-        e_i = calculate_e_i(i, ro_i, omega_i_local, eta_norm)
-        e_i_1_integral[j] += e_i[0] * frame_time
-        e_i_2_integral[j] += e_i[1] * frame_time
-        fi = (d_i * alpha_i_local - d_i * alpha_i_minus_local) / (2 * d_i)
-        zi = (
-            d_i * (omega_i_plus_local - omega_i_local)
-            - d_i * (omega_i_local - omega_i_minus_local)
-        ) / (2 * d_i)
-        u_r = (
-            -ro_i * omega_i_local**2
-            - eta_norm
-            - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
+        u = calculate_u(
+            d_i,
+            ro_i,
+            omega_i_local,
+            omega_i_plus_local,
+            omega_i_minus_local,
+            alpha_i_local,
+            alpha_i_minus_local,
+            eta_norm,
+            e_i_1_integral,
+            e_i_2_integral,
+            j,
+            i,
         )
-        u_theta = (
-            (omega_i_local + Omega + fi) * eta_norm
-            + zi * ro_i
-            + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
-        )
-        if ro_i > 1.5 * R or ro_i < 0.5 * R:
-            u_r = u_r * 0.5
-        else:
-            u_r = u_r * 0.2
-        if alpha_i_local < np.pi / 3.4 or alpha_i_local > np.pi / 2.6:
-            u_theta = u_theta * 2
-        else:
-            u_theta = u_theta * 1
+
         # --- ローカル→グローバル変換 ---
         theta_global = np.arctan2(e_r[1], e_r[0])
         A = np.array(
@@ -214,7 +203,7 @@ def animate(i):
                 [np.sin(theta_global), np.cos(theta_global)],
             ]
         )
-        u_vec_local = np.array([u_r, u_theta])
+        u_vec_local = np.array([u[0], u[1]])
         u_vec = A @ u_vec_local
         # 位置を仮更新
         new_pos = agent_positions[j] + u_vec * frame_time
@@ -228,7 +217,7 @@ def animate(i):
             agent_positions[j] = target_pos + direction * R
         # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
         omega_i_sec = omega_i_local * fps
-        # u_r, u_theta, u_vecを[m/sec]に変換
+        # u[0], u[1], u_vecを[m/sec]に変換
         u_vec_sec = u_vec * fps
         ro_i_history[j].append(ro_i)
         eta_i_history[j].append(eta)
