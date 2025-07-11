@@ -1,3 +1,6 @@
+# animation.py内の計算を行う
+# 具体的には、各Agentの速度uを計算する関数calculate_uを定義
+
 from parameter import R, Omega, frame_time
 import numpy as np
 

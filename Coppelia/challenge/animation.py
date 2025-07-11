@@ -7,7 +7,6 @@ from parameter import (
     xlim,
     ylim,
     radius,
-    fps,
     max_speed,
     random_walk_sigma,
     frame_time,
@@ -19,15 +18,7 @@ from parameter import (
 )
 from calculation import calculate_u
 from Handle import Agent_handles, target_handle, sim
-from DataStrage import (
-    ro_i_history,
-    eta_i_history,
-    omega_i_history,
-    alpha_i_history,
-    u_vec_history,
-    e_i_1_integral,
-    e_i_2_integral,
-)
+from DataStrage import e_i_1_integral, e_i_2_integral
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -124,7 +115,6 @@ def animate(i):
         vec = agent_positions[j] - np.array([x, y])
         ro_i = np.linalg.norm(vec)
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
-
         e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
         e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
         # ローカル座標系でtargetや隣接エージェントの情報を取得
@@ -195,15 +185,6 @@ def animate(i):
             # R未満なら、targetから距離Rの位置に補正
             direction = (new_pos - target_pos) / np.linalg.norm(new_pos - target_pos)
             agent_positions[j] = target_pos + direction * R
-        # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
-        omega_i_sec = omega_i_local * fps
-        # u[0], u[1], u_vecを[m/sec]に変換
-        u_vec_sec = u_vec * fps
-        ro_i_history[j].append(ro_i)
-        eta_i_history[j].append(eta)
-        omega_i_history[j].append(omega_i_sec)  # [rad/sec]で保存
-        alpha_i_history[j].append(alpha_i_local)  # [rad]で保存
-        u_vec_history[j].append(u_vec_sec.copy())
 
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])

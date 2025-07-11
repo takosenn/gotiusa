@@ -1,3 +1,7 @@
+# Coppeliasimのハンドルを取得する
+# Agentの緑の球(target)とtargetの緑の球(target)、カメラのハンドルを取得する
+# カメラはvisionSensorのperspectiveセンサーを選択
+
 from parameter import num_agents
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 

@@ -10,12 +10,10 @@ from animation import animate, init, fig
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
 
-global target_velocity
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
     print("Simulation started")
-
 
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
@@ -43,4 +41,6 @@ button.on_clicked(control.toggle)
 
 plt.show()
 
+# シミュレーション停止
+print("Stopping simulation")
 sim.stopSimulation()
