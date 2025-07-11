@@ -28,21 +28,20 @@ Omega = 2 / fps  # Ω=2
 # ランダムウォークのパラメータ
 random_walk_sigma = 0.2  # 1フレームごとの速度変化の標準偏差
 max_speed = 1  # targetの最大速度
-Agent_handles=[]
+Agent_handles = []
 
+client = RemoteAPIClient()
+sim = client.require("sim")
 
-client = RemoteAPIClient() 
-sim = client.require('sim')
-
-#各Agentの緑の球(target)のハンドル
+# 各Agentの緑の球(target)のハンドル
 for i in range(num_agents):
-    object_name=f"Quadcopter[{i+1}]"
-    Agent_handle=sim.getObject(f"/{object_name}/target")
+    object_name = f"Quadcopter[{i+1}]"
+    Agent_handle = sim.getObject(f"/{object_name}/target")
     Agent_handles.append(Agent_handle)
     print(f"取得: {object_name}")
 
-#中央のtargetのハンドル
-target_handle=sim.getObject("/Quadcopter[0]/target")
+# 中央のtargetのハンドル
+target_handle = sim.getObject("/Quadcopter[0]/target")
 print("取得: Quadcopter[0]")
 
 # シミュレーション開始
@@ -119,10 +118,12 @@ for i in range(num_agents):
 target_pos = np.array([0.0, 0.0])  # 初期位置（円運動の初期値と同じ）
 target_velocity = np.zeros(2)  # 初期速度
 
+
 def init():
     point.set_data([0], [radius])
     agent_dots.set_offsets(agent_positions)
-    return point, agent_dots 
+    return point, agent_dots
+
 
 # --- グラフ用データ保存リスト ---
 ro_i_history: list = [[] for _ in range(num_agents)]
@@ -134,6 +135,7 @@ relative_velocity_history: list = [[] for _ in range(num_agents)]
 # e_i_1, e_i_2の時間積分値（各エージェントごと）
 e_i_1_integral = [0.0 for _ in range(num_agents)]
 e_i_2_integral = [0.0 for _ in range(num_agents)]
+
 
 def animate(i):
     global target_pos, target_velocity
@@ -267,19 +269,21 @@ def animate(i):
 
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])
-    
-    #Coppeliasim側でAgentの緑の球(target)の位置同期
+
+    # Coppeliasim側でAgentの緑の球(target)の位置同期
     for j in range(num_agents):
-        Agents_pos_3d=[agent_positions[j][0],agent_positions[j][1],2.0]
-        sim.setObjectPosition(Agent_handles[j],-1,Agents_pos_3d)
-    #Coppeliasim側でtargetの緑の球(target)の位置同期
-    target_pos_3d=[target_pos[0],target_pos[1],2.0]
-    sim.setObjectPosition(target_handle,-1,target_pos_3d)
+        Agents_pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
+        sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
+    # Coppeliasim側でtargetの緑の球(target)の位置同期
+    target_pos_3d = [target_pos[0], target_pos[1], 2.0]
+    sim.setObjectPosition(target_handle, -1, target_pos_3d)
     return point, agent_dots
+
 
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )
+
 
 # --- 再生/停止ボタンのみ ---
 class AnimationControl:
@@ -293,6 +297,7 @@ class AnimationControl:
         else:
             self.anim.event_source.start()
         self.running = not self.running
+
 
 button_ax = plt.axes((0.85, 0.05, 0.1, 0.075))
 button = Button(button_ax, "再生/停止")
