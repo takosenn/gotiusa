@@ -40,6 +40,14 @@ for i in range(num_agents):
     Agent_handles.append(Agent_handle)
     print(f"取得: {object_name}")
 
+# --- 追加: 各AgentのvisionSensorのハンドル取得 ---
+visionSensor_handles = []
+for i in range(num_agents):
+    vision_sensor_name = f"/Quadcopter[{i+1}]/visionSensor"
+    visionSensor_handle = sim.getObject(vision_sensor_name)
+    visionSensor_handles.append(visionSensor_handle)
+    print(f"取得: {vision_sensor_name}")
+
 # 中央のtargetのハンドル
 target_handle = sim.getObject("/Quadcopter[0]/target")
 print("取得: Quadcopter[0]")
@@ -137,6 +145,16 @@ e_i_1_integral = [0.0 for _ in range(num_agents)]
 e_i_2_integral = [0.0 for _ in range(num_agents)]
 
 
+def get_distance_from_vision_sensor(visionSensor_handle):
+    result, state, aux = sim.readVisionSensor(visionSensor_handle)
+    if aux and len(aux) > 1 and len(aux[1]) > 0:
+        depth_buffer = aux[1]
+        ro_i = min(depth_buffer)
+        return ro_i
+    else:
+        return None  # 取得失敗時
+
+
 def animate(i):
     global target_pos, target_velocity
     # targetのランダムウォーク
@@ -158,8 +176,16 @@ def animate(i):
         animate.prev_target_pos = np.array([x, y])
 
     for j in range(num_agents):
-        vec = agent_positions[j] - np.array([x, y])
-        ro_i = np.linalg.norm(vec)
+        # --- visionSensorから距離取得 ---
+        distance = sim.getVisionSensorDepth(visionSensor_handles[j])
+        if distance is not None:
+            ro_i = min(distance[1])
+            vec = agent_positions[j] - np.array([x, y])  # vecは他で使うので計算
+            print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} ")
+        else:
+            vec = agent_positions[j] - np.array([x, y])
+            ro_i = np.linalg.norm(vec)
+            print(f"Agent{j+1} visionSensor 測定失敗: 距離 = {ro_i:.3f} (計算値)")
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
 
         e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
@@ -306,4 +332,6 @@ button.on_clicked(control.toggle)
 
 plt.show()
 
+# シミュレーション停止
+print("Stopping simulation")
 sim.stopSimulation()
