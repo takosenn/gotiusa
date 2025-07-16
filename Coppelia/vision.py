@@ -8,6 +8,8 @@ from matplotlib.widgets import Button
 from matplotlib.lines import Line2D
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import time
+import cv2
+import array
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
 
@@ -28,7 +30,9 @@ Omega = 2 / fps  # Ω=2
 # ランダムウォークのパラメータ
 random_walk_sigma = 0.2  # 1フレームごとの速度変化の標準偏差
 max_speed = 1  # targetの最大速度
-Agent_handles = []
+Agent_handles: list = []  # 各Agentの緑の球(target)のハンドル
+visionSensor_handles: list = []  # 各AgentのvisionSensorのハンドル
+
 
 client = RemoteAPIClient()
 sim = client.require("sim")
@@ -41,10 +45,9 @@ for i in range(num_agents):
     print(f"取得: {object_name}")
 
 # --- 追加: 各AgentのvisionSensorのハンドル取得 ---
-visionSensor_handles = []
 for i in range(num_agents):
-    vision_sensor_name = f"/Quadcopter[{i+1}]/visionSensor"
-    visionSensor_handle = sim.getObject(vision_sensor_name)
+    vision_sensor_name = f"Quadcopter[{i+1}]"
+    visionSensor_handle = sim.getObjectHandle(f"/{vision_sensor_name}/visionSensor")
     visionSensor_handles.append(visionSensor_handle)
     print(f"取得: {vision_sensor_name}")
 
@@ -177,17 +180,32 @@ def animate(i):
 
     for j in range(num_agents):
         # --- visionSensorから距離取得 ---
-        distance = sim.getVisionSensorDepth(visionSensor_handles[j])
-        if distance is not None:
-            ro_i = min(distance[1])
-            vec = agent_positions[j] - np.array([x, y])  # vecは他で使うので計算
-            print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} ")
+        result = sim.getVisionSensorDepth(visionSensor_handles[j], 0, [0, 0], [0, 0])
+        if isinstance(result, tuple) and len(result) == 2:
+            depth_bytes, resolution = result    #resolutionは解像度[256,256]を表す
+            # bytes → float32配列に変換
+            arr = array.array("f")
+            arr.frombytes(depth_bytes)
+            if len(arr) > 0:
+                ro_i = min(arr)  # 画面内の最短距離[m]
+                # もし中心ピクセルだけ使いたい場合
+                # width, height = resolution
+                # center_idx = (height // 2) * width + (width // 2)
+                # ro_i = arr[center_idx]
+                print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
+            else:
+                # データが空の場合
+                ro_i = np.linalg.norm(agent_positions[j] - np.array([x, y]))
+                print(
+                    f"Agent{j+1} visionSensor 測定失敗: 距離 = {ro_i:.3f} [m] (計算値)"
+                )
         else:
-            vec = agent_positions[j] - np.array([x, y])
-            ro_i = np.linalg.norm(vec)
-            print(f"Agent{j+1} visionSensor 測定失敗: 距離 = {ro_i:.3f} (計算値)")
+            # 取得失敗時
+            ro_i = np.linalg.norm(agent_positions[j] - np.array([x, y]))
+            print(f"Agent{j+1} visionSensor 測定失敗: 距離 = {ro_i:.3f} [m] (計算値)")
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
 
+        vec = agent_positions[j] - np.array([x, y])  # vecは他で使うので計算
         e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
         e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
         # ローカル座標系でtargetや隣接エージェントの情報を取得
