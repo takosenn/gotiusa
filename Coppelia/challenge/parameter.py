@@ -15,12 +15,10 @@ d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.02  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
 Omega = 2 / fps  # Ω=2
-
+radius_limit = 6  # 配置半径（中心からの距離）
 
 # ランダムウォークのパラメータ
-random_walk_sigma = (
-    0.2  # 1フレームごとの速度変化の標準偏差 特にこの数字にこだわりはない))
-)
+random_walk_sigma = 0.2  # 1フレームごとの速度変化の標準偏差 特にこの数字にこだわりはない))
 max_speed = 1  # targetの最大速度
 # --- targetのランダムウォーク用初期化 ---
 target_pos = np.array([0.0, 0.0])  # targetの初期位置

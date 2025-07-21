@@ -15,10 +15,12 @@ from parameter import (
     d_i,
     target_pos,
     target_velocity,
+    radius_limit,
 )
 from calculation import calculate_u
 from Handle import Agent_handles, target_handle, sim
 from DataStrage import e_i_1_integral, e_i_2_integral
+from visionSensor import distance,coodinate_target
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -34,7 +36,6 @@ ax.set_title("Example1")
 
 # --- エージェントの初期角度を第i象限に配置（i=1:第1象限, i=2:第2象限, ...） ---
 agent_positions = np.zeros((num_agents, 2))
-radius_limit = 6  # 配置半径（中心からの距離）
 
 for i in range(num_agents):
     theta = 2 * np.pi * i / num_agents
@@ -84,7 +85,6 @@ for i in range(num_agents):
 
 # --- アニメーション関数 ---
 
-
 def init():
     point.set_data([0], [radius])
     agent_dots.set_offsets(agent_positions)
@@ -112,8 +112,9 @@ def animate(i):
         animate.prev_target_pos = np.array([x, y])
 
     for j in range(num_agents):
+        ro_i=distance(j)
+        world_pos=coodinate_target(j,ro_i)
         vec = agent_positions[j] - np.array([x, y])
-        ro_i = np.linalg.norm(vec)
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
         e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
         e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸

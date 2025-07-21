@@ -1,43 +1,45 @@
-from parameter import num_agents
-from Handle import sim
+
+from Handle import sim,visionSensor_handles
+import math
 import numpy as np
 
+def distance(j):
+    result2=sim.handleVisionSensor(visionSensor_handles[j])
+    result = sim.getVisionSensorDepth(visionSensor_handles[j],1,[0,0],[0,0])
+    if isinstance(result, tuple) and len(result) == 2:
+        depth_bytes, resolution = result    #resolutionは解像度[256,256]を表す
 
-def distance():
-    for i in range(num_agents):
-        object_name = f"Quadcopter[{i+1}]"
-        visionSensor_handle = sim.getObject(f"/{object_name}/visionSensor")
-        print(f"取得: {object_name}のvisionSensor")
+        # bytes → float32配列に変換
+        floatingNumbers = sim.unpackFloatTable(depth_bytes , 0,  0,  0)
+        ro_i = min(floatingNumbers)  # 画面内の最短距離[m]
+        if ro_i>4:  # 広い視野角（84.6度）
+            sim.setObjectFloatParam(visionSensor_handles[j], sim.visionfloatparam_perspective_angle, math.radians(84.6))
+        else:       # 狭い視野角（30度）
+            sim.setObjectFloatParam(visionSensor_handles[j], sim.visionfloatparam_perspective_angle, math.radians(30))
+        print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
+    return  ro_i
 
-        result, resolution = sim.getVisionSensorDepth(visionSensor_handle[i])
-        depthBuffer, resolution = result
-        depthArray = np.array(depthBuffer, dtype=np.float64)
-        if len(resolution) == 2:
-            depthArray = depthArray.reshape(resolution)
-        nearClip = sim.getObjectFloatParam(
-            visionSensor_handle, sim.visionfloatparam_near_clipping
-        )
-        farClip = sim.getObjectFloatParam(
-            visionSensor_handle, sim.visionfloatparam_far_clipping
-        )
-        realDepth = nearClip + (farClip - nearClip) * depthArray
-        valid_mask = realDepth < (farClip - 1e-4)
-        if np.any(valid_mask):
-            minDist = np.min(realDepth[valid_mask])
-            if np.isfinite(minDist):
-                ro_i = minDist
-                print(f"[Drone{i+1}] VisionSensorで検知: ro_i = {ro_i:.2f} m")
-            else:
-                print(f"[Drone{i+1}] VisionSensor: 有効な物体なし")
-        else:
-            print(f"[Drone{i+1}] VisionSensor: 物体未検知")
-            print(f"中心の距離: {ro_i:.3f} m")
+def coodinate_target(j,ro_i):
+    height,width=256,256
+    fov_y = sim.getObjectFloatParam(visionSensor_handles[j], sim.visionfloatparam_perspective_angle)
+    aspect = width / height
+    fov_x = 2 * math.atan(math.tan(fov_y / 2) * aspect)
+    depth_buffer = sim.getVisionSensorDepthBuffer(visionSensor_handles[j])
+    depth_image = np.array(depth_buffer).reshape(height, width)
+    ro_i = depth_image[height//2, width//2]  # 中央ピクセルの距離
 
-        visionSensor_orientation = sim.getObjectOrientation(visionSensor_handle[i], -1)
-        yaw_angle = visionSensor_orientation[2]
-        vision_direction = np.array([np.cos(yaw_angle), np.sin(yaw_angle)])
-        vec = vision_direction * ro_i
-        print(
-            f"[Drone{i+1}] VisionSensor値からvec計算: ro_i = {ro_i:.2f} m, 角度 = {np.degrees(yaw_angle):.1f}°"
-        )
-    return vec, ro_i
+    # 正規化座標
+    nx = (width//2 / width) - 0.5
+    ny = 0.5 - (height//2 / height)
+
+    # カメラ空間座標
+    x_cam = ro_i * math.tan(fov_x / 2) * 2 * nx
+    y_cam = ro_i * math.tan(fov_y / 2) * 2 * ny
+    z_cam = ro_i
+
+    # ワールド座標変換
+    local_pos = [x_cam, y_cam, z_cam]
+    sensor_matrix = sim.getObjectMatrix(visionSensor_handles[j], -1)
+    world_pos = sim.multiplyVector(sensor_matrix, local_pos)
+    print(f"Agent{j+1} visionSensor 座標変換成功: 座標 =[{world_pos[0]:.2f}, {world_pos[1]:.2f}]")
+    return world_pos

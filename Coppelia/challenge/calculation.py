@@ -4,7 +4,6 @@
 from parameter import R, Omega, frame_time
 import numpy as np
 
-
 def calculate_u(
     d_i,
     ro_i,

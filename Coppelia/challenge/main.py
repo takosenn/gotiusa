@@ -19,7 +19,6 @@ ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )
 
-
 # --- 再生/停止ボタンのみ ---
 class AnimationControl:
     def __init__(self, anim):
@@ -44,3 +43,4 @@ plt.show()
 # シミュレーション停止
 print("Stopping simulation")
 sim.stopSimulation()
+init()
