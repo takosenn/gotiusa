@@ -8,6 +8,7 @@ from matplotlib.widgets import Button
 from matplotlib.lines import Line2D
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import time
+import array
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
 
@@ -38,7 +39,7 @@ sim = client.require("sim")
 # 各Agentの緑の球(target)のハンドル
 for i in range(num_agents):
     object_name = f"Quadcopter[{i+1}]"
-    Agent_handle = sim.getObjectHandle(f"/{object_name}/target")
+    Agent_handle = sim.getObject(f"/{object_name}/target")
     Agent_handles.append(Agent_handle)
     print(f"取得: {object_name}")
 
@@ -50,7 +51,7 @@ for i in range(num_agents):
     print(f"取得: {vision_sensor_name}")
 
 # 中央のtargetのハンドル
-target_handle = sim.getObjectHandle("/Quadcopter[0]/target")
+target_handle = sim.getObject("/Quadcopter[0]/target")
 print("取得: Quadcopter[0]")
 
 # シミュレーション開始
@@ -146,6 +147,16 @@ e_i_1_integral = [0.0 for _ in range(num_agents)]
 e_i_2_integral = [0.0 for _ in range(num_agents)]
 
 
+def get_distance_from_vision_sensor(visionSensor_handle):
+    result, state, aux = sim.readVisionSensor(visionSensor_handle)
+    if aux and len(aux) > 1 and len(aux[1]) > 0:
+        depth_buffer = aux[1]
+        ro_i = min(depth_buffer)
+        return ro_i
+    else:
+        return None  # 取得失敗時
+
+
 def animate(i):
     global target_pos, target_velocity
     # targetのランダムウォーク
@@ -168,12 +179,14 @@ def animate(i):
 
     for j in range(num_agents):
         # --- visionSensorから距離取得 ---
-        a=sim.handleVisionSensor(visionSensor_handles[j])  
-        result = sim.getVisionSensorDepth(visionSensor_handles[j],1,[0,0],[0,0])
+        result = sim.getVisionSensorDepth(visionSensor_handles[j],0,[0,0],[0,0])
         if isinstance(result, tuple) and len(result) == 2:
             depth_bytes, resolution = result    #resolutionは解像度[256,256]を表す
             # bytes → float32配列に変換
             floatingNumbers = sim.unpackFloatTable(depth_bytes , 0,  0,  0)
+            # bytes → float32配列に変換
+            #arr = array.array("f")
+            #arr.frombytes(floatingNumbers)
             if len(floatingNumbers) > 0 :
                 ro_i = min(floatingNumbers)  # 画面内の最短距離[m]
                 # もし中心ピクセルだけ使いたい場合

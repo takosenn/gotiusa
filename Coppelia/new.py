@@ -38,19 +38,20 @@ sim = client.require("sim")
 # 各Agentの緑の球(target)のハンドル
 for i in range(num_agents):
     object_name = f"Quadcopter[{i+1}]"
-    Agent_handle = sim.getObjectHandle(f"/{object_name}/target")
+    Agent_handle = sim.getObject(f"/{object_name}/target")
     Agent_handles.append(Agent_handle)
     print(f"取得: {object_name}")
 
 # --- 追加: 各AgentのvisionSensorのハンドル取得 ---
+proximitySensor_handles = []
 for i in range(num_agents):
-    vision_sensor_name = f"Quadcopter[{i+1}]"
-    visionSensor_handle = sim.getObjectHandle(f"/{vision_sensor_name}/visionSensor")
-    visionSensor_handles.append(visionSensor_handle)
-    print(f"取得: {vision_sensor_name}")
+    proximity_sensor_name = f"Quadcopter[{i+1}]"
+    proximitySensor_handle = sim.getObjectHandle(f"/{proximity_sensor_name}/proximitySensor")
+    proximitySensor_handles.append(proximitySensor_handle)
+    print(f"取得: {proximity_sensor_name}")
 
 # 中央のtargetのハンドル
-target_handle = sim.getObjectHandle("/Quadcopter[0]/target")
+target_handle = sim.getObject("/Quadcopter[0]/target")
 print("取得: Quadcopter[0]")
 
 # シミュレーション開始
@@ -146,6 +147,16 @@ e_i_1_integral = [0.0 for _ in range(num_agents)]
 e_i_2_integral = [0.0 for _ in range(num_agents)]
 
 
+def get_distance_from_vision_sensor(visionSensor_handle):
+    result, state, aux = sim.readVisionSensor(visionSensor_handle)
+    if aux and len(aux) > 1 and len(aux[1]) > 0:
+        depth_buffer = aux[1]
+        ro_i = min(depth_buffer)
+        return ro_i
+    else:
+        return None  # 取得失敗時
+
+
 def animate(i):
     global target_pos, target_velocity
     # targetのランダムウォーク
@@ -167,30 +178,19 @@ def animate(i):
         animate.prev_target_pos = np.array([x, y])
 
     for j in range(num_agents):
-        # --- visionSensorから距離取得 ---
-        a=sim.handleVisionSensor(visionSensor_handles[j])  
-        result = sim.getVisionSensorDepth(visionSensor_handles[j],1,[0,0],[0,0])
-        if isinstance(result, tuple) and len(result) == 2:
-            depth_bytes, resolution = result    #resolutionは解像度[256,256]を表す
-            # bytes → float32配列に変換
-            floatingNumbers = sim.unpackFloatTable(depth_bytes , 0,  0,  0)
-            if len(floatingNumbers) > 0 :
-                ro_i = min(floatingNumbers)  # 画面内の最短距離[m]
-                # もし中心ピクセルだけ使いたい場合
-                # width, height = resolution
-                # center_idx = (height // 2) * width + (width // 2)
-                # ro_i = arr[center_idx]
-                print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
+        # --- proximitySensorから距離取得 ---
+        result = sim.checkProximitySensor(proximitySensor_handles[j], target_handle)
+        if isinstance(result, tuple) and len(result) >= 2:
+            detected, detectedPoint = result[0], result[1]
+            if detected:
+                ro_i = np.linalg.norm(detectedPoint)
+                print(f"Agent{j+1} proximitySensor 測定成功: 距離 = {ro_i:.3f} [m]")
             else:
-                # データが空の場合
                 ro_i = np.linalg.norm(agent_positions[j] - np.array([x, y]))
-                print(
-                    f"aAgent{j+1} visionSensor 測定失敗: 距離 = {ro_i:.3f} [m] (計算値)"
-                )
+                print(f"Agent{j+1} proximitySensor 測定失敗: 距離 = {ro_i:.3f} [m] (計算値)")
         else:
-            # 取得失敗時
             ro_i = np.linalg.norm(agent_positions[j] - np.array([x, y]))
-            print(f"Agent{j+1} visionSensor 測定失敗: 距離 = {ro_i:.3f} [m] (計算値)")
+            print(f"aAgent{j+1} proximitySensor 測定失敗: 距離 = {ro_i:.3f} [m] (計算値)")
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
 
         vec = agent_positions[j] - np.array([x, y])  # vecは他で使うので計算

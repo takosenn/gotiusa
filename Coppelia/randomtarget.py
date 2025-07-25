@@ -1,9 +1,6 @@
-# targetとAgentが合体
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from matplotlib.patches import Circle
 import matplotlib
 from matplotlib.widgets import Button
 from matplotlib.lines import Line2D
@@ -11,12 +8,11 @@ from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 matplotlib.rcParams["font.family"] = "MS Gothic"  # Windows標準の日本語フォントを指定
 
-
 # CoppeliaSim 接続
 client = RemoteAPIClient()
 sim = client.require("sim")
 
-# ドローン Agent数 4台
+# ドローン Agent数 6台
 num_agents = 6
 drone_handles = []
 
@@ -27,7 +23,9 @@ for i in range(num_agents):
         f"/{object_name}/target"
     )  # シーン内のオブジェクト名に合わせて修正
     drone_handles.append(drone_handle)
+    visionSensorHandles = [sim.getObject(f"/{object_name}/visionSensor")]
     print("取得: Agent")
+    print("取得: visionSensor")
 
 # Targetオブジェクト取得（ここをループ外で1回だけ！）
 target_handle = sim.getObject(
@@ -35,13 +33,14 @@ target_handle = sim.getObject(
 )  # シーン内のtarget名に合わせて修正
 print("取得: target")
 
+
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
     print("Simulation started")
-    import time
-
-    time.sleep(1.0)  # 少し待つ
+    # import time
+    # time.sleep(1.0)
+    # 少し待つ
 
 # --- パラメータ設定（論文 Example1 Fig.3 準拠） ---
 center = (0, 0)
@@ -54,7 +53,9 @@ d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.02  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
 Omega = 2 / fps  # Ω=2
-
+# ランダムウォークのパラメータ
+random_walk_sigma = 0.2  # 1フレームごとの速度変化の標準偏差
+max_speed = 1  # targetの最大速度
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -121,7 +122,7 @@ for i in range(num_agents):
 
 # --- アニメーション関数 ---
 # ro_i（targetと各Agentの距離）表示用テキスト（グラフ外右側に配置）
-roi_text = ax.text(
+"""roi_text = ax.text(
     0.05,
     0.10,
     "",
@@ -130,22 +131,18 @@ roi_text = ax.text(
     va="center",
     fontsize=8,
     color="black",
-)
+)"""
 
 # --- targetのランダムウォーク用初期化 ---
 target_pos = np.array([0.0, 0.0])  # 初期位置（円運動の初期値と同じ）
 target_velocity = np.zeros(2)  # 初期速度
 
-# ランダムウォークのパラメータ
-random_walk_sigma = 0.5  # 1フレームごとの速度変化の標準偏差
-max_speed = 1.5  # targetの最大速度（2.0→1.0に変更し追いつきやすく）
-
 
 def init():
     point.set_data([0], [radius])
     agent_dots.set_offsets(agent_positions)
-    roi_text.set_text("")
-    return point, agent_dots, roi_text
+    # roi_text.set_text("")
+    return point, agent_dots  # , roi_text
 
 
 def angular_distance_rad(angle1, angle2):
@@ -188,126 +185,116 @@ def animate(i):
     if not hasattr(animate, "prev_target_pos"):
         animate.prev_target_pos = np.array([x, y])
 
-    roi_lines = []
     for j in range(num_agents):
+        visionSensorHandle = visionSensorHandles[j]
+        print(f"距離は{visionSensorHandle}")
         vec = agent_positions[j] - np.array([x, y])
         ro_i = np.linalg.norm(vec)
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
-        if ro_i > 0:
-            e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
-            e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
-            # ローカル座標系でtargetや隣接エージェントの情報を取得
-            # targetの相対速度（ローカル）
-            agent_velocity = (
-                agent_positions[j] - animate.prev_agent_pos[j]
-            ) / frame_time
-            relative_velocity = agent_velocity - target_velocity
-            relative_velocity_local = np.array(
-                [np.dot(relative_velocity, e_r), np.dot(relative_velocity, e_theta)]
-            )
-            # 隣接エージェントのローカル角度
-            idx_plus = (j + 1) % num_agents
-            idx_minus = (j - 1) % num_agents
-            vec_plus = agent_positions[idx_plus] - agent_positions[j]
-            vec_minus = agent_positions[idx_minus] - agent_positions[j]
-            theta_plus_local = np.arctan2(
-                np.dot(vec_plus, e_theta), np.dot(vec_plus, e_r)
-            )
-            theta_minus_local = np.arctan2(
-                np.dot(vec_minus, e_theta), np.dot(vec_minus, e_r)
-            )
-            theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
-            # ローカル角速度
-            if not hasattr(animate, "prev_theta_local"):
-                animate.prev_theta_local = np.zeros(num_agents)
-            omega_i_local = theta_now_local - animate.prev_theta_local[j]
-            omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
-            animate.prev_theta_local[j] = theta_now_local
-            # 隣接エージェントのローカル角速度
-            if not hasattr(animate, "prev_theta_plus_local"):
-                animate.prev_theta_plus_local = np.zeros(num_agents)
-            if not hasattr(animate, "prev_theta_minus_local"):
-                animate.prev_theta_minus_local = np.zeros(num_agents)
-            omega_i_plus_local = theta_plus_local - animate.prev_theta_plus_local[j]
-            omega_i_plus_local = (omega_i_plus_local + np.pi) % (2 * np.pi) - np.pi
-            omega_i_minus_local = theta_minus_local - animate.prev_theta_minus_local[j]
-            omega_i_minus_local = (omega_i_minus_local + np.pi) % (2 * np.pi) - np.pi
-            animate.prev_theta_plus_local[j] = theta_plus_local
-            animate.prev_theta_minus_local[j] = theta_minus_local
-            # ローカル角距離
-            alpha_i_local = abs(theta_plus_local - theta_now_local)
-            alpha_i_minus_local = abs(theta_minus_local - theta_now_local)
-            # --- 制御プロトコルu_iの計算（ローカル座標系） ---
-            eta = relative_velocity_local[0]
-            eta_norm = abs(eta)
-            if i == 0:
-                e_i_1 = 0
-                e_i_2 = 0
-            else:
-                tau_i_1 = 0.5
-                tau_i_2 = 0.5
-                e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
-                e_i_2 = tau_i_2 * abs(ro_i * (omega_i_local + Omega - omega_i_local))
-            e_i_1_integral[j] += e_i_1 * frame_time
-            e_i_2_integral[j] += e_i_2 * frame_time
-            fi = (d_i * alpha_i_local - d_i * alpha_i_minus_local) / (2 * d_i)
-            zi = (
-                d_i * (omega_i_plus_local - omega_i_local)
-                - d_i * (omega_i_local - omega_i_minus_local)
-            ) / (2 * d_i)
-            u_r = (
-                -ro_i * omega_i_local**2
-                - eta_norm
-                - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
-            )
-            u_theta = (
-                (omega_i_local + Omega + fi) * eta_norm
-                + zi * ro_i
-                + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
-            )
-            if ro_i > 1.5 * R or ro_i < 0.5 * R:
-                u_r = u_r * 0.5
-            else:
-                u_r = u_r * 0.2
-            if alpha_i_local < np.pi / 3.6 or alpha_i_local > np.pi / 2.4:
-                u_theta = u_theta * 2
-            else:
-                u_theta = u_theta * 1
-            # --- ローカル→グローバル変換 ---
-            theta_global = np.arctan2(e_r[1], e_r[0])
-            A = np.array(
-                [
-                    [np.cos(theta_global), -np.sin(theta_global)],
-                    [np.sin(theta_global), np.cos(theta_global)],
-                ]
-            )
-            u_vec_local = np.array([u_r, u_theta])
-            u_vec = A @ u_vec_local
-            agent_positions[j] += u_vec * frame_time
-            # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
-            omega_i_sec = omega_i_local * fps
 
-            # u_r, u_theta, u_vecを[m/sec]に変換
-            u_vec_sec = u_vec * fps
-
-            ro_i_history[j].append(ro_i)
-            eta_i_history[j].append(eta)
-            omega_i_history[j].append(omega_i_sec)  # [rad/sec]で保存
-            alpha_i_history[j].append(alpha_i_local)  # [rad]で保存
-            u_vec_history[j].append(u_vec_sec.copy())
-            # 加速度計算（2フレーム目以降)
-            if len(u_vec_history[j]) > 1:
-                a_vec = (u_vec_history[j][-1] - u_vec_history[j][-2]) / frame_time
-                a_vec_history[j].append(np.linalg.norm(a_vec))  # 大きさ[m/s^2]
-            else:
-                a_vec_history[j].append(0.0)
+        e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
+        e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
+        # ローカル座標系でtargetや隣接エージェントの情報を取得
+        # targetの相対速度（ローカル）
+        agent_velocity = (agent_positions[j] - animate.prev_agent_pos[j]) / frame_time
+        relative_velocity = agent_velocity - target_velocity
+        relative_velocity_local = np.array(
+            [np.dot(relative_velocity, e_r), np.dot(relative_velocity, e_theta)]
+        )
+        # 隣接エージェントのローカル角度
+        idx_plus = (j + 1) % num_agents
+        idx_minus = (j - 1) % num_agents
+        vec_plus = agent_positions[idx_plus] - agent_positions[j]
+        vec_minus = agent_positions[idx_minus] - agent_positions[j]
+        theta_plus_local = np.arctan2(np.dot(vec_plus, e_theta), np.dot(vec_plus, e_r))
+        theta_minus_local = np.arctan2(
+            np.dot(vec_minus, e_theta), np.dot(vec_minus, e_r)
+        )
+        theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
+        # ローカル角速度
+        if not hasattr(animate, "prev_theta_local"):
+            animate.prev_theta_local = np.zeros(num_agents)
+        omega_i_local = theta_now_local - animate.prev_theta_local[j]
+        omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
+        animate.prev_theta_local[j] = theta_now_local
+        # 隣接エージェントのローカル角速度
+        if not hasattr(animate, "prev_theta_plus_local"):
+            animate.prev_theta_plus_local = np.zeros(num_agents)
+        if not hasattr(animate, "prev_theta_minus_local"):
+            animate.prev_theta_minus_local = np.zeros(num_agents)
+        omega_i_plus_local = theta_plus_local - animate.prev_theta_plus_local[j]
+        omega_i_plus_local = (omega_i_plus_local + np.pi) % (2 * np.pi) - np.pi
+        omega_i_minus_local = theta_minus_local - animate.prev_theta_minus_local[j]
+        omega_i_minus_local = (omega_i_minus_local + np.pi) % (2 * np.pi) - np.pi
+        animate.prev_theta_plus_local[j] = theta_plus_local
+        animate.prev_theta_minus_local[j] = theta_minus_local
+        # ローカル角距離
+        alpha_i_local = abs(theta_plus_local - theta_now_local)
+        alpha_i_minus_local = abs(theta_minus_local - theta_now_local)
+        # --- 制御プロトコルu_iの計算（ローカル座標系） ---
+        eta = relative_velocity_local[0]
+        eta_norm = abs(eta)
+        if i == 0:
+            e_i_1 = 0
+            e_i_2 = 0
         else:
-            # ro_i<=0 の場合は値を0で記録し、位置更新しない
-            roi_lines.append(f"Agent{j+1}")
-            roi_lines.append(f"  ro_i={ro_i:.2f} (<=0, skipped)")
-            roi_lines.append(f"  --- skipped ---")
+            tau_i_1 = 0.5
+            tau_i_2 = 0.5
+            e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
+            e_i_2 = tau_i_2 * abs(ro_i * (omega_i_local + Omega - omega_i_local))
+        e_i_1_integral[j] += e_i_1 * frame_time
+        e_i_2_integral[j] += e_i_2 * frame_time
+        fi = (d_i * alpha_i_local - d_i * alpha_i_minus_local) / (2 * d_i)
+        zi = (
+            d_i * (omega_i_plus_local - omega_i_local)
+            - d_i * (omega_i_local - omega_i_minus_local)
+        ) / (2 * d_i)
+        u_r = (
+            -ro_i * omega_i_local**2
+            - eta_norm
+            - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
+        )
+        u_theta = (
+            (omega_i_local + Omega + fi) * eta_norm
+            + zi * ro_i
+            + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
+        )
+        if ro_i > 1.5 * R or ro_i < 0.5 * R:
+            u_r = u_r * 0.5
+        else:
+            u_r = u_r * 0.2
+        if alpha_i_local < np.pi / 3.4 or alpha_i_local > np.pi / 2.6:
+            u_theta = u_theta * 2
+        else:
+            u_theta = u_theta * 1
+        # --- ローカル→グローバル変換 ---
+        theta_global = np.arctan2(e_r[1], e_r[0])
+        A = np.array(
+            [
+                [np.cos(theta_global), -np.sin(theta_global)],
+                [np.sin(theta_global), np.cos(theta_global)],
+            ]
+        )
+        u_vec_local = np.array([u_r, u_theta])
+        u_vec = A @ u_vec_local
+        agent_positions[j] += u_vec * frame_time
+        # omega_i, omega_i_plus, omega_i_minusを[rad/sec]に変換
+        omega_i_sec = omega_i_local * fps
+        # u_r, u_theta, u_vecを[m/sec]に変換
+        u_vec_sec = u_vec * fps
+        ro_i_history[j].append(ro_i)
+        eta_i_history[j].append(eta)
+        omega_i_history[j].append(omega_i_sec)  # [rad/sec]で保存
+        alpha_i_history[j].append(alpha_i_local)  # [rad]で保存
+        u_vec_history[j].append(u_vec_sec.copy())
+        # 加速度計算（2フレーム目以降)
+        if len(u_vec_history[j]) > 1:
+            a_vec = (u_vec_history[j][-1] - u_vec_history[j][-2]) / frame_time
+            a_vec_history[j].append(np.linalg.norm(a_vec))  # 大きさ[m/s^2]
+        else:
+            a_vec_history[j].append(0.0)
 
-    roi_text.set_text("\n".join(roi_lines))
+    # roi_text.set_text("\n".join(roi_lines))
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])
     # --- CoppeliaSim 側ドローン位置同期 ---
@@ -317,7 +304,7 @@ def animate(i):
     # targetも1回だけ更新
     target_pos_3d = [target_pos[0], target_pos[1], 2.0]
     sim.setObjectPosition(target_handle, -1, target_pos_3d)
-    return point, agent_dots, roi_text
+    return point, agent_dots  # , roi_text
 
 
 ani = FuncAnimation(

@@ -18,49 +18,38 @@ sim = client.require("sim")
 
 # ドローン Agent数
 num_agents = 6  # アニメーション・座標・色分け用（全体）
-num_sensors = num_agents  # VisionSensorを持つドローン数（1~6すべて）
 
-# drone_handles, quadcopterHandles の二重管理を解消
 # ドローンハンドルはquadcopterHandlesのみを使う
-quadcopterHandles = [
-    sim.getObject(f"/Quadcopter[{i}]") for i in range(1, num_agents + 1)
-]
-# VisionSensorハンドル
-visionSensorHandles = [
-    sim.getObject(f"/Quadcopter[{i}]/visionSensor") for i in range(1, num_agents + 1)
-]
+quadcopterHandles = [sim.getObject(f"/Quadcopter[{i}]") for i in range(1, num_agents + 1)]# VisionSensorハンドル
+visionSensorHandles = [sim.getObject(f"/Quadcopter[{i}]/visionSensor") for i in range(1, num_agents + 1)]
 # target_handleは中央の緑球のみ
 # 各エージェントのtargetも可視化したい場合
 # target_handles: Quadcopter[1]~[6]のtarget
 
 target_handle = sim.getObject("/Quadcopter[0]/target")
-target_handles = [
-    sim.getObject(f"/Quadcopter[{i}]/target") for i in range(1, num_agents + 1)
-]
+target_handles = [sim.getObject(f"/Quadcopter[{i}]/target") for i in range(1, num_agents + 1)]
 
 print("取得: target")
 
 # 各ドローンごとに履歴を持つ
-prev_dist = [None] * num_sensors
-prev_time = [0.0] * num_sensors
+prev_dist = [None] * num_agents
+prev_time = [0.0] * num_agents
 
 
-# ドローンハンドル取得
-# for i in range(num_agents):
-#     object_name = f"Quadcopter[{i+1}]"  # Quadcopter[1] ~ Quadcopter[4]
-#     drone_handle = sim.getObject(
-#         f"/{object_name}/target"
-#     )  # シーン内のオブジェクト名に合わせて修正
-#     drone_handles.append(drone_handle)
-#     print("取得: Agent")
-
-# Targetオブジェクト取得（ここをループ外で1回だけ！）
-# target_handle = sim.getObject(
-#     "/Quadcopter[0]/target"
-# )  # シーン内のtarget名に合わせて修正
-# print("取得: target")
-
-# シミュレーション開始
+#ドローンハンドル取得
+#for i in range(num_agents):
+#    object_name = f"Quadcopter[{i+1}]"  # Quadcopter[1] ~ Quadcopter[4]
+#    drone_handle = sim.getObject(
+#        f"/{object_name}/target"
+#    )  # シーン内のオブジェクト名に合わせて修正
+#    drone_handles.append(drone_handle)
+#    print("取得: Agent")
+#Targetオブジェクト取得（ここをループ外で1回だけ！）
+#target_handle = sim.getObject(
+#    "/Quadcopter[0]/target"
+#)  # シーン内のtarget名に合わせて修正
+#print("取得: target")
+#シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
     print("Simulation started")
@@ -79,7 +68,6 @@ d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.02  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
 Omega = 2 / fps  # Ω=2
-
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -204,7 +192,7 @@ for i in range(1, num_agents + 1):
 
 
 def animate(i):
-    global target_pos, target_velocity, point, exclude_object_ids
+    global target_pos, target_velocity, point, exclude_object_ids,R
     # targetのランダムウォーク
     # 速度にランダムな変化を加える。一瞬で枠外に飛び出さないように
     target_velocity += np.random.normal(0, random_walk_sigma, size=2)
@@ -226,7 +214,7 @@ def animate(i):
         animate.prev_target_pos = np.array([x, y])
 
     roi_lines = []
-    for j in range(num_sensors):
+    for j in range(num_agents):
         # --- Vision Sensor で距離測定 ---
         visionSensorHandle = visionSensorHandles[j]
         ro_i = None  # VisionSensorで計測した値で上書き
