@@ -1,5 +1,6 @@
-import numpy as np
+# ローカル座標系の値をグローバル座標系に変換する関数
 
+import numpy as np
 
 def coordinate_trans(theta_global, u):
     A = np.array(

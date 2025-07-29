@@ -18,9 +18,10 @@ from parameter import (
     radius_limit,
 )
 from calculation import calculate_u
-from Handle import Agent_handles, target_handle, sim
+from Handle import Agent_handles, target_handle, sim,drone_handles,visionSensor_handles
 from DataStrage import e_i_1_integral, e_i_2_integral
-from visionSensor import distance,coodinate_target
+from visionSensor import distance,coodinate_target#, orientation_to_target
+import math
 
 # --- 初期化 ---
 fig, ax = plt.subplots()
@@ -64,32 +65,12 @@ legend_elements = [
 ]
 ax.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5))
 
-# 各エージェントが隣接エージェント（前後の番号）の座標を知る
-neighbor_indices = [
-    ((i - 1) % num_agents, (i + 1) % num_agents) for i in range(num_agents)
-]
-agent_neighbors = []
-for i in range(num_agents):
-    left_idx = (i - 1) % num_agents
-    right_idx = (i + 1) % num_agents
-    left_pos = agent_positions[left_idx]
-    right_pos = agent_positions[right_idx]
-    agent_neighbors.append((left_pos, right_pos))
-# agent_neighbors[i] = (左隣の座標, 右隣の座標)
-
-for i in range(num_agents):
-    left_idx = (i - 1) % num_agents
-    right_idx = (i + 1) % num_agents
-    dist_left = np.linalg.norm(agent_positions[i] - agent_positions[left_idx])
-    dist_right = np.linalg.norm(agent_positions[i] - agent_positions[right_idx])
-
 # --- アニメーション関数 ---
 
 def init():
     point.set_data([0], [radius])
     agent_dots.set_offsets(agent_positions)
     return point, agent_dots
-
 
 def animate(i):
     global target_pos, target_velocity
@@ -100,6 +81,7 @@ def animate(i):
     speed = np.linalg.norm(target_velocity)
     if speed > max_speed:
         target_velocity = target_velocity / speed * max_speed
+
     # 位置を更新
     target_pos += target_velocity * frame_time
     x, y = target_pos
@@ -112,11 +94,11 @@ def animate(i):
         animate.prev_target_pos = np.array([x, y])
 
     for j in range(num_agents):
-        ro_i=distance(j)
-        world_pos=coodinate_target(j,ro_i)
-        vec = agent_positions[j] - np.array([x, y])
+        ro_i = distance(j)
+        world_pos = np.round(coodinate_target(j,ro_i),2)
+        e_r = (world_pos[0]/math.sqrt(world_pos[0]**2 + world_pos[1]**2),world_pos[1]/math.sqrt(world_pos[0]**2 + world_pos[1]**2))
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
-        e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
+        #e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
         e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
         # ローカル座標系でtargetや隣接エージェントの情報を取得
         # targetの相対速度（ローカル）
@@ -176,6 +158,8 @@ def animate(i):
         # --- ローカル→グローバル変換 ---
         theta_global = np.arctan2(e_r[1], e_r[0])
         u_vec = coordinate_trans(theta_global, u)
+        #Yaw = math.atan2(world_pos[1], world_pos[0])  # グローバル座標系での角度
+        #sim.setObjectOrientation(visionSensor_handles[j], -1, [0, 0, Yaw])
         # 位置を仮更新
         new_pos = agent_positions[j] + u_vec * frame_time
         # targetとの距離を計算
