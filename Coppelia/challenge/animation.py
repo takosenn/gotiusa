@@ -18,9 +18,19 @@ from parameter import (
     radius_limit,
 )
 from calculation import calculate_u
-from Handle import Agent_handles, target_handle, sim,drone_handles,visionSensor_handles
+from Handle import (
+    Agent_handles,
+    target_handle,
+    sim,
+    drone_handles,
+    visionSensor_handles,
+)
 from DataStrage import e_i_1_integral, e_i_2_integral
-from visionSensor import distance,coodinate_target#, orientation_to_target
+from visionSensor import (
+    distance,
+    coodinate_target,
+    sensor_orientation,
+)  # , orientation_to_target
 import math
 
 # --- 初期化 ---
@@ -44,9 +54,12 @@ for i in range(num_agents):
     r = radius_limit  # ランダム性を排除し、一定の半径で配置
     agent_positions[i, 0] = center[0] + r * np.cos(theta)
     agent_positions[i, 1] = center[1] + r * np.sin(theta)
+    #sim.setObjectOrientation(visionSensor_handles[i],  [0 , np.pi*2/(i+1) , 0] , sim.handle_world )
+
 
 # 色分け用カラーマップ（tab10を利用）
-agent_colors = plt.get_cmap("tab10").colors[:num_agents]
+cmap = plt.get_cmap("tab10")
+agent_colors = [cmap(i) for i in range(num_agents)]
 agent_dots = ax.scatter(
     agent_positions[:, 0], agent_positions[:, 1], c=agent_colors, label="Agents"
 )
@@ -158,8 +171,8 @@ def animate(i):
         # --- ローカル→グローバル変換 ---
         theta_global = np.arctan2(e_r[1], e_r[0])
         u_vec = coordinate_trans(theta_global, u)
-        #Yaw = math.atan2(world_pos[1], world_pos[0])  # グローバル座標系での角度
-        #sim.setObjectOrientation(visionSensor_handles[j], -1, [0, 0, Yaw])
+
+        sensor_orientation(j,world_pos)
         # 位置を仮更新
         new_pos = agent_positions[j] + u_vec * frame_time
         # targetとの距離を計算

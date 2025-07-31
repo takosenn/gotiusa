@@ -18,7 +18,7 @@ Omega = 2 / fps  # Ω=2
 radius_limit = 6  # 配置半径（中心からの距離）
 
 # ランダムウォークのパラメータ
-random_walk_sigma = 0.2  # 1フレームごとの速度変化の標準偏差 特にこの数字にこだわりはない))
+random_walk_sigma = 0.2  # 1フレームごとの速度変化の標準偏差 特にこの数字にこだわりはない
 max_speed = 1  # targetの最大速度
 # --- targetのランダムウォーク用初期化 ---
 target_pos = np.array([0.0, 0.0])  # targetの初期位置
