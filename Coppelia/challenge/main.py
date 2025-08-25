@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
-from parameter import frame_time, frames
+from parameter import frame_time, frames,step_counter
 from Handle import sim
 from animation import animate, init, fig
 import japanize_matplotlib      # type: ignore
@@ -11,7 +11,10 @@ import japanize_matplotlib      # type: ignore
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
-    print("Simulation started")
+else:
+    sim.stopSimulation()
+    sim.startSimulation()
+print("Simulation started")
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )

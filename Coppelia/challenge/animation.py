@@ -16,21 +16,13 @@ from parameter import (
     target_pos,
     target_velocity,
     radius_limit,
+    step_counter,
+    read_interval,
 )
 from calculation import calculate_u
-from Handle import (
-    Agent_handles,
-    target_handle,
-    sim,
-    drone_handles,
-    visionSensor_handles,
-)
+from Handle import Agent_handles, target_handle, sim
 from DataStrage import e_i_1_integral, e_i_2_integral
-from visionSensor import (
-    distance,
-    coodinate_target,
-    sensor_orientation,
-)  # , orientation_to_target
+from visionSensor import distance, coodinate_target
 import math
 
 # --- 初期化 ---
@@ -54,7 +46,6 @@ for i in range(num_agents):
     r = radius_limit  # ランダム性を排除し、一定の半径で配置
     agent_positions[i, 0] = center[0] + r * np.cos(theta)
     agent_positions[i, 1] = center[1] + r * np.sin(theta)
-    #sim.setObjectOrientation(visionSensor_handles[i],  [0 , np.pi*2/(i+1) , 0] , sim.handle_world )
 
 
 # 色分け用カラーマップ（tab10を利用）
@@ -80,13 +71,28 @@ ax.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5))
 
 # --- アニメーション関数 ---
 
+
 def init():
     point.set_data([0], [radius])
     agent_dots.set_offsets(agent_positions)
     return point, agent_dots
 
+
 def animate(i):
-    global target_pos, target_velocity
+    global target_pos, target_velocity, step_counter
+    step_counter += 1
+
+    # 初期化処理（一度だけ実行）
+    if not hasattr(animate, "initialized"):
+        animate.prev_agent_pos = agent_positions.copy()
+        animate.prev_target_pos = np.array([0, 0])
+        animate.prev_ro_i = np.ones(num_agents) * 6.0  # 初期値
+        animate.prev_world_pos = agent_positions.copy()
+        animate.prev_theta_local = np.zeros(num_agents)
+        animate.prev_theta_plus_local = np.zeros(num_agents)
+        animate.prev_theta_minus_local = np.zeros(num_agents)
+        animate.initialized = True
+
     # targetのランダムウォーク
     # 速度にランダムな変化を加える。一瞬で枠外に飛び出さないように
     target_velocity += np.random.normal(0, random_walk_sigma, size=2)
@@ -101,17 +107,26 @@ def animate(i):
     point.set_data([x], [y])
     agent_dots.set_offsets(agent_positions)
 
-    if not hasattr(animate, "prev_agent_pos"):
-        animate.prev_agent_pos = agent_positions.copy()
-    if not hasattr(animate, "prev_target_pos"):
-        animate.prev_target_pos = np.array([x, y])
-
     for j in range(num_agents):
-        ro_i = distance(j)
-        world_pos = np.round(coodinate_target(j,ro_i),2)
-        e_r = (world_pos[0]/math.sqrt(world_pos[0]**2 + world_pos[1]**2),world_pos[1]/math.sqrt(world_pos[0]**2 + world_pos[1]**2))
+        if step_counter % read_interval == 0:
+            ro_i = distance(j)  # Agentとtargetの間の距離(visionSensoeで計測)
+            world_pos = np.round(
+                coodinate_target(j, ro_i), 2
+            )  # targetから見た時のAgent[j]の座標
+        else:
+            ro_i = animate.prev_ro_i[j]
+            world_pos = animate.prev_agent_pos[j]
+        animate.prev_ro_i[j] = ro_i
+
+        # Vision Sensorの測定値をセンサー情報として使用（位置の直接代入は行わない）
+        # agent_positions[j] = world_pos[0], world_pos[1]  # この行を削除
+
+        e_r = (
+            world_pos[0] / math.sqrt(world_pos[0] ** 2 + world_pos[1] ** 2),
+            world_pos[1] / math.sqrt(world_pos[0] ** 2 + world_pos[1] ** 2),
+        )
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
-        #e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
+        # e_r = vec / ro_i  # target方向の単位ベクトル(ローカルx軸)
         e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
         # ローカル座標系でtargetや隣接エージェントの情報を取得
         # targetの相対速度（ローカル）
@@ -131,16 +146,10 @@ def animate(i):
         )
         theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
         # ローカル角速度
-        if not hasattr(animate, "prev_theta_local"):
-            animate.prev_theta_local = np.zeros(num_agents)
         omega_i_local = theta_now_local - animate.prev_theta_local[j]
         omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
         animate.prev_theta_local[j] = theta_now_local
         # 隣接エージェントのローカル角速度
-        if not hasattr(animate, "prev_theta_plus_local"):
-            animate.prev_theta_plus_local = np.zeros(num_agents)
-        if not hasattr(animate, "prev_theta_minus_local"):
-            animate.prev_theta_minus_local = np.zeros(num_agents)
         omega_i_plus_local = theta_plus_local - animate.prev_theta_plus_local[j]
         omega_i_plus_local = (omega_i_plus_local + np.pi) % (2 * np.pi) - np.pi
         omega_i_minus_local = theta_minus_local - animate.prev_theta_minus_local[j]
@@ -172,7 +181,6 @@ def animate(i):
         theta_global = np.arctan2(e_r[1], e_r[0])
         u_vec = coordinate_trans(theta_global, u)
 
-        sensor_orientation(j,world_pos)
         # 位置を仮更新
         new_pos = agent_positions[j] + u_vec * frame_time
         # targetとの距離を計算

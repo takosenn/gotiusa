@@ -1,6 +1,13 @@
-from Handle import sim, visionSensor_handles,Agent_handles,drone_handles
+from Handle import sim, visionSensor_handles, Agent_handles, target_handle
 import math
 import numpy as np
+
+
+def get_drone_role(handle):
+    data = sim.readCustomDataBlock(handle, "drone_role")
+    if data is not None:
+        return data  # 文字列に変換
+    return None
 
 
 # 距離測定
@@ -17,7 +24,7 @@ def distance(j):
             sim.setObjectFloatParam(
                 visionSensor_handles[j],
                 sim.visionfloatparam_perspective_angle,
-                math.radians(84.6),
+                math.radians(40),
             )
         else:  # 狭い視野角（30度）
             sim.setObjectFloatParam(
@@ -26,6 +33,16 @@ def distance(j):
                 math.radians(30),
             )
         print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
+
+        role = sim.readCustomDataBlock(visionSensor_handles[j], "drone_role")
+
+        if role == "target":
+            print("これはターゲットです")
+        elif role == "Agent":
+            print("これはAgentです")
+        else:
+            print("識別情報なし")
+
     return ro_i
 
 
@@ -57,12 +74,10 @@ def coodinate_target(j, ro_i):
     print(
         f"Agent{j+1} visionSensor 座標変換成功: 座標 =[{world_pos[0]:.2f}, {world_pos[1]:.2f}]"
     )
-    return world_pos
-
-
-def sensor_orientation(j, world_pos):
     dx = world_pos[0]
     dy = world_pos[1]
     Yaw = np.arctan2(dy, dx)  # グローバル座標系での角度
-    #pose = {dx , dy , 2 , 0 , 0 , Yaw , 1}
-    sim.setObjectPose(Agent_handles[j], sim.handle_parent, [0 , 0 , Yaw])
+    # pose = {dx , dy , 2 , 0 , 0 , Yaw , 1}
+    sim.setObjectOrientation(Agent_handles[j], sim.handle_parent, [0, 0, Yaw])
+
+    return world_pos

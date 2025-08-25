@@ -2,7 +2,7 @@
 
 import numpy as np
 
-num_agents = 6  # ドローン Agent数 6台
+num_agents = 4  # ドローン Agent数 6台
 
 # --- パラメータ設定（論文 Example1 Fig.3 準拠） ---
 center = (0, 0)  # targetの中心位置
@@ -12,7 +12,7 @@ xlim = (-10, 10)  # x軸の限界
 ylim = (-10, 10)  # y軸の限界
 R = 1  # targetとAgentの理想の距離
 d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
-frame_time = 0.2  # interval=50msの場合    アニメーション全体の速度を調整
+frame_time = 0.05  # interval=50msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
 Omega = 2 / fps  # Ω=2
 radius_limit = 6  # 配置半径（中心からの距離）
@@ -23,3 +23,7 @@ max_speed = 1  # targetの最大速度
 # --- targetのランダムウォーク用初期化 ---
 target_pos = np.array([0.0, 0.0])  # targetの初期位置
 target_velocity = np.zeros(2)  # targetの初期速度
+
+#visionSensorの測定を5フレームに1回にする
+step_counter = 0
+read_interval = 5

@@ -7,12 +7,13 @@ from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 
 client = RemoteAPIClient()
 sim = client.require("sim")
-drone_handles:list = []
-Agent_handles:list = []
-visionSensor_handles:list = []
+drone_handles: list = []
+Agent_handles: list = []
+visionSensor_handles: list = []
 
 # 中央のtargetのハンドル
 target_handle = sim.getObject("/Quadcopter[0]/target")
+sim.writeCustomDataBlock(target_handle, "drone_role", "target")
 print("取得: Quadcopter[0]")
 
 # 各Agentの緑の球(target)のハンドル
@@ -23,6 +24,7 @@ for i in range(num_agents):
     print(f"取得: {object_name} ")
     object_name = f"Quadcopter[{i+1}]"
     Agent_handle = sim.getObject(f"/{object_name}/target")
+    sim.writeCustomDataBlock(Agent_handle, "drone_role", "Agent")
     Agent_handles.append(Agent_handle)
     print(f"取得: {object_name} のtarget")
     object_name = f"Quadcopter[{i+1}]"
