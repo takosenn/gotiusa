@@ -111,7 +111,7 @@ def animate(i):
         if step_counter % read_interval == 0:
             ro_i = distance(j)  # Agentとtargetの間の距離(visionSensoeで計測)
             world_pos = np.round(
-                coodinate_target(j, ro_i), 2
+                coodinate_target(j , ro_i , i), 2
             )  # targetから見た時のAgent[j]の座標
         else:
             ro_i = animate.prev_ro_i[j]

@@ -34,20 +34,21 @@ def distance(j):
             )
         print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
 
-        role = sim.readCustomDataBlock(visionSensor_handles[j], "drone_role")
-
-        if role == "target":
-            print("これはターゲットです")
-        elif role == "Agent":
-            print("これはAgentです")
+        #-- 識別情報の読み取り visionSensorで検出した物体のhandleを取得できない。 取得できたらそのhandleをtarget_handleに入れ替える ---
+        role = sim.readCustomDataBlock(j, "drone_role")
+        #print(result)
+        if role is not None:
+            print(f"検出: {role}")
         else:
             print("識別情報なし")
 
     return ro_i
 
+prev_world_pos = [[6,0,2],[0,6,2],[-6,0,2],[0,-6,2]]
 
 # カメラ座標系からワールド座標系への変換 targetを中心とした座標系から見たAgentの座標
-def coodinate_target(j, ro_i):
+def coodinate_target(j , ro_i , i):
+    global prev_world_pos
     height, width = 256, 256
     fov_y = sim.getObjectFloatParam(
         visionSensor_handles[j], sim.visionfloatparam_perspective_angle
@@ -74,10 +75,16 @@ def coodinate_target(j, ro_i):
     print(
         f"Agent{j+1} visionSensor 座標変換成功: 座標 =[{world_pos[0]:.2f}, {world_pos[1]:.2f}]"
     )
-    dx = world_pos[0]
-    dy = world_pos[1]
-    Yaw = np.arctan2(dy, dx)  # グローバル座標系での角度
-    # pose = {dx , dy , 2 , 0 , 0 , Yaw , 1}
-    sim.setObjectOrientation(Agent_handles[j], sim.handle_parent, [0, 0, Yaw])
+    if i==0:
+        #prev_world_pos[j] = world_pos
+        print("移動なし")
+    else:
+        dx = world_pos[0]
+        dy = world_pos[1]
+        #prev_world_pos[j] = world_pos
+        Yaw = np.arctan2(dy, dx)  # グローバル座標系での角度
+        print(f"{180*Yaw/np.pi}度の位置に移動")
+        # pose = {dx , dy , 2 , 0 , 0 , Yaw , 1}
+        sim.setObjectOrientation(Agent_handles[j], sim.handle_parent, [0, 0, Yaw])
 
     return world_pos
