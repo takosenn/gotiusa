@@ -1,4 +1,9 @@
+<<<<<<< Updated upstream
 from Handle import sim, visionSensor_handles, Agent_handles, target_handle
+=======
+from Handle import sim, visionSensor_handles,Agent_handles,drone_handles
+from parameter import radius_limit
+>>>>>>> Stashed changes
 import math
 import numpy as np
 
@@ -24,13 +29,17 @@ def distance(j):
             sim.setObjectFloatParam(
                 visionSensor_handles[j],
                 sim.visionfloatparam_perspective_angle,
+<<<<<<< Updated upstream
                 math.radians(40),
+=======
+                math.radians(30),
+>>>>>>> Stashed changes
             )
         else:  # 狭い視野角（30度）
             sim.setObjectFloatParam(
                 visionSensor_handles[j],
                 sim.visionfloatparam_perspective_angle,
-                math.radians(30),
+                math.radians(20),
             )
         print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
 
@@ -88,3 +97,16 @@ def coodinate_target(j , ro_i , i):
         sim.setObjectOrientation(Agent_handles[j], sim.handle_parent, [0, 0, Yaw])
 
     return world_pos
+<<<<<<< Updated upstream
+=======
+
+
+def sensor_orientation(j, world_pos):
+    dx = world_pos[0]
+    dy = world_pos[1]
+    Yaw = np.arctan2(dy, dx)  # グローバル座標系での角度
+    qw=np.cos(Yaw/2)
+    qz=np.sin(Yaw/2)
+    #pose = [dx + 0.73*np.cos(Yaw) , dy + 0.73 * np.sin(Yaw) , 2 , 0 , 0 ,qw , qz]
+    sim.setObjectOrientation(Agent_handles[j], sim.handle_parent, [0,0,Yaw])
+>>>>>>> Stashed changes
