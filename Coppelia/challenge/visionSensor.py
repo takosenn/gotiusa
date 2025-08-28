@@ -20,11 +20,12 @@ def distance(j):
         # bytes → float32配列に変換
         floatingNumbers = sim.unpackFloatTable(depth_bytes, 0, 0, 0)
         ro_i = min(floatingNumbers)  # 画面内の最短距離[m]
-        if ro_i > 4:  # 広い視野角（84.6度）
+
+        if ro_i > 4:  # 広い視野角（45度）
             sim.setObjectFloatParam(
                 visionSensor_handles[j],
                 sim.visionfloatparam_perspective_angle,
-                math.radians(40),
+                math.radians(45),
             )
         else:  # 狭い視野角（30度）
             sim.setObjectFloatParam(

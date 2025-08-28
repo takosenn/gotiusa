@@ -27,7 +27,6 @@ for i in range(num_agents):
     sim.writeCustomDataBlock(Agent_handle, "drone_role", "Agent")
     Agent_handles.append(Agent_handle)
     print(f"取得: {object_name} のtarget")
-    object_name = f"Quadcopter[{i+1}]"
     visionSensor_handle = sim.getObject(f"/{object_name}/visionSensor")
     visionSensor_handles.append(visionSensor_handle)
     print(f"取得: {object_name}のvisionSensor")
