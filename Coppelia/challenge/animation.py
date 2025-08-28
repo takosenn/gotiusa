@@ -22,7 +22,6 @@ from parameter import (
 from calculation import calculate_u
 from Handle import Agent_handles, target_handle, sim
 from DataStrage import e_i_1_integral, e_i_2_integral
-from visionSensor import distance, coodinate_target
 from LiderSensor import Lidar_distance , Lidar_coodinate_target
 import math
 
