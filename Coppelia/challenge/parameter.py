@@ -17,7 +17,8 @@ fps = 1 / frame_time
 Omega = 2 / fps  # Ω=2
 radius_limit = 6  # 配置半径（中心からの距離）
 
-# ランダムウォークのパラメータ
+
+# targetのランダムウォークのパラメータ
 random_walk_sigma = (
     0.2  # 1フレームごとの速度変化の標準偏差 特にこの数字にこだわりはない
 )
