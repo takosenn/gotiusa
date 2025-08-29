@@ -1,5 +1,4 @@
-from Handle import sim, visionSensor_handles, Agent_handles, target_handle
-from Handle import sim, visionSensor_handles,Agent_handles,drone_handles
+from Handle import sim, Lidar_handles, Agent_handles, target_handle
 from parameter import radius_limit
 import math
 import numpy as np
@@ -14,8 +13,8 @@ def get_drone_role(handle):
 
 # 距離測定
 def distance(j):
-    result = sim.handleVisionSensor(visionSensor_handles[j])
-    result = sim.getVisionSensorDepth(visionSensor_handles[j], 1, [0, 0], [0, 0])
+    result = sim.handleVisionSensor(Lidar_handles[j])
+    result = sim.getVisionSensorDepth(Lidar_handles[j], 1, [0, 0], [0, 0])
     if isinstance(result, tuple) and len(result) == 2:
         depth_bytes, resolution = result  # resolutionは解像度[256,256]を表す
 
@@ -24,13 +23,13 @@ def distance(j):
         ro_i = min(floatingNumbers)  # 画面内の最短距離[m]
         if ro_i > 4:  # 広い視野角（84.6度）
             sim.setObjectFloatParam(
-                visionSensor_handles[j],
+                Lidar_handles[j],
                 sim.visionfloatparam_perspective_angle,
                 math.radians(30),
             )
         else:  # 狭い視野角（30度）
             sim.setObjectFloatParam(
-                visionSensor_handles[j],
+                Lidar_handles[j],
                 sim.visionfloatparam_perspective_angle,
                 math.radians(20),
             )
@@ -53,11 +52,11 @@ def coodinate_target(j , ro_i , i):
     global prev_world_pos
     height, width = 256, 256
     fov_y = sim.getObjectFloatParam(
-        visionSensor_handles[j], sim.visionfloatparam_perspective_angle
+        Lidar_handles[j], sim.visionfloatparam_perspective_angle
     )
     aspect = width / height
     fov_x = 2 * math.atan(math.tan(fov_y / 2) * aspect)  # 水平面の視野角
-    depth_buffer = sim.getVisionSensorDepthBuffer(visionSensor_handles[j])
+    depth_buffer = sim.getVisionSensorDepthBuffer(Lidar_handles[j])
     depth_image = np.array(depth_buffer).reshape(height, width)
     ro_i = depth_image[height // 2, width // 2]  # 中央ピクセルの距離
 
@@ -72,7 +71,7 @@ def coodinate_target(j , ro_i , i):
 
     # ワールド座標変換
     local_pos = [x_cam, y_cam, z_cam]
-    sensor_matrix = sim.getObjectMatrix(visionSensor_handles[j], sim.handle_world)
+    sensor_matrix = sim.getObjectMatrix(Lidar_handles[j], sim.handle_world)
     world_pos = sim.multiplyVector(sensor_matrix, local_pos)
     print(
         f"Agent{j+1} visionSensor 座標変換成功: 座標 =[{world_pos[0]:.2f}, {world_pos[1]:.2f}]"

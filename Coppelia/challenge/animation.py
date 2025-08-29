@@ -22,7 +22,7 @@ from parameter import (
 from calculation import calculate_u
 from Handle import Agent_handles, target_handle, sim
 from DataStrage import e_i_1_integral, e_i_2_integral
-from LiderSensor import Lidar_distance , Lidar_coodinate_target
+from LidarSensor import Lidar_distance , Lidar_coodinate_target
 import math
 
 # --- 初期化 ---
@@ -109,14 +109,12 @@ def animate(i):
 
     for j in range(num_agents):
         if step_counter % read_interval == 0:
-            ro_i = distance(j)  # Agentとtargetの間の距離(visionSensoeで計測)
-            world_pos = np.round(
-                coodinate_target(j , ro_i , i), 2
-            )  # targetから見た時のAgent[j]の座標
+            ro_i = Lidar_distance(j)  # Agentとtargetの間の距離(visionSensoeで計測)
+            world_pos = np.round(Lidar_coodinate_target(j), 2)  # targetから見た時のAgent[j]の座標
         else:
             ro_i = animate.prev_ro_i[j]
             world_pos = animate.prev_agent_pos[j]
-        animate.prev_ro_i[j] = ro_i
+        #animate.prev_ro_i[j] = ro_i
 
         # Vision Sensorの測定値をセンサー情報として使用（位置の直接代入は行わない）
         # agent_positions[j] = world_pos[0], world_pos[1]  # この行を削除

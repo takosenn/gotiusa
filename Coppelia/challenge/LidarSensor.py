@@ -1,12 +1,12 @@
 
-from Handle import sim, Agent_handles, target_handle , visionSensor_handles
+from Handle import sim, Agent_handles, target_handle , Lidar_handles
 import numpy as np
 
-def Liar_distance(j):
+def Lidar_distance(j):
     distances = 6
-    packed = sim.getStringSignal("ranges1{j+1}")
+    packed = [sim.getStringSignal("ranges11"),sim.getStringSignal("ranges12"),sim.getStringSignal("ranges13"),sim.getStringSignal("ranges14")]
     if packed:
-        arr = sim.unpackFloatTable(packed)
+        arr = sim.unpackFloatTable(packed[j])
         if len(arr) % 3 == 0:
             points = np.array(arr).reshape(-1, 3)
             distances = np.linalg.norm(points, axis=1)
@@ -20,15 +20,14 @@ def Liar_distance(j):
         else:
             distances = np.array([])
     else:
-        distances = np.arrau([])
+        distances = np.array([])
     return distances
 
 
-def Lidar_coodinate_target(j, ro_i, i):
-    points = None
-    packed = sim.getStringSignal("hokuyo_data")
+def Lidar_coodinate_target(j):
+    packed = [sim.getStringSignal("ranges11"),sim.getStringSignal("ranges12"),sim.getStringSignal("ranges13"),sim.getStringSignal("ranges14")]
     if packed:
-        arr = sim.unpackFloatTable(packed)
+        arr = sim.unpackFloatTable(packed[j])
         if len(arr) % 3 == 0:
             points = np.array(arr).reshape(-1, 3)
             distances = np.linalg.norm(points, axis=1)
