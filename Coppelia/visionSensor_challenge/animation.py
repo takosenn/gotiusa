@@ -57,21 +57,25 @@ class Animation:
             handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5)
         )
 
+        # prev_agent_pos, prev_target_pos などの初期化
+        self.prev_agent_pos = self.agent_positions.copy()
+        self.prev_target_pos = np.array([param.target_pos[0], param.target_pos[1]])
+        self.prev_theta_local = np.zeros(param.num_agents)
+        self.prev_theta_plus_local = np.zeros(param.num_agents)
+        self.prev_theta_minus_local = np.zeros(param.num_agents)
+
     def initial_rending(self):
         return self.point, self.agent_dots, self.agent_positions
 
     def target_position(self):
-        point, agent_dots, agent_positions = self.initial_rending()
         # targetのランダムウォーク
         param.target_velocity += np.random.normal(0, param.random_walk_sigma, size=2)
-        # 最大速度制限
         speed = np.linalg.norm(param.target_velocity)
         if speed > param.max_speed:
             param.target_velocity = param.target_velocity / speed * param.max_speed
-
-        # 位置を更新
         param.target_pos += param.target_velocity * param.frame_time
         x, y = param.target_pos
+        self.point.set_data([x], [y])
         return x, y
 
     def agent_position(self):
@@ -86,15 +90,12 @@ class Animation:
         return agent_positions
 
     def init(self):
-        point, agent_dots, agent_positions = self.initial_rending()
-        point.set_data([0], [param.radius])
-        agent_dots.set_offsets(agent_positions)
-        return point, agent_dots
+        self.point.set_data([param.target_pos[0]], [param.target_pos[1]])
+        self.agent_dots.set_offsets(self.agent_positions)
+        return self.point, self.agent_dots
 
     def animate(self, frame):
-        point, agent_dots, agent_positions = self.initial_rending()
         x, y = self.target_position()
-        agent_positions = self.agent_position()
         for j in range(param.num_agents):
             ro_i = visionSensor(j).visionSensor_min_distance()
             world_pos = np.round(coordinate_target(j, ro_i), 2)
@@ -104,7 +105,7 @@ class Animation:
             )
             e_theta = np.array([-e_r[1], e_r[0]])
             agent_velocity = (
-                agent_positions[j] - self.prev_agent_pos[j]
+                self.agent_positions[j] - self.prev_agent_pos[j]
             ) / param.frame_time
             relative_velocity = agent_velocity - param.target_velocity
             relative_velocity_local = np.array(
@@ -112,8 +113,8 @@ class Animation:
             )
             idx_plus = (j + 1) % param.num_agents
             idx_minus = (j - 1) % param.num_agents
-            vec_plus = agent_positions[idx_plus] - agent_positions[j]
-            vec_minus = agent_positions[idx_minus] - agent_positions[j]
+            vec_plus = self.agent_positions[idx_plus] - self.agent_positions[j]
+            vec_minus = self.agent_positions[idx_minus] - self.agent_positions[j]
             theta_plus_local = np.arctan2(
                 np.dot(vec_plus, e_theta), np.dot(vec_plus, e_r)
             )
@@ -157,22 +158,28 @@ class Animation:
             theta_global = np.arctan2(e_r[1], e_r[0])
             u_vec = coordinate_trans(theta_global, u)
             visionSensor(j).visionSensor_ViewAngle()
-            new_pos = agent_positions[j] + u_vec * param.frame_time
+            new_pos = self.agent_positions[j] + u_vec * param.frame_time
             dist_to_target = np.linalg.norm(new_pos - param.target_pos)
             if dist_to_target >= param.R:
-                agent_positions[j] = new_pos
+                self.agent_positions[j] = new_pos
             else:
                 direction = (new_pos - param.target_pos) / np.linalg.norm(
                     new_pos - param.target_pos
                 )
-                agent_positions[j] = param.target_pos + direction * param.R
+                self.agent_positions[j] = param.target_pos + direction * param.R
 
-        self.prev_agent_pos = agent_positions.copy()
+        self.prev_agent_pos = self.agent_positions.copy()
         self.prev_target_pos = np.array([x, y])
 
         for j in range(param.num_agents):
-            Agents_pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
+            Agents_pos_3d = [
+                self.agent_positions[j][0],
+                self.agent_positions[j][1],
+                2.0,
+            ]
             sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
         target_pos_3d = [param.target_pos[0], param.target_pos[1], 2.0]
         sim.setObjectPosition(target_handle, -1, target_pos_3d)
-        return point, agent_dots
+        self.agent_dots.set_offsets(self.agent_positions)
+        self.point.set_data([param.target_pos[0]], [param.target_pos[1]])
+        return self.point, self.agent_dots

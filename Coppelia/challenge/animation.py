@@ -41,16 +41,12 @@ ax.set_aspect("equal")
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 ax.set_title("Example1")
-
 # 目標の軌道
 (point,) = ax.plot([0], [radius], "ro", label="Target")
-
 # --- エージェントの初期角度を第i象限に配置（i=1:第1象限, i=2:第2象限, ...） ---
 agent_positions = np.zeros((num_agents, 2))
-
 for i in range(num_agents):
     theta = 2 * np.pi * i / num_agents
-
     r = radius_limit  # ランダム性を排除し、一定の半径で配置
     agent_positions[i, 0] = center[0] + r * np.cos(theta)
     agent_positions[i, 1] = center[1] + r * np.sin(theta)
@@ -76,14 +72,16 @@ legend_elements = [
     )
     for i in range(num_agents)
 ]
-ax.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5))
-
-# --- アニメーション関数 ---
 
 def init():
+    ax.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5))
     point.set_data([0], [radius])
     agent_dots.set_offsets(agent_positions)
     return point, agent_dots
+
+# --- アニメーション関数 ---
+
+
 
 def animate(i):
     global target_pos, target_velocity

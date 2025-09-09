@@ -4,12 +4,11 @@
 
 from parameter import num_agents
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
-
 client = RemoteAPIClient()
 sim = client.require("sim")
-drone_handles:list = []
-Agent_handles:list = []
-visionSensor_handles:list = []
+drone_handles: list = []
+Agent_handles: list = []
+visionSensor_handles: list = []
 
 # 中央のtargetのハンドル
 target_handle = sim.getObject("/Quadcopter[0]/target")
