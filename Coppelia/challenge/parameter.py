@@ -10,7 +10,7 @@ radius = 20  # targetの軌道半径
 frames = 10000  # アニメーションのフレーム数
 xlim = (-10, 10)  # x軸の限界
 ylim = (-10, 10)  # y軸の限界
-R = 1  # targetとAgentの理想の距離
+R = 2  # targetとAgentの理想の距離
 d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度
 frame_time = 0.2  # interval=80msの場合    アニメーション全体の速度を調整
 fps = 1 / frame_time
