@@ -121,27 +121,16 @@ def sensor_orientation(j, world_pos):
 
     #sim.setObjectOrientation(Agent_handles[j],sim.handle_parent,[0, 0, rotation_angle])
     # ずれが大きい場合Yawを調整
-    if dx > 10:  # 10ピクセル以上ずれていたら
-        current_orientation = sim.getObjectOrientation(
-            Agent_handles[j], sim.handle_parent
-        )
-        #ずれの向きに応じてYawを微調整（例: 1度ずつ）
-        delta_yaw = np.sign(dx)*math.radians(4)
-        new_yaw = delta_yaw + current_orientation[2]
-        sim.setObjectOrientation(
-            Agent_handles[j],
-            sim.handle_parent,
-            [0, 0, new_yaw],
-        )
-    elif dx < -10:
-        current_orientation = sim.getObjectOrientation(
-            Agent_handles[j], sim.handle_parent
-        )
-        #ずれの向きに応じてYawを微調整（例: 1度ずつ）
-        delta_yaw = np.sign(dx)*math.radians(4)
-        new_yaw = delta_yaw + current_orientation[2]
-        sim.setObjectOrientation(
-            Agent_handles[j],
-            sim.handle_parent,
-            [0, 0, new_yaw],
-        )
+    
+    current_orientation = sim.getObjectOrientation(
+        Agent_handles[j], sim.handle_parent
+    )
+    #ずれの向きに応じてYawを微調整（例: 1度ずつ）
+    delta_yaw = np.sign(dx)*math.radians(45*dx/256)
+    new_yaw = delta_yaw + current_orientation[2]
+    sim.setObjectOrientation(
+        Agent_handles[j],
+        sim.handle_parent,
+        [0, 0, new_yaw],
+    )
+    

@@ -10,6 +10,9 @@ drone_handles: list = []
 Agent_handles: list = []
 visionSensor_handles: list = []
 
+host='127.0.0.1'
+port=23000
+
 # 中央のtargetのハンドル
 target_handle = sim.getObject("/Quadcopter[0]/target")
 print("取得: Quadcopter[0]")
