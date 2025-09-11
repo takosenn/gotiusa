@@ -6,6 +6,7 @@ from neighbors_info import neighbors_info
 from initial_image import initial_image
 import csv
 from datetime import datetime
+from simulation import Simulation
 
 # データ保存時の日時
 current_time = datetime.now()
@@ -82,6 +83,9 @@ def animate(i):
         u_vec = result[0] * e_r + result[1] * e_theta
         # 位置更新（タイムステップdt=0.05）
         agent_positions[j] += u_vec * frame_time
+
+        position_synchronization = Simulation()
+        position_synchronization.Position_Synchronization()
 
         #with open(f"data_x{current_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv", mode="a", newline="" , encoding="utf-8") as file_x:
         #    writer = csv.writer(file_x)

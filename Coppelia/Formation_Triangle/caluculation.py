@@ -10,7 +10,6 @@ def switch_R():
     global R
     R = [4,4,4,4,4,4]
 
-
 def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i,eta_norm):
     timer = threading.Timer(10 , switch_R)
     timer.start()
