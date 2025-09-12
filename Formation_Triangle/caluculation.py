@@ -12,8 +12,8 @@ def switch_R():
 
 
 def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i,eta_norm):
-    timer = threading.Timer(10 , switch_R)
-    timer.start()
+    #timer = threading.Timer(10 , switch_R)
+    #timer.start()
     # --- fi, zi の計算と表示 ---
     fi = (d_i[j] * alpha_i - d_i[j] * alpha_i_minus) / (2 * d_i[j])
     zi = (d_i[j] * (omega_i_plus - omega_i) - d_i[j] * (omega_i - omega_i_minus)) / (2 * d_i[j])
