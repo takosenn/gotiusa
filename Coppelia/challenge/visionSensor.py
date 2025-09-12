@@ -36,7 +36,12 @@ def distance(j):
         #    )
         #    print(f"Agent{j+1} Yawを90度回転させました")
         # ro_i = min(visionSenosr_distance)  # 画面内の最短距離[m] カメラから見た物体までの距離
-        
+    
+        New_result = sim.handleVisionSensor(visionSensor_handles[j])
+        #New_result = sim.setObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_near_clipping, 0.1)
+        New_result = sim.setObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_far_clipping, 10)
+        New_result = sim.getObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_far_clipping)
+        print(New_result)
         if ro_i > 4:  # 広い視野角（84.6度）
             sim.setObjectFloatParam(
                 visionSensor_handles[j],
@@ -49,8 +54,6 @@ def distance(j):
                 sim.visionfloatparam_perspective_angle,
                 math.radians(45),
             )
-        sim.setObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_near_clipping, 0.1)
-        sim.setObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_far_clipping, ro_i + 0.5)
         print(f"Agent{j+1} visionSensor 測定成功: 距離 = {ro_i:.3f} [m]")
         distance.prev_ro_i = ro_i.copy()
     return ro_i
