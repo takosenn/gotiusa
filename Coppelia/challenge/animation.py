@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+import time
 from coordinate_transformation import coordinate_trans
 from parameter import (
     center,
@@ -22,6 +23,7 @@ from Handle import (
     Agent_handles,
     target_handle,
     sim,
+    client,
     drone_handles,
     visionSensor_handles,
 )
@@ -84,6 +86,7 @@ def init():
 
 
 def animate(i):
+    client.setStepping(True) # 必要に応じて同期モードを有効にする
     global target_pos, target_velocity
     # targetのランダムウォーク
     # 速度にランダムな変化を加える。一瞬で枠外に飛び出さないように
@@ -185,7 +188,9 @@ def animate(i):
         sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
         # Coppeliasim側でtargetの緑の球(target)の位置同期
         target_pos_3d = [target_pos[0], target_pos[1], 2.0]
-        sim.setObjectPosition(target_handle, -1, target_pos_3d)            
+        sim.setObjectPosition(target_handle, -1, target_pos_3d)
+        client.step()            
+        time.sleep(0.05)
 
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
 from parameter import frame_time, frames
-from Handle import sim , client , RemoteAPIClient
+from Handle import sim , client
 from animation import animate, init, fig
 import japanize_matplotlib      # type: ignore
 import time
