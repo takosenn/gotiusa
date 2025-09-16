@@ -19,20 +19,8 @@ from parameter import (
     radius_limit,
 )
 from calculation import calculate_u
-from Handle import (
-    Agent_handles,
-    target_handle,
-    sim,
-    client,
-    drone_handles,
-    visionSensor_handles,
-)
 from DataStrage import e_i_1_integral, e_i_2_integral
-from visionSensor import (
-    distance,
-    coodinate_target,
-    sensor_orientation,
-)  # , orientation_to_target
+from simulation import Simulation
 import math
 
 # --- 初期化 ---
@@ -83,10 +71,10 @@ def init():
 
 # --- アニメーション関数 ---
 
-
+sim = Simulation()
+sim.get_handles()
 
 def animate(i):
-    client.setStepping(True) # 必要に応じて同期モードを有効にする
     global target_pos, target_velocity
     # targetのランダムウォーク
     # 速度にランダムな変化を加える。一瞬で枠外に飛び出さないように
@@ -108,8 +96,8 @@ def animate(i):
         animate.prev_target_pos = np.array([x, y])
 
     for j in range(num_agents):
-        ro_i = distance(j)
-        world_pos = np.round(coodinate_target(j,ro_i),2)
+        ro_i = sim.get_visionSensor_distance(j)
+        world_pos = np.round(sim.coodinate_target(j),2)
         e_r = (world_pos[0]/math.sqrt(world_pos[0]**2 + world_pos[1]**2),world_pos[1]/math.sqrt(world_pos[0]**2 + world_pos[1]**2))
         # ローカル座標系の定義: x軸=target方向, y軸=その直交方向
         #e_r = vec / ro_i  # target方向の単位ベクトル（ローカルx軸）
@@ -173,7 +161,7 @@ def animate(i):
         theta_global = np.arctan2(e_r[1], e_r[0])
         u_vec = coordinate_trans(theta_global, u)
 
-        sensor_orientation(j,world_pos)
+        sim.visionSenor_orientation(j)
         # 位置を仮更新
         new_pos = agent_positions[j] + u_vec * frame_time
         # targetとの距離を計算
@@ -185,11 +173,11 @@ def animate(i):
             direction = (new_pos - target_pos) / np.linalg.norm(new_pos - target_pos)
             agent_positions[j] = target_pos + direction * R
         Agents_pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
-        sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
+        sim.set_agent_position(j , Agents_pos_3d)
         # Coppeliasim側でtargetの緑の球(target)の位置同期
         target_pos_3d = [target_pos[0], target_pos[1], 2.0]
-        sim.setObjectPosition(target_handle, -1, target_pos_3d)
-        client.step()            
+        sim.set_target_position(target_pos_3d)
+        sim.step_simulation()         
         time.sleep(0.05)
 
     animate.prev_agent_pos = agent_positions.copy()

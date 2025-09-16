@@ -3,10 +3,7 @@ import time
 import numpy as np
 import math
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
-
-num_agents = 6
-radius_limit = 6
-center = (0 , 0)
+from parameter import num_agents , radius_limit , center
 
 class Simulation:
     def __init__(self , host = '127.0.0.1' , port = 23000):
@@ -34,14 +31,14 @@ class Simulation:
     def step_simulation(self):
         self.client.step()
     
-    def get_handles(self , Agents_names , target_name):
+    def get_handles(self):
         try:
             print("ハンドルの取得を開始します")
-            self.target_handle = self.sim.getObject(target_name)
+            self.target_handle = self.sim.getObject("/Quadcopter[0]/target")
             print("Targetのハンドルを取得しました")
-            self.Agent_hansles = [self.sim.getObject(f"/{Agents_names[{i+1}]}/target") for i in range(num_agents)]
+            self.Agent_handles = [self.sim.getObject(f"/Quadcopter[{i+1}]/target") for i in range(num_agents)]
             print("Agentのハンドルを取得しました")
-            self.visionSensor_handles = [self.sim.getObject(f"/{Agents_names[{i+1}]}/visionSensor") for i in range(num_agents)]
+            self.visionSensor_handles = [self.sim.getObject(f"/Quadcopter[{i+1}]/visionSensor") for i in range(num_agents)]
             print("visionSensorのハンドルを取得しました")
             print("すべてのハンドルの取得に成功しました")
         except Exception as e:
@@ -74,7 +71,7 @@ class Simulation:
         return min(floatingNumbers)
     
     def set_visionSensor_param(self , j):
-        ro_i = self.get_visionsensor_distance(j)
+        ro_i = self.get_visionSensor_distance(j)
         if ro_i > 4:  # 広い視野角（84.6度）
             self.sim.setObjectFloatParam(
                 self.visionSensor_handles[j],
@@ -122,6 +119,7 @@ class Simulation:
         return world_pos
     
     def visionSenor_orientation(self , j):
+        self.set_visionSensor_param(j)
         world_pos = self.coodinate_target(j)
         dx = world_pos[0]
         dy = world_pos[1]

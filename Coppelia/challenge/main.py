@@ -3,25 +3,22 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
-from parameter import frame_time, frames
-from Handle import sim , client
-from animation import animate, init, fig
 import japanize_matplotlib      # type: ignore
-import time
-        
-#client.setStepping(True) # 必要に応じて同期モードを有効にする
+
+from parameter import frame_time, frames
+from animation import animate, init, fig
+from simulation import Simulation
+
+sim = Simulation()
+sim.connect()
 
 # シミュレーション開始
-if sim.getSimulationState() == sim.simulation_stopped:
-    sim.startSimulation()
-    print("Simulation started")
+sim.start_simulation()
 
-#client.step()
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )
 
-#time.sleep(0.05)
 # --- 再生/停止ボタンのみ ---
 class AnimationControl:
     def __init__(self, anim):
@@ -45,6 +42,4 @@ button.on_clicked(control.toggle)
 plt.show()
 
 # シミュレーション停止
-print("Stopping simulation")
-sim.stopSimulation()
-init()
+sim.stop_simulation()
