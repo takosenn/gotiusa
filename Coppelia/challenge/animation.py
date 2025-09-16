@@ -181,15 +181,20 @@ def animate(i):
             # R未満なら、targetから距離Rの位置に補正
             direction = (new_pos - target_pos) / np.linalg.norm(new_pos - target_pos)
             agent_positions[j] = target_pos + direction * R
+        Agents_pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
+        sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
+        # Coppeliasim側でtargetの緑の球(target)の位置同期
+        target_pos_3d = [target_pos[0], target_pos[1], 2.0]
+        sim.setObjectPosition(target_handle, -1, target_pos_3d)            
 
     animate.prev_agent_pos = agent_positions.copy()
     animate.prev_target_pos = np.array([x, y])
 
     # Coppeliasim側でAgentの緑の球(target)の位置同期
-    for j in range(num_agents):
-        Agents_pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
-        sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
-    # Coppeliasim側でtargetの緑の球(target)の位置同期
-    target_pos_3d = [target_pos[0], target_pos[1], 2.0]
-    sim.setObjectPosition(target_handle, -1, target_pos_3d)
+    #for j in range(num_agents):
+    #    Agents_pos_3d = [agent_positions[j][0], agent_positions[j][1], 2.0]
+    #    sim.setObjectPosition(Agent_handles[j], -1, Agents_pos_3d)
+    ## Coppeliasim側でtargetの緑の球(target)の位置同期
+    #target_pos_3d = [target_pos[0], target_pos[1], 2.0]
+    #sim.setObjectPosition(target_handle, -1, target_pos_3d)
     return point, agent_dots
