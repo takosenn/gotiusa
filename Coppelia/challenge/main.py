@@ -9,19 +9,19 @@ from animation import animate, init, fig
 import japanize_matplotlib      # type: ignore
 import time
         
-client.setStepping(True) # 必要に応じて同期モードを有効にする
+#client.setStepping(True) # 必要に応じて同期モードを有効にする
 
 # シミュレーション開始
 if sim.getSimulationState() == sim.simulation_stopped:
     sim.startSimulation()
     print("Simulation started")
 
-client.step()
+#client.step()
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
 )
 
-time.sleep(0.05)
+#time.sleep(0.05)
 # --- 再生/停止ボタンのみ ---
 class AnimationControl:
     def __init__(self, anim):
