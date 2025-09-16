@@ -9,8 +9,8 @@ radius_limit = 6
 center = (0 , 0)
 
 class Simulation:
-    def __init__(self , host = '127.0.0.1' , port = 23000):
-        self.client = RemoteAPIClient(host, port)
+    def __init__(self):
+        self.client = RemoteAPIClient()
         self.sim = self.client.getObject('sim')
         self.Agent_handles = []
         self.target_handle = -1
@@ -34,18 +34,22 @@ class Simulation:
     def step_simulation(self):
         self.client.step()
     
-    def get_handles(self , Agents_names , target_name):
+    def get_handles(self):
         try:
             print("ハンドルの取得を開始します")
-            self.target_handle = self.sim.getObject(target_name)
+            self.target_handle = self.sim.getObject(f"/target")
             print("Targetのハンドルを取得しました")
-            self.Agent_hansles = [self.sim.getObject(f"/{Agents_names[{i+1}]}/target") for i in range(num_agents)]
-            print("Agentのハンドルを取得しました")
-            self.visionSensor_handles = [self.sim.getObject(f"/{Agents_names[{i+1}]}/visionSensor") for i in range(num_agents)]
-            print("visionSensorのハンドルを取得しました")
+            for i in range(num_agents):
+                object_name = f"Quadcopter[{i+1}]"
+                self.Agent_hansle = self.sim.getObject(f"/target[{i+1}]")
+                self.Agent_handles.append(self.Agent_handle)
+                print("Agentのハンドルを取得しました")
+                self.visionSensor_handle = self.sim.getObject(f"/{object_name}/visionSensor")
+                self.visionSensor_handles.append(self.visionSensor_handle)
+                print("visionSensorのハンドルを取得しました")
             print("すべてのハンドルの取得に成功しました")
         except Exception as e:
-            print("ハンドル取得に失敗:" , e)
+            print("ハンドル取得に失敗:" , e.args)
 
     def get_all_drone_state(self):
         drone_states = []
