@@ -41,7 +41,7 @@ def distance(j):
         #New_result = sim.setObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_near_clipping, 0.1)
         New_result = sim.setObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_far_clipping, 10)
         New_result = sim.getObjectFloatParam(visionSensor_handles[j] , sim.visionfloatparam_far_clipping)
-        print(New_result)
+        #print(New_result)
         if ro_i > 4:  # 広い視野角（84.6度）
             sim.setObjectFloatParam(
                 visionSensor_handles[j],
