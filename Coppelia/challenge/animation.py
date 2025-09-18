@@ -65,13 +65,13 @@ class Animation:
             # ローカル座標系でtargetや隣接エージェントの情報を取得
             # targetの相対速度（ローカル）
             self.agent_positions[j] = world_pos[:2]
-            print(f"これはself.agent_positionsです{self.agent_positions[j]}")
+            #print(f"これはself.agent_positionsです{self.agent_positions[j]}")
             
             agent_velocity = (np.array(self.agent_positions[j]) - np.array(prev_agent_positions[j])) / frame_time
-            print(f"これはtargetの速度{target_velocity}")
+            print(f"これはagentの速度{agent_velocity}")
             # 相対速度を計算(world_posは対象から見た自身の位置なので、速度はそのまま使える)
             relative_velocity = agent_velocity# - target_velocity
-            
+
             relative_velocity_local = np.array(
                 [np.dot(relative_velocity, e_r), np.dot(relative_velocity, e_theta)]
             )
@@ -81,11 +81,10 @@ class Animation:
             vec_plus = self.agent_positions[idx_plus] - self.agent_positions[j]
             vec_minus = self.agent_positions[idx_minus] - self.agent_positions[j]
             theta_plus_local = np.arctan2(np.dot(vec_plus, e_theta), np.dot(vec_plus, e_r))
-            theta_minus_local = np.arctan2(
-                np.dot(vec_minus, e_theta), np.dot(vec_minus, e_r)
-            )
-            theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
-            # ローカル角速度
+            theta_minus_local = np.arctan2(np.dot(vec_minus, e_theta), np.dot(vec_minus, e_r))
+            theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0            
+            # ローカル角速度 omega_i_local
+            #print(f"これはprev_theta_localです{prev_theta_local[j]}")
             omega_i_local = omega_i_local_calculation(prev_theta_local[j])
             prev_theta_local[j] = theta_now_local
             # 隣接エージェントのローカル角速度
