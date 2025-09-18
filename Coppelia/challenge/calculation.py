@@ -22,8 +22,8 @@ def calculate_u(
         tau_i_1 = 0
         tau_i_2 = 0
     else:
-        tau_i_1 = 0.5
-        tau_i_2 = 0.5
+        tau_i_1 = 2
+        tau_i_2 = 2
     e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
     e_i_2 = tau_i_2 * abs(ro_i * (omega_i_local + Omega - omega_i_local))
 
@@ -34,22 +34,26 @@ def calculate_u(
         d_i * (omega_i_plus_local - omega_i_local)
         - d_i * (omega_i_local - omega_i_minus_local)
     ) / (2 * d_i)
+    #内側に向かう加速度
     u_r = (
         -ro_i * omega_i_local**2
         - eta_norm
         - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
     )
+    #回転する加速度
     u_theta = (
         (omega_i_local + Omega + fi) * eta_norm
         + zi * ro_i
         + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
     )
     if ro_i > 1.5 * R or ro_i < 0.5 * R:
-        u_r = u_r * 1
-    else:
         u_r = u_r * 0.5
-    if alpha_i_local < np.pi / 3.4 or alpha_i_local > np.pi / 2.6:
-        u_theta = u_theta * 2
     else:
+        u_r = u_r * 0.2
+    if alpha_i_local < np.pi / 3.4 or alpha_i_local > np.pi / 2.6:
         u_theta = u_theta * 1
-    return u_r, u_theta
+    else:
+        u_theta = u_theta * 0.5
+    print(f"これはu_rです{u_r}")
+    print(f"これはu_thetaです{u_theta}")
+    return u_r , u_theta
