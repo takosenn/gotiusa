@@ -14,7 +14,6 @@ class Main:
         self.sim.connect()
         self.sim.start_simulation()
         time.sleep(1)  # シミュレーションが安定するまで待つ
-        self.sim.get_handles()
 
         try:
             for i in range(frames):

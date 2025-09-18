@@ -35,6 +35,7 @@ class Animation:
         self.agent_dots = None
 
     def animate(self , i):
+        self.sim.get_handles()
         global target_pos, target_velocity
         # targetのランダムウォーク
         # 速度にランダムな変化を加える。一瞬で枠外に飛び出さないように
@@ -63,11 +64,11 @@ class Animation:
             e_theta = np.array([-e_r[1], e_r[0]])  # ローカルy軸
             # ローカル座標系でtargetや隣接エージェントの情報を取得
             # targetの相対速度（ローカル）
-            self.agent_positions[j] = world_pos
+            self.agent_positions[j] = world_pos[:2]
+            print(f"これはself.agent_positionsです{self.agent_positions[j]}")
             
-
             agent_velocity = (self.agent_positions[j] - prev_agent_positions[j]) / frame_time
-            print(agent_velocity)
+            #print(agent_velocity)
             relative_velocity = agent_velocity - target_velocity
             relative_velocity_local = np.array(
                 [np.dot(relative_velocity, e_r), np.dot(relative_velocity, e_theta)]
