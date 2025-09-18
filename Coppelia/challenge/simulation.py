@@ -44,7 +44,6 @@ class Simulation:
                 self.visionSensor_handle = self.sim.getObject(f"/{object_name}/visionSensor")
                 self.visionSensor_handles.append(self.visionSensor_handle)
                 print(f"Agent{i+1}のtargetハンドルとvisionSensorハンドルを取得しました")
-                print(f"visionSensor_handlesの要素数: {len(self.visionSensor_handles)}")
             print("すべてのハンドルの取得に成功しました")
             for idx, h in enumerate(self.visionSensor_handles):
                 print(f"visionSensor[{idx+1}] handle: {h}")
@@ -66,7 +65,7 @@ class Simulation:
         self.sim.setObjectPosition(self.target_handle, -1, target_pos_3d)
 
     def get_visionSensor_distance(self, j):
-        print(f"j={j}, visionSensor_handlesの長さ={len(self.visionSensor_handles)}")
+        #print(f"j={j}, visionSensor_handlesの長さ={len(self.visionSensor_handles)}")
         result = self.sim.handleVisionSensor(self.visionSensor_handles[j])
         result = self.sim.getVisionSensorDepth(self.visionSensor_handles[j], 1, [0, 0], [0, 0])
         if isinstance(result, tuple) and len(result) == 2:

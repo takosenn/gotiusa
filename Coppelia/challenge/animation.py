@@ -67,9 +67,11 @@ class Animation:
             self.agent_positions[j] = world_pos[:2]
             print(f"これはself.agent_positionsです{self.agent_positions[j]}")
             
-            agent_velocity = (self.agent_positions[j] - prev_agent_positions[j]) / frame_time
-            #print(agent_velocity)
-            relative_velocity = agent_velocity - target_velocity
+            agent_velocity = (np.array(self.agent_positions[j]) - np.array(prev_agent_positions[j])) / frame_time
+            print(f"これはtargetの速度{target_velocity}")
+            # 相対速度を計算(world_posは対象から見た自身の位置なので、速度はそのまま使える)
+            relative_velocity = agent_velocity# - target_velocity
+            
             relative_velocity_local = np.array(
                 [np.dot(relative_velocity, e_r), np.dot(relative_velocity, e_theta)]
             )
