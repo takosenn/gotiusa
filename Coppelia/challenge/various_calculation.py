@@ -2,10 +2,11 @@
 
 import numpy as np
 
-def omega_i_local_calculation(prev_theta_local):
-    theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
+def omega_i_local_calculation(ro_i , agent_velocity):
+    #theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
     # ローカル角速度
-    omega_i_local = theta_now_local - prev_theta_local
+    omega_i_local = agent_velocity[1] / ro_i
+    print(f"これはomega_i_localです{omega_i_local}")
     omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
     return omega_i_local
 
