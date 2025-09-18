@@ -31,6 +31,7 @@ class Animation:
                 for i in range(num_agents)
             ]
         )
+        self.omega_i_local = np.zeros(num_agents)
         self.point = None
         self.agent_dots = None
 
@@ -75,17 +76,21 @@ class Animation:
             relative_velocity_local = np.array(
                 [np.dot(relative_velocity, e_r), np.dot(relative_velocity, e_theta)]
             )
+            #print(f"これはrelative_velocity_localです{relative_velocity_local}")
+
             # 隣接エージェントのローカル角度
             idx_plus = (j + 1) % num_agents
             idx_minus = (j - 1) % num_agents
             vec_plus = self.agent_positions[idx_plus] - self.agent_positions[j]
             vec_minus = self.agent_positions[idx_minus] - self.agent_positions[j]
             theta_plus_local = np.arctan2(np.dot(vec_plus, e_theta), np.dot(vec_plus, e_r))
+            print(f"これはtheta_plus_localです{theta_plus_local}")
             theta_minus_local = np.arctan2(np.dot(vec_minus, e_theta), np.dot(vec_minus, e_r))
+            print(f"これはtheta_minus_localです{theta_minus_local}")
             theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0            
             # ローカル角速度 omega_i_local
             #print(f"これはprev_theta_localです{prev_theta_local[j]}")
-            omega_i_local = omega_i_local_calculation(prev_theta_local[j])
+            omega_i_local = omega_i_local_calculation(ro_i , agent_velocity)
             prev_theta_local[j] = theta_now_local
             # 隣接エージェントのローカル角速度
             omega_i_plus_local = theta_plus_local - prev_theta_plus_local[j]
