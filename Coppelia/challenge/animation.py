@@ -105,7 +105,7 @@ class Animation:
             alpha_i_minus_local = np.arctan2(self.agent_positions[j][1] , self.agent_positions[j][0]) - np.arctan2(self.agent_positions[idx_minus][1] , self.agent_positions[idx_minus][0])
             print(f"これはalpha_i_minus_localです{alpha_i_minus_local}")
             # --- 制御プロトコルu_iの計算（ローカル座標系） ---
-            eta = relative_velocity_local[0]
+            eta = agent_velocity[0]#relative_velocity_local[0]
             eta_norm = eta
             print(f"これはeta_normです{eta_norm}")
             #eta_norm = abs(eta)
@@ -142,6 +142,7 @@ class Animation:
                 # R未満なら、targetから距離Rの位置に補正
                 direction = (new_pos - target_pos) / np.linalg.norm(new_pos - target_pos)
                 self.agent_positions[j] = target_pos + direction * R
+            
             Agents_pos_3d = [self.agent_positions[j][0], self.agent_positions[j][1], 2.0]
             self.sim.set_agent_position(j , Agents_pos_3d)
             # Coppeliasim側でtargetの緑の球(target)の位置同期

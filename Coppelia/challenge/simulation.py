@@ -73,7 +73,7 @@ class Simulation:
 
             # bytes → float32配列に変換
             floatingNumbers = self.sim.unpackFloatTable(depth_bytes, 0, 0, 0)
-            floatingNumbers = np.array(floatingNumbers)
+            floatingNumbers = np.array(floatingNumbers) +0.4
         print(
             f"visionSensorの距離測定に成功しました: 距離 = {min(floatingNumbers):.3f} [m]"
         )
