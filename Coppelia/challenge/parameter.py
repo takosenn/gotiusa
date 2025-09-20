@@ -28,4 +28,4 @@ target_velocity = np.zeros(2)  # targetの初期速度
 
 
 #visionSenosrのパラメータ
-measurable_distance = 10  # 測定可能距離[m]q
+measurable_distance = 10  # 測定可能距離[m]

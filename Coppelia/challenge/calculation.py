@@ -47,13 +47,13 @@ def calculate_u(
         + e_i_2_integral[j] * np.sign(fi + Omega - omega_i_local)
     )
     if ro_i > 1.5 * R or ro_i < 0.5 * R:
-        u_r = u_r * 0.5
+        u_r = u_r * 1
     else:
-        u_r = u_r * 0.2
+        u_r = u_r * 1
     if alpha_i_local < np.pi / 3.4 or alpha_i_local > np.pi / 2.6:
         u_theta = u_theta * 1
     else:
-        u_theta = u_theta * 0.5
+        u_theta = u_theta * 1
     print(f"これはu_rです{u_r}")
     print(f"これはu_thetaです{u_theta}")
     return u_r , u_theta

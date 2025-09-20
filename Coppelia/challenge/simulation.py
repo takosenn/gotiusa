@@ -73,7 +73,7 @@ class Simulation:
 
             # bytes → float32配列に変換
             floatingNumbers = self.sim.unpackFloatTable(depth_bytes, 0, 0, 0)
-            floatingNumbers = np.array(floatingNumbers) +0.4
+            floatingNumbers = np.array(floatingNumbers) +0.37
         print(
             f"visionSensorの距離測定に成功しました: 距離 = {min(floatingNumbers):.3f} [m]"
         )
@@ -126,9 +126,7 @@ class Simulation:
             self.visionSensor_handles[j], self.sim.handle_world
         )
         world_pos = self.sim.multiplyVector(sensor_matrix, local_pos)
-        print(
-            f"Agent{j+1} visionSensor 座標変換成功: 座標 =[{world_pos[0]:.2f}, {world_pos[1]:.2f}]"
-        )
+        #print(f"これは座標ですよ～{world_pos}")
         return world_pos
 
     def visionSenor_orientation(self, j):
@@ -169,3 +167,4 @@ class Simulation:
             self.sim.handle_parent,
             [0, 0, new_yaw],
         )
+        return Yaw            # 2.0  # 0~1に正規化して返す

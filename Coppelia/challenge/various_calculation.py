@@ -3,7 +3,6 @@
 import numpy as np
 
 def omega_i_local_calculation(ro_i , agent_velocity):
-    #theta_now_local = 0.0  # 自分自身から見たtarget方向は常に0
     # ローカル角速度
     omega_i_local = agent_velocity / ro_i
     omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
@@ -21,3 +20,9 @@ def coordinate_trans(theta_global, u):
     u_vec_local = np.array([u[0], u[1]])
     u_vec = A @ u_vec_local
     return u_vec
+
+def Coordinate_Correction(Yaw):
+    correction_x = np.cos(Yaw)
+    correction_y = np.sin(Yaw)
+    #print(f"これは関数内の位置座標補正の値です{np.array([correction_x, correction_y])}")
+    return np.array([correction_x, correction_y])
