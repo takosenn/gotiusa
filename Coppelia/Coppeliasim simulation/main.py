@@ -6,13 +6,13 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
 from parameter import frames , frame_time 
 from animation import animate,init,fig
-from connect_Coppelia import sim
+from connect_Coppelia import Simulation
 import japanize_matplotlib      # type: ignore
 
-# シミュレーション開始
-if sim.getSimulationState() == sim.simulation_stopped:
-    sim.startSimulation()
-    print("Simulation started")
+# CoppeliaSimと接続
+sim = Simulation()
+sim.connect()
+sim.start_simulation()
 
 ani = FuncAnimation(
     fig, animate, frames=frames, init_func=init, blit=True, interval=frame_time * 1000
@@ -41,6 +41,5 @@ button.on_clicked(control.toggle)
 plt.show()
 
 # シミュレーション停止
-print("Stopping simulation")
-sim.stopSimulation()
+sim.stop_simulation()
 init()

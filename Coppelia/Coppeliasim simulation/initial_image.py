@@ -1,11 +1,14 @@
-
-#シミュレーションの下準備
+# シミュレーションの下準備
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
-from parameter import center,xlim,ylim,radius,num_agents,radius_limit
+from parameter import center, xlim, ylim, radius, num_agents, radius_limit
+from connect_Coppelia import Simulation
+
+sim = Simulation()
+sim.get_handles(num_agents)
 
 def initial_image():
     # --- 初期化 ---
@@ -23,13 +26,14 @@ def initial_image():
     ax.add_patch(circle)
 
     # --- エージェントの初期角度を第i象限に配置（i=1:第1象限, i=2:第2象限, ...） ---
+    target_positions = [0, 5, 0]
+    sim.initial_settargetposition(target_positions)
     agent_positions = np.zeros((num_agents, 2))
     for i in range(num_agents):
-        theta = 2 * np.pi * i / num_agents
-
-        r = radius_limit  # ランダム性を排除し、一定の半径で配置
-        agent_positions[i, 0] = center[0] + r * np.cos(theta)
-        agent_positions[i, 1] = center[1] + radius + r * np.sin(theta)
+        agent_positions[i] = [4 + np.sign(np.cos(np.pi * i)), 2 * i]
+        sim.initial_setAgentpositions(
+            i, [float(agent_positions[i][0]), float(agent_positions[i][1]), 2.0]
+        )
 
     # 色分け用カラーマップ（tab10を利用）
     agent_colors = plt.get_cmap("tab10").colors[:num_agents]
@@ -50,4 +54,4 @@ def initial_image():
         for i in range(num_agents)
     ]
     ax.legend(handles=legend_elements, loc="center left", bbox_to_anchor=(1, 0.5))
-    return fig, ax, point, agent_dots, agent_positions, agent_colors
+    return fig, ax, point, agent_dots, agent_positions, agent_colors, sim
