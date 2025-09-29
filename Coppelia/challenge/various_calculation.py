@@ -1,6 +1,7 @@
 # ローカル座標系の値をグローバル座標系に変換する関数
 
 import numpy as np
+from parameter import frame_time
 
 def omega_i_local_calculation(ro_i , agent_velocity):
     # ローカル角速度
@@ -8,7 +9,6 @@ def omega_i_local_calculation(ro_i , agent_velocity):
     omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
     print(f"これはomega_i_localです{omega_i_local}")
     return omega_i_local
-
 
 def coordinate_trans(theta_global, u):
     A = np.array(
@@ -23,6 +23,10 @@ def coordinate_trans(theta_global, u):
 
 def Coordinate_Correction(Yaw):
     correction_x = np.cos(Yaw)
-    correction_y = np.sin(Yaw)
+    correction_y = 1.22*np.sin(Yaw)
     #print(f"これは関数内の位置座標補正の値です{np.array([correction_x, correction_y])}")
     return np.array([correction_x, correction_y])
+
+def velocity_calculation(positions , prev_positions):
+    velocity = (np.array(positions)- np.array(prev_positions)) / frame_time
+    return velocity
