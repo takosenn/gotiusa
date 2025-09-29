@@ -65,7 +65,6 @@ class Simulation:
         self.sim.setObjectPosition(self.target_handle, -1, target_pos_3d)
 
     def get_visionSensor_distance(self, j):
-        #print(f"j={j}, visionSensor_handlesの長さ={len(self.visionSensor_handles)}")
         result = self.sim.handleVisionSensor(self.visionSensor_handles[j])
         result = self.sim.getVisionSensorDepth(self.visionSensor_handles[j], 1, [0, 0], [0, 0])
         if isinstance(result, tuple) and len(result) == 2:
@@ -73,11 +72,9 @@ class Simulation:
 
             # bytes → float32配列に変換
             floatingNumbers = self.sim.unpackFloatTable(depth_bytes, 0, 0, 0)
-            floatingNumbers = np.array(floatingNumbers) +0.37
-        print(
-            f"visionSensorの距離測定に成功しました: 距離 = {min(floatingNumbers):.3f} [m]"
-        )
-        return min(floatingNumbers)
+            floatingNumbers = np.array(floatingNumbers)
+            ro_i = min(floatingNumbers)# + 0.37
+        return ro_i
 
     def set_visionSensor_param(self, j):
         ro_i = self.get_visionsensor_distance(j)
@@ -128,13 +125,16 @@ class Simulation:
         world_pos = self.sim.multiplyVector(sensor_matrix, local_pos)
         #print(f"これは座標ですよ～{world_pos}")
         return world_pos
+    
+    def drone_speed(self , j):
+        agent_speed, _ = self.sim.getObjectVelocity(self.Agent_handles[j])
+        return agent_speed
 
-    def visionSenor_orientation(self, j):
-        world_pos = self.coodinate_target(j)
+
+    def visionSenor_orientation(self, j , world_pos):
         dx = world_pos[0]
         dy = world_pos[1]
         Yaw = np.arctan2(dy, dx)  # グローバル座標系での角度
-        print(f"Agent{j+1}のいるべき角度: {Yaw/np.pi}π")
         # pose = {dx , dy , 2 , 0 , 0 , Yaw , 1}
         self.sim.setObjectOrientation(
             self.Agent_handles[j], self.sim.handle_parent, [0, 0, Yaw]

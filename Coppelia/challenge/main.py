@@ -1,7 +1,7 @@
 # targetとAgentが合体
 
 import time
-from parameter import frames
+from parameter import frames , frame_time
 from animation import Animation
 from simulation import Simulation
 
@@ -18,6 +18,7 @@ class Main:
         try:
             for i in range(frames):
                 self.ani.animate(i)
+                time.sleep(frame_time)
 
         except KeyboardInterrupt:
             print("Ctrl+Cが押されました。終了します。")

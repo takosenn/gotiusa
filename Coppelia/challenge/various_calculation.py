@@ -22,8 +22,8 @@ def coordinate_trans(theta_global, u):
     return u_vec
 
 def Coordinate_Correction(Yaw):
-    correction_x = np.cos(Yaw)
-    correction_y = 1.22*np.sin(Yaw)
+    correction_x = 0.4*np.cos(Yaw)
+    correction_y = 0.4*np.sin(Yaw)
     #print(f"これは関数内の位置座標補正の値です{np.array([correction_x, correction_y])}")
     return np.array([correction_x, correction_y])
 
