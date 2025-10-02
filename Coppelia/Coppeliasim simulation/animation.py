@@ -1,59 +1,79 @@
 import numpy as np
 from parameter import center, radius, frame_time, omega_target, num_agents
 from caluculation import caluculate
-from neighbors_info import neighbors_info
-from initial_image import initial_image
 from connect_Coppelia import Simulation
+import time
 import csv
 from datetime import datetime
 
 # データ保存時の日時
 
-# initial_image()からsimも受け取る
-fig, ax, point, agent_dots, agent_positions, agent_colors, sim = initial_image()
+class Animation:
+    def __init__(self):
+        self.sim = Simulation()
+        self.sim.get_handles(num_agents)
+        self.agent_positions = []
+        for i in range(num_agents):
+            theta = 2 * np.pi * i / num_agents
+            agent_position = [center[0] + 5 * np.cos(theta) , center[1] + radius + 5 * np.sin(theta) , 2]
+            self.agent_positions.append(agent_position)
+            self.sim.initial_setAgentpositions(i, agent_position)
+        self.prev_agent_positions = self.agent_positions
+        self.target_position = [0 , 5 ,2]
+        self.sim.initial_settargetposition(self.target_position)
+        self.prev_target_position = []
+        self.ro_i = []
+        self.coordinates = []
+        self.prev_theta = np.zeros(num_agents)
+        self.prev_theta_plus = np.zeros(num_agents)
+        self.prev_theta_minus =np.zeros(num_agents)
+        self.omega_i = []
+        self.omega_i_plus = []
+        self.omega_i_minus = []
+        self.alpha_i = []
+        self.alpha_i_minus = []
+        self.prev_time = time.time()
 
-# --- アニメーション関数 ---
-def init():
-    point.set_data([0], [radius])
-    agent_dots.set_offsets(agent_positions)
-    return point, agent_dots
+    def animate(self , i):
+        current_time = time.time()
+        delta_time = current_time - self.prev_time
+        j = i % num_agents
+        j_plus = (i+1) % num_agents
+        j_minus = (i-1) % num_agents
 
-# with open(f"data_x{current_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv", mode="a", newline="" , encoding="utf-8") as file_x:
-#    writer = csv.writer(file_x)
-#    writer.writerow(["u_r", "u_theta" , "ro_i", "agent_position_x[1]" , "agent_position_x[2]" , "agent_position_x[3]" , "agent_position_x[4]" , "agent_position_x[5]" , "agent_position_x[6]" ]) #xヘッダー行
-# with open(f"data_y{current_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv", mode="a", newline="" , encoding="utf-8") as file_y:
-#    writer = csv.writer(file_y)
-#    writer.writerow(["u_r", "u_theta" , "ro_i", "agent_position_y[1]" , "agent_position_y[2]" , "agent_position_y[3]" , "agent_position_y[4]" , "agent_position_y[5]" , "agent_position_y[6]" ]) #yヘッダー行
+        theta_target = omega_target * i
+        self.target_position = [center[0]  + radius * np.sin(theta_target) , center[1]  + radius * np.cos(theta_target) , 2]
 
-def animate(i):
-    theta = omega_target * i
-    x = center[0]  + radius * np.sin(theta)
-    y = center[1]  + radius * np.cos(theta)
-    point.set_data([x], [y])
-    agent_dots.set_offsets(agent_positions)
+        vec = np.array(self.agent_positions[j]) - np.array(self.target_position)
+        vec_plus = np.array(self.agent_positions[j_plus]) - np.array(self.target_position)
+        vec_minus = np.array(self.agent_positions[j_minus]) - np.array(self.target_position)
+        theta = np.arctan2(vec[1] , vec[0])
+        theta_plus = np.arctan2(vec_plus[1] , vec_plus[0])
+        theta_minus = np.arctan2(vec_minus[1] , vec_minus[0])
 
-    if not hasattr(animate, "prev_agent_pos"):
-        animate.prev_agent_pos = agent_positions.copy()
-    if not hasattr(animate, "prev_target_pos"):
-        animate.prev_target_pos = np.array([x, y])
-
-    for j in range(num_agents):
-        vec = agent_positions[j] - np.array([x, y])
-        ro_i = np.linalg.norm(vec)  # agentとtargetとの間の距離をベクトルの計算で求めた
-        theta_now = np.arctan2(vec[1], vec[0])
-        if not hasattr(animate, "prev_theta"):
-            animate.prev_theta = np.zeros(num_agents)
-        omega_i = theta_now - animate.prev_theta[j]
-        omega_i = (omega_i + np.pi) % (2 * np.pi) - np.pi
+        self.ro_i = np.linalg.norm(vec)
+        #角速度の計算
+        self.omega_i = theta - self.prev_theta[j]
+        self.omega_i_plus = theta_plus - self.prev_theta_plus
+        self.omega_i_minus = theta_minus - self.prev_theta_minus
         
+        self.omega_i = (self.omega_i + np.pi) % (2 * np.pi) - np.pi
+        self.omega_i_plus = (self.omega_i_plus + np.pi) % (2 * np.pi) - np.pi
+        self.omega_i_minus = (self.omega_i_minus + np.pi) % (2 * np.pi) - np.pi
 
-        animate.prev_theta[j] = theta_now
 
-        alpha_i, alpha_i_minus, omega_i_plus, omega_i_minus = neighbors_info(j, agent_positions, x, y, animate, theta_now)
+        #前回のthetaを保持
+        self.prev_theta[j] = theta
+        self.prev_theta_plus[j] = theta_plus
+        self.prev_theta_minus[j] = theta_minus
+        #agent間の角距離計算
+        diff = abs(theta - theta_plus)
+        self.alpha_i = min(diff, 2 * np.pi - diff)
+        diff_minus = abs(theta - theta_minus)
+        self.alpha_i_minus = min(diff_minus, 2 * np.pi - diff_minus)
 
-        # --- 制御プロトコルu_iの計算と位置更新 ---
         # 放射方向・接線方向の単位ベクトル
-        e_r = vec / ro_i
+        e_r = vec / self.ro_i
         e_theta = np.array([-e_r[1], e_r[0]])
 
         # targetの速度ベクトルを計算
@@ -61,11 +81,13 @@ def animate(i):
             [
                 -radius * omega_target * np.cos(theta),  # x方向の速度成分
                 -radius * omega_target * np.sin(theta),  # y方向の速度成分
+                0
             ]
         )
 
         # エージェントの速度ベクトルを計算(現在の位置と前の位置から)
-        agent_velocity = (agent_positions[j] - animate.prev_agent_pos[j]) / frame_time
+        agent_velocity = (np.array(self.agent_positions[j]) - np.array(self.prev_agent_positions[j])) / delta_time
+        self.prev_time = current_time
 
         # 相対速度の計算
         relative_velocity = agent_velocity - target_velocity
@@ -77,21 +99,21 @@ def animate(i):
         result = caluculate(
             i,
             j,
-            alpha_i,
-            alpha_i_minus,
-            omega_i_plus,
-            omega_i,
-            omega_i_minus,
-            ro_i,
+            self.alpha_i,
+            self.alpha_i_minus,
+            self.omega_i_plus,
+            self.omega_i,
+            self.omega_i_minus,
+            self.ro_i,
             eta_norm,
         )
-
         # 合成速度ベクトル
+        e_r = np.delete(e_r , 2)
         u_vec = result[0] * e_r + result[1] * e_theta
+        u_vec = np.append(u_vec , 0)
+        print(u_vec)
 
-        # 位置更新（タイムステップdt=0.05）
-        target_pos = np.array([x, y])
-        agent_positions[j] += u_vec * frame_time
+        self.agent_positions[j] += u_vec * delta_time
 
         # with open(f"data_x{current_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv", mode="a", newline="" , encoding="utf-8") as file_x:
         #    writer = csv.writer(file_x)
@@ -101,19 +123,18 @@ def animate(i):
         #    writer = csv.writer(file_y)
         #    writer.writerow([result[0], result[1], ro_i, agent_positions[0][1] , agent_positions[1][1] , agent_positions[2][1] , agent_positions[3][1] , agent_positions[4][1] , agent_positions[5][1]])     # データをCSVに書き込む
 
-    # 前の位置を更新
-    animate.prev_agent_pos = agent_positions.copy()
-    animate.prev_target_pos = np.array([x, y])
+        # 前の位置を更新
+        self.prev_agent_positions[j] = self.agent_positions[j]
+        self.prev_target_position = self.target_position
 
-    # Coppeliasim側でAgentの緑の球(target)の位置同期
-    for j in range(num_agents):
-        Agents_pos_3d = [
-            float(agent_positions[j][0]),
-            float(agent_positions[j][1]),
-            2.0,
-        ]
-        sim.setAgentposition(j, Agents_pos_3d)
-    target_pos_3d = [float(target_pos[0]), float(target_pos[1]), 2.0]
-    sim.settargetposition(target_pos_3d)
-
-    return point, agent_dots
+        # Coppeliasim側でAgentの緑の球(target)の位置同期
+        for j in range(num_agents):
+            Agents_pos_3d = [
+                float(self.agent_positions[j][0]),
+                float(self.agent_positions[j][1]),
+                2.0,
+            ]
+            #print(f"これはAgent{j+1}の位置{Agents_pos_3d}")
+            self.sim.setAgentposition(j, Agents_pos_3d)
+        target_pos_3d = [float(self.target_position[0]), float(self.target_position[1]), 2.0]
+        self.sim.settargetposition(target_pos_3d)

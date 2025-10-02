@@ -11,7 +11,6 @@ class Simulation():
         self.Agent_handles = []
         self.target_Drone_handle = self.sim.getObject("/Quadcopter[0]")
         self.target_handle = self.sim.getObject("/Quadcopter[0]/target")
-        print("取得: Quadcopter[0] のtarget")
     
     def connect(self):
         print("CoppeliaSimと接続中...")
@@ -35,9 +34,9 @@ class Simulation():
         self.client.step()
 
     def get_handles(self,num_agents):
-        #target_handle = self.sim.getObject("/Quadcopter[0]/target")
-        #target_Drone_handle = self.sim.getObject("/Quadcopter[0]")
-        #print("取得: Quadcopter[0] のtarget")
+        self.target_handle = self.sim.getObject("/Quadcopter[0]/target")
+        self.target_Drone_handle = self.sim.getObject("/Quadcopter[0]")
+        print("取得: Quadcopter[0] のtarget")
         # 各Agentの緑の球(target)のハンドル
         for i in range(num_agents):
             object_name = f"Quadcopter[{i+1}]"

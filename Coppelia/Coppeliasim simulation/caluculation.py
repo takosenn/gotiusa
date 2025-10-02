@@ -38,4 +38,5 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
         u_theta = u_theta * 2
     else:
         u_theta = u_theta * 1
-    return u_r,u_theta
+    #print(u_theta)
+    return u_r,u_theta[0]
