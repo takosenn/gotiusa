@@ -6,6 +6,14 @@ from parameter import R, Omega,frame_time,d_i
 from DataStrage import e_i_1_integral, e_i_2_integral
 
 def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i,eta_norm):
+    #ro_i = np.delete(ro_i , 2)
+    print(f"alpah_i: {alpha_i}")
+    print(f"alpha_i_minus: {alpha_i_minus}")
+    print(f"omega_i: {omega_i}")
+    print(f"omega_i_minus: {omega_i_minus}")
+    print(f"omega_i_plus: {omega_i_plus}")
+    print(f"ro_i: {ro_i}")
+    print(f"eta_norm: {eta_norm}")
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
@@ -24,6 +32,7 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
     e_i_1_integral[j] += e_i_1 * frame_time
     e_i_2_integral[j] += e_i_2 * frame_time
 
+
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
     #u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
     u_r = -ro_i * omega_i**2 - eta_norm - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
@@ -39,4 +48,4 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
     else:
         u_theta = u_theta * 1
     #print(u_theta)
-    return u_r,u_theta[0]
+    return u_r,u_theta

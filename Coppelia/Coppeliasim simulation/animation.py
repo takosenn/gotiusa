@@ -44,18 +44,19 @@ class Animation:
         theta_target = omega_target * i
         self.target_position = [center[0]  + radius * np.sin(theta_target) , center[1]  + radius * np.cos(theta_target) , 2]
 
-        vec = np.array(self.agent_positions[j]) - np.array(self.target_position)
-        vec_plus = np.array(self.agent_positions[j_plus]) - np.array(self.target_position)
-        vec_minus = np.array(self.agent_positions[j_minus]) - np.array(self.target_position)
-        theta = np.arctan2(vec[1] , vec[0])
+        vec = np.array(self.agent_positions[j]) - np.array(self.target_position)                    
+        vec_plus = np.array(self.agent_positions[j_plus]) - np.array(self.target_position)          
+        vec_minus = np.array(self.agent_positions[j_minus]) - np.array(self.target_position)        
+        theta = np.arctan2(vec[1] , vec[0])                                                         
         theta_plus = np.arctan2(vec_plus[1] , vec_plus[0])
+        print(theta_plus)
         theta_minus = np.arctan2(vec_minus[1] , vec_minus[0])
 
         self.ro_i = np.linalg.norm(vec)
         #角速度の計算
         self.omega_i = theta - self.prev_theta[j]
-        self.omega_i_plus = theta_plus - self.prev_theta_plus
-        self.omega_i_minus = theta_minus - self.prev_theta_minus
+        self.omega_i_plus = theta_plus - self.prev_theta_plus[j]
+        self.omega_i_minus = theta_minus - self.prev_theta_minus[j]
         
         self.omega_i = (self.omega_i + np.pi) % (2 * np.pi) - np.pi
         self.omega_i_plus = (self.omega_i_plus + np.pi) % (2 * np.pi) - np.pi
@@ -84,6 +85,7 @@ class Animation:
                 0
             ]
         )
+        self.target_position += target_velocity * delta_time
 
         # エージェントの速度ベクトルを計算(現在の位置と前の位置から)
         agent_velocity = (np.array(self.agent_positions[j]) - np.array(self.prev_agent_positions[j])) / delta_time
@@ -111,7 +113,7 @@ class Animation:
         e_r = np.delete(e_r , 2)
         u_vec = result[0] * e_r + result[1] * e_theta
         u_vec = np.append(u_vec , 0)
-        print(u_vec)
+        #print(u_vec)
 
         self.agent_positions[j] += u_vec * delta_time
 
