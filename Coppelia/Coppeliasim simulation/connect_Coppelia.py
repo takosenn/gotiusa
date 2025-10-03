@@ -61,3 +61,7 @@ class Simulation():
     def settargetposition(self , target_pos_3d):
         # Coppeliasim側でtargetの緑の球(target)の位置同期
         self.sim.setObjectPosition(self.target_handle, -1, target_pos_3d)
+
+    def get_agent_velocity(self , j):
+        linear_velocity , angular_velocity = self.sim.getObjectVelocity(self.Agent_handles[j])
+        return linear_velocity , angular_velocity
