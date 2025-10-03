@@ -28,9 +28,10 @@ class Animation:
         self.prev_target_position = []
         self.ro_i = np.zeros(num_agents)
         self.prev_ro_i = [5 , 5 , 5 , 5 , 5 , 5]
-        self.theta = np.zeros(num_agents)
-        self.theta_plus = np.zeros(num_agents)
-        self.theta_minus = np.zeros(num_agents)
+        self.eta = np.zeros(num_agents)
+        self.theta = [0 , np.pi/3 , 2*np.pi/3 , np.pi , -2*np.pi/3 , -np.pi/3]
+        self.theta_plus = [np.pi/3 , 2*np.pi/3 , np.pi , -2*np.pi/3 , -np.pi/3 , 0]
+        self.theta_minus = [-np.pi/3 , 0 , np.pi/3 , 2*np.pi/3 , np.pi , -2*np.pi/3]
         self.prev_theta = [0 , np.pi/3 , 2*np.pi/3 , np.pi , -2*np.pi/3 , -np.pi/3]
         self.prev_theta_plus = [np.pi/3 , 2*np.pi/3 , np.pi , -2*np.pi/3 , -np.pi/3 , 0]
         self.prev_theta_minus = [-np.pi/3 , 0 , np.pi/3 , 2*np.pi/3 , np.pi , -2*np.pi/3]
@@ -38,6 +39,7 @@ class Animation:
         self.omega_i_plus = np.zeros(num_agents)
         self.omega_i_minus = np.zeros(num_agents)
         self.alpha_i = [radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3]
+        self.prev_alpha_i = [radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3]
         self.alpha_i_minus = [radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3 , radius*np.pi/3]
         self.prev_time = time.time()
 
@@ -58,12 +60,13 @@ class Animation:
         self.theta_minus[j] = np.arctan2(vec_minus[1] , vec_minus[0])
 
         self.ro_i[j] = np.linalg.norm(vec)                          #距離
-        eta = (self.ro_i[j] - self.prev_ro_i[j]) / frame_time
-        print(f"距離の微分: {eta}")
-        
+        #print(f"前回のro_i: {self.prev_ro_i[j]}")
+        self.eta[j] = (self.ro_i[j] - self.prev_ro_i[j]) / frame_time
+        #print(f"距離の微分: {eta}")
+
 
         # エージェントの速度ベクトルを計算(現在の位置と前の位置から)
-        agent_velocity = (np.array(self.agent_positions[j]) - np.array(self.prev_agent_positions[j])) / frame_time
+        #agent_velocity = (np.array(self.agent_positions[j]) - np.array(self.prev_agent_positions[j])) / frame_time
         #print(agent_velocity)
 
         #角速度の計算
@@ -74,28 +77,35 @@ class Animation:
         self.omega_i_plus[j] = (self.theta_plus[j] - self.prev_theta_plus[j]) / frame_time
         self.omega_i_minus[j] = (self.theta_minus[j] - self.prev_theta_minus[j]) / frame_time
 
-        self.omega_i[j] = (self.omega_i[j] + np.pi) % (2 * np.pi) - np.pi
-        self.omega_i_plus[j] = (self.omega_i_plus[j] + np.pi) % (2 * np.pi) - np.pi
-        self.omega_i_minus[j] = (self.omega_i_minus[j] + np.pi) % (2 * np.pi) - np.pi
+        #self.omega_i[j] = (self.omega_i[j] + np.pi) % (2 * np.pi) - np.pi
+        #self.omega_i_plus[j] = (self.omega_i_plus[j] + np.pi) % (2 * np.pi) - np.pi
+        #self.omega_i_minus[j] = (self.omega_i_minus[j] + np.pi) % (2 * np.pi) - np.pi
 
         #print(f"Agent[{j}]の角速度: {self.omega_i[j]}")
         #print(f"Agent[{j_plus}]の角速度: {self.omega_i_plus[j]}")
         #print(f"Agent[{j_minus}]の角速度: {self.omega_i_minus[j]}")
 
-        #前回のthetaを保持
-        self.prev_theta[j] = np.copy(self.theta[j])
-        self.prev_theta_plus[j] = np.copy(self.theta_plus[j])
-        self.prev_theta_minus[j] = np.copy(self.theta_minus[j])
-
         #agent間の角距離計算
         diff = abs(self.theta[j] - self.theta_plus[j])
-        self.alpha_i = min(diff, 2 * np.pi - diff)
+        self.alpha_i[j] = min(diff, 2 * np.pi - diff)
         diff_minus = abs(self.theta[j] - self.theta_minus[j])
-        self.alpha_i_minus = min(diff_minus, 2 * np.pi - diff_minus)
+        self.alpha_i_minus[j] = min(diff_minus, 2 * np.pi - diff_minus)
+
+        #self.omega_i[j] = (self.alpha_i[j] - self.prev_alpha_i[j]) / frame_time
+
+        agent_velocity = [self.eta[j] , self.omega_i[j]*self.ro_i[j] , 0]
+        #print(f"Agent[{j}]の速度: {agent_velocity}")
 
         # 放射方向・接線方向の単位ベクトル
         e_r = vec / self.ro_i[j]
         e_theta = np.array([-e_r[1], e_r[0]])
+
+        #前回のthetaとro_iを保持
+        self.prev_theta[j] = np.copy(self.theta[j])
+        self.prev_theta_plus[j] = np.copy(self.theta_plus[j])
+        self.prev_theta_minus[j] = np.copy(self.theta_minus[j])
+        self.prev_ro_i[j] = np.copy(self.ro_i[j])
+        self.prev_alpha_i[j] = np.copy(self.alpha_i[j])
 
         # targetの速度ベクトルを計算
         target_velocity = np.array(
@@ -115,13 +125,13 @@ class Animation:
 
         # 相対速度をローカル座標系（極座標）に変換
         relative_velocity_r = np.dot(relative_velocity, e_r)
-        eta = relative_velocity_r
-        eta_norm = abs(eta)
+        #eta = relative_velocity_r
+        eta_norm = abs(self.eta[j])
         result = caluculate(
             i,
             j,
-            self.alpha_i,
-            self.alpha_i_minus,
+            self.alpha_i[j],
+            self.alpha_i_minus[j],
             self.omega_i_plus[j],
             self.omega_i[j],
             self.omega_i_minus[j],
