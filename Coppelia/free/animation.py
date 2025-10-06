@@ -47,7 +47,7 @@ class Animation:
         j_minus = (i - 1) % num_agents
 
 
-        print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {self.current_world_agent_positions[j]}")
+        print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}")
 
 
         self.local_agent_positions[j] = np.array(self.current_world_agent_positions[j]) - np.array(self.target_position)     #targetから見たAgentの座標(x,y,zの要素3つ)
@@ -96,10 +96,10 @@ class Animation:
         self.prev_local_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
         print(f"今回のtargetから見たAgent[{j+1}]の位置を正しくコピーできているか確認: {self.prev_local_agent_positions[j]}")
 
+
         """Coppeliasim上のAgentの位置同期"""
         self.sim.setAgentposition(j , self.current_world_agent_positions[j])
 
         self.sim.settargetposition(self.target_position)
-
 
         print("\n")
