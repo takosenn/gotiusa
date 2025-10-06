@@ -32,15 +32,15 @@ class Animation:
 
 
     def animate(self , i):
-        
-        
+
+
         #ここから下はtargetの位置更新
         target_theta = (omega_target * i) % (2 * np.pi)
         target_x = 5 * np.sin(target_theta)
         target_y = 5 * np.cos(target_theta)
         self.target_position = [target_x , target_y , 2]
 
-        
+
         #ここから下はAgentの位置更新
         j = i % num_agents
         j_plus = (i + 1) % num_agents
