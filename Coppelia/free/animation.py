@@ -99,8 +99,11 @@ class Animation:
         print(f"targetとAgent[{j+1}]の距離の時間微分: {eta}")
 
 
-        u_r , u_theta = caluculate(i , j , self.alpha_i[j] , self.alpha_i_minus[j] , self.omega_i_plus[j] , self.omega_i[j] , self.omega_i_minus[j] , self.ro_i[j] , abs(eta))
+        u_r , u_theta = caluculate(i , j , self.alpha_i[j] , self.alpha_i_minus[j] , self.omega_i_plus[j] , self.omega_i[j] , self.omega_i_minus[j] , self.ro_i[j] , eta)
         print(f"Agent[{j+1}]のローカル加速度: [{u_r} , {u_theta}]")
+
+
+        u_world = coordinate_trans(self.theta[j] , [u_r,u_theta])
 
 
         agent_velocity = (np.array(self.prev_local_agent_positions[j]) - np.array(self.prev_prev_local_agent_positions[j])) / frame_time
@@ -111,7 +114,7 @@ class Animation:
         print(f"ローカル速度: {local_agent_velocity}")
 
 
-        updated_position = np.array(self.current_world_agent_positions[j]) + [u_r*frame_time*frame_time , u_theta*frame_time*frame_time , 0]                               #位置更新の式
+        updated_position = np.array(self.current_world_agent_positions[j]) + [u_world[0]*frame_time*frame_time , u_world[1]*frame_time*frame_time , 0]                               #位置更新の式
         self.current_world_agent_positions[j] = updated_position.tolist()                                              #要素に追加
         print(f"位置座標更新後のAgent[{j + 1}]のWorld座標系の位置: {np.array(self.current_world_agent_positions[j])}")
 

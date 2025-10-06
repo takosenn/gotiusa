@@ -5,7 +5,6 @@ from parameter import R, Omega,frame_time,d_i
 from DataStrage import e_i_1_integral, e_i_2_integral
 
 def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i,eta_norm):
-    #ro_i = np.delete(ro_i , 2)
     #print(f"alpah_i: {alpha_i}")
     #print(f"alpha_i_minus: {alpha_i_minus}")
     #print(f"omega_i: {omega_i}")
@@ -22,8 +21,8 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
         tau_i_1 = 0
         tau_i_2 = 0
     else:
-        tau_i_1 = 0.5
-        tau_i_2 = 0.5
+        tau_i_1 = 2
+        tau_i_2 = 2
     e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
     e_i_2 = tau_i_2 * abs(ro_i * (omega_i + Omega - omega_i))
     
@@ -39,11 +38,11 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
 
     #u_r(放射方向)とu_theta(接線方向)の調整
     if ro_i > 1.5 * R or ro_i < 0.5 * R:
-        u_r = u_r * 0.5
+        u_r = u_r * 1
     else:
-        u_r = u_r * 0.2
+        u_r = u_r * 1
     if alpha_i < np.pi / 3.4 or alpha_i > np.pi / 2.6:
-        u_theta = u_theta * 2
+        u_theta = u_theta * 1
     else:
         u_theta = u_theta * 1
     #print(u_theta)
