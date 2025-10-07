@@ -21,6 +21,17 @@ def coordinate_trans(theta_global, u):
     u_vec = A @ u_vec_local
     return u_vec
 
+def coordinate_trans_inverse(theta_global, u):
+    A = np.array(
+        [
+            [np.cos(theta_global), -np.sin(theta_global)],
+            [np.sin(theta_global), np.cos(theta_global)],
+        ]
+    )
+    u_vec_local = np.array([u[0], u[1]])
+    u_vec = np.linalg.inv(A) @ u_vec_local
+    return u_vec
+
 def Coordinate_Correction(Yaw):
     correction_x = 0.4*np.cos(Yaw)
     correction_y = 0.4*np.sin(Yaw)

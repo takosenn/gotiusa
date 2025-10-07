@@ -55,7 +55,8 @@ class Simulation():
 
     def setAgentposition(self , j , Agents_pos_3d):
         # Coppeliasim側でAgentの緑の球(target)の位置同期
-        self.sim.setObjectPosition(self.Agent_handles[j], -1, Agents_pos_3d)
+        for j in range(num_agents):
+            self.sim.setObjectPosition(self.Agent_handles[j], -1, Agents_pos_3d[j])
 
     def settargetposition(self , target_pos_3d):
         # Coppeliasim側でtargetの緑の球(target)の位置同期

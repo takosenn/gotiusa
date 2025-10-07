@@ -17,14 +17,11 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
 
     # e_i_1, e_i_2の初期値は0、それ以降は式で計算
-    if i == 0:
-        tau_i_1 = 0
-        tau_i_2 = 0
-    else:
-        tau_i_1 = 2
-        tau_i_2 = 2
+
+    tau_i_1 = 2
+    tau_i_2 = 2
     e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
-    e_i_2 = tau_i_2 * abs(ro_i * (omega_i + Omega - fi))
+    e_i_2 = tau_i_2 * abs(ro_i * (omega_i - Omega - fi))
     
     # --- e_i_1, e_i_2の時間積分 ---
     e_i_1_integral[j] += e_i_1 * frame_time
