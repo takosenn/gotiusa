@@ -19,6 +19,8 @@ class Animation:
                 2,
             ]
             self.current_world_agent_positions.append(current_world_agent_positions)
+        self.prev_world_agent_positions = [pos.copy() for pos in self.current_world_agent_positions]
+        self.prev_prev_world_agent_positions = [pos.copy() for pos in self.prev_world_agent_positions]
         self.local_agent_positions = []
         for i in range(num_agents):
             local_agent_positions = np.array(
@@ -59,7 +61,7 @@ class Animation:
         self.target_position = [target_x, target_y, 2]
         print(
             f"現在のtargetのWorld座標系の位置座標: {np.array(self.target_position)}"
-        )                                                                                                               # 論文中のP_0(t)
+        )                                                                                                                   # 論文中のP_0(t)
         self.target_velocity = np.array(
             [
                 -5 * omega_target * np.cos(target_theta),  # x方向の速度成分
@@ -67,13 +69,12 @@ class Animation:
             ]
         )
 
-
         # ここから下はAgentの位置更新
         j = i % num_agents
         j_plus = (i + 1) % num_agents
         j_minus = (i - 1) % num_agents
         print(
-            f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}"             # 論文中のP_i(t)
+            f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}"                          # 論文中のP_i(t)
         )
 
         self.local_agent_positions[j] = np.array(
@@ -82,22 +83,22 @@ class Animation:
             self.target_position
         )  # targetから見たAgentの座標(x,y,zの要素3つ)
         print(
-            f"targetから見たAgent[{j + 1}]の座標: {self.local_agent_positions[j]}"                                       #vec
-        )  # 論文中のP_bar_i(t)
+            f"targetから見たAgent[{j + 1}]の座標: {self.local_agent_positions[j]}"                                              # vec
+        )                                                                                                                       # 論文中のP_bar_i(t)
         self.ro_i[j] = np.linalg.norm(
             self.local_agent_positions[j]
         )  # target-Agent間の距離(スカラー)
-        print(f"targetとAgent[{j+1}]の距離: {self.ro_i[j]}")  # 論文中のρ_i(t)
+        print(f"targetとAgent[{j+1}]の距離: {self.ro_i[j]}")                                                                    # 論文中のρ_i(t)
 
         self.theta[j] = np.arctan2(
             self.local_agent_positions[j][1], self.local_agent_positions[j][0]
-        )  # targetとAgentのなす角                                                                                          theta_now
+        )  # targetとAgentのなす角                                                                                              theta_now
         if self.theta[j] >= 0:
             self.theta[j] = self.theta[j]
         else:
             self.theta[j] = self.theta[j] + 2 * np.pi
         print(
-            f"targetとAgent[{j+1}]とのなす角度: {self.theta[j]}"  # 論文中のα[j]
+            f"targetとAgent[{j+1}]とのなす角度: {self.theta[j]}"                                                                # 論文中のα[j]
         )  # なす角を0~2πの範囲に
 
         # Agent[i]とAgent[i+1]の間の角距離(例: π/3とかπ/4など)
@@ -108,7 +109,7 @@ class Animation:
             self.alpha_i[j] = diff + 2 * np.pi
         print(
             f"Agent[{j+1}]とAgent[{j_plus+1}]の角距離: {self.alpha_i[j]}"
-        )  # 論文中のα_hat[j]
+        )                                                                                                                       # 論文中のα_hat[j]
 
         diff_minus = self.theta[j] - self.theta[j_minus]
         if diff_minus >= 0:
@@ -117,23 +118,23 @@ class Animation:
             self.alpha_i_minus[j] = diff_minus + 2 * np.pi
         print(
             f"Agent[{j+1}]とAgent[{j_minus+1}]の角距離: {self.alpha_i_minus[j]}"
-        )  # 論文中のα_hat[minus]
+        )                                                                                                                       # 論文中のα_hat[j_minus]
 
-        #print(np.array(self.prev_theta))
+        # print(np.array(self.prev_theta))
         self.omega_i[j] = (self.theta[j] - self.prev_theta[j]) / frame_time
         print(
             f"Agent[{j+1}]がtargetの周りを回る角速度: {self.omega_i[j]}"
-        )  # 論文中のω_i[j]
+        )                                                                                                                           # 論文中のω_i[j]
 
         # 隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)
         self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
         print(
             f"Agent[{j_plus+1}]がtargetの周りを回る角速度: {self.omega_i_plus[j]}"
-        )  # 論文中のω_i[plus]
+        )                                                                                                                           # 論文中のω_i[j_plus]
         self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
         print(
             f"Agent[{j_minus+1}]がtargetの周りを回る角速度: {self.omega_i_minus[j]}"
-        )  # 論文中のω_i[minus]
+        )                                                                                                                           # 論文中のω_i[j_minus]
 
         print(
             f"targetから見たAgent[{j+1}]の前回のLocal座標系の位置: {np.array(self.prev_local_agent_positions[j])}"
@@ -142,35 +143,43 @@ class Animation:
             f"targetから見たAgent[{j+1}]の前々回のLocal座標系の位置: {np.array(self.prev_prev_local_agent_positions[j])}"
         )
         agent_velocity = (
-            np.array(self.local_agent_positions[j])
-            - np.array(self.prev_local_agent_positions[j])
-        ) / frame_time
+            np.array(self.current_world_agent_positions[j])
+            - np.array(self.prev_world_agent_positions[j])
+        ) / frame_time                                                                                                              #論文中のv_i(t)
         print(f"Agent[{j+1}]の速度: {agent_velocity}")  # ワールド座標系のAgentの速度
 
-        # それぞれのAgentのLocal座標のx軸とy軸の方向ベクトル
-        e_i_x = [
-            self.local_agent_positions[j][0] / self.ro_i[j],
-            self.local_agent_positions[j][1] / self.ro_i[j],
-        ]
-        e_i_y = np.array([-e_i_x[1], e_i_x[0]])
-        print(f"e_i_xについて: {np.array(e_i_x)}")
-        print(f"e_i_yについて: {np.array(e_i_y)}")
+        # 論文の式(5)に従ったローカル座標系の定義
+        # x軸はターゲットからエージェントへの方向
+        e_i_x = np.array(
+            [
+                self.local_agent_positions[j][0] / self.ro_i[j],
+                self.local_agent_positions[j][1] / self.ro_i[j],
+            ]
+        )                                                                                                                           #論文中のe_i_x
+        # y軸はx軸をπ/2回転（反時計回り）
+        e_i_y = np.array([-e_i_x[1], e_i_x[0]])                                                                                     #論文中のe_i_y
+        print(f"ローカル座標系のx軸: {e_i_x}")
+        print(f"ローカル座標系のy軸: {e_i_y}")
 
         print(f"targetの速度について: {self.target_velocity}")
         print(f"Agent[{j+1}]の速度について: {agent_velocity[:2]}")
-        relative_velocity = (
-            -self.target_velocity + agent_velocity[:2]
-        )  # agentがLocal、targetがWorldになってる要修正
-        relative_velocity = coordinate_trans_inverse(self.theta[j], relative_velocity)
-        # relative_velocity_r = np.dot(relative_velocity , e_i_x)
 
-        # targetとAgentの間の距離ro_iの時間微分
-        eta = relative_velocity[
-            0
-        ]  # _r #(self.ro_i[j] - self.prev_ro_i[j]) / frame_time #
-        print(f"targetとAgent[{j+1}]の距離の時間微分: {eta}")
-        # eta = (self.ro_i[j] - self.prev_ro_i[j]) / frame_time
-        # print(f"targetとAgent[{j+1}]の距離の時間微分: {eta}")
+        # 論文の式(6)に従った相対速度の計算
+        # ワールド座標系での相対速度を計算
+        relative_velocity_world = agent_velocity[:2] - self.target_velocity
+
+        # ローカル座標系に変換（論文の式(5)の回転行列A_i(t)の逆行列を使用）
+        # A_i(t) = [[cos(α_i), -sin(α_i)], [sin(α_i), cos(α_i)]]
+        cos_alpha = np.cos(self.theta[j])
+        sin_alpha = np.sin(self.theta[j])
+        A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
+        relative_velocity = A_inv @ relative_velocity_world
+
+        print(f"ローカル座標系での相対速度: {relative_velocity}")
+
+        # 論文の式(6)に従ったη_i（距離の時間微分）の計算
+        eta = relative_velocity[0]  # ローカル座標系のx成分
+        print(f"targetとAgent[{j+1}]の距離の時間微分η_i: {eta}")
 
         u_r, u_theta = caluculate(
             i,
@@ -183,10 +192,23 @@ class Animation:
             self.ro_i[j],
             eta,
         )
-        print(f"Agent[{j+1}]のローカル加速度: [{u_r} , {u_theta}]")
+        print(f"Agent[{j+1}]のローカル制御入力: [u_r={u_r}, u_theta={u_theta}]")
 
-        u_world = u_r * np.array(e_i_x) + u_theta * np.array(e_i_y)
-        u_world = np.append(u_world, 0)
+        # 論文の式(5)に従ったローカル座標系からワールド座標系への変換
+        # u_i(t) = A_i(t) * u^e_i(t)
+        # ここでA_i(t)は回転行列
+        cos_alpha = np.cos(self.theta[j])
+        sin_alpha = np.sin(self.theta[j])
+        A = np.array([[cos_alpha, -sin_alpha], [sin_alpha, cos_alpha]])
+
+        # ローカル座標系での制御入力ベクトル
+        u_local = np.array([u_r, u_theta])
+
+        # ワールド座標系に変換
+        u_world_2d = A @ u_local
+        u_world = np.append(u_world_2d, 0)  # z成分を追加
+
+        print(f"ワールド座標系での制御入力: {u_world}")
 
         local_agent_velocity = coordinate_trans(self.theta[j], agent_velocity[:2])
         print(f"ローカル速度: {local_agent_velocity}")
@@ -223,12 +245,19 @@ class Animation:
             f"今回のtargetから見たAgent[{j+1}]の位置を正しくコピーできているか確認: {self.prev_local_agent_positions[j]}"
         )
 
+        self.prev_prev_world_agent_positions[j] = np.copy(self.prev_world_agent_positions[j])
+        print(f"前回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_prev_world_agent_positions[j]}")
+
+        self.prev_world_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
+        print(f"今回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_world_agent_positions[j]}")
+
         """Coppeliasim上のAgentの位置同期"""
-        
-        print(f"位置更新する際のAgentの位置: {np.array(self.current_world_agent_positions)}")
+
+        print(
+            f"位置更新する際のAgentの位置: {np.array(self.current_world_agent_positions)}"
+        )
         print(f"位置更新する際のtargetの位置: {np.array(self.target_position)}")
         self.sim.setAgentposition(j, self.current_world_agent_positions)
         self.sim.settargetposition(self.target_position)
-            
-        print("\n")
 
+        print("\n")

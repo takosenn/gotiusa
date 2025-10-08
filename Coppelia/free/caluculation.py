@@ -1,17 +1,20 @@
-#u_r(放射方向)とu_theta(接線方向)を計算する
+# u_r(放射方向)とu_theta(接線方向)を計算する
 
 import numpy as np
-from parameter import R, Omega,frame_time,d_i
+from parameter import R, Omega, frame_time, d_i
 from DataStrage import e_i_1_integral, e_i_2_integral
 
-def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i,eta_norm):
-    #print(f"alpah_i: {alpha_i}")
-    #print(f"alpha_i_minus: {alpha_i_minus}")
-    #print(f"omega_i: {omega_i}")
-    #print(f"omega_i_minus: {omega_i_minus}")
-    #print(f"omega_i_plus: {omega_i_plus}")
-    #print(f"ro_i: {ro_i}")
-    #print(f"eta_norm: {eta_norm}")
+
+def caluculate(
+    i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm
+):
+    # print(f"alpah_i: {alpha_i}")
+    # print(f"alpha_i_minus: {alpha_i_minus}")
+    # print(f"omega_i: {omega_i}")
+    # print(f"omega_i_minus: {omega_i_minus}")
+    # print(f"omega_i_plus: {omega_i_plus}")
+    # print(f"ro_i: {ro_i}")
+    # print(f"eta_norm: {eta_norm}")
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
@@ -22,18 +25,28 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
     tau_i_2 = 2
     e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
     e_i_2 = tau_i_2 * abs(ro_i * (omega_i - Omega - fi))
-    
+
     # --- e_i_1, e_i_2の時間積分 ---
     e_i_1_integral[j] += e_i_1 * frame_time
     e_i_2_integral[j] += e_i_2 * frame_time
 
+    # 論文の式(21)に従った制御プロトコルの計算
+    # u^e_i = [u^e_i1, u^e_i2]^T
+    # u^e_i1 = -ω_i^2 ρ_i - η_i - e_i1 sign(ρ_i - R_i + η_i)
+    # u^e_i2 = (ω_i + Ω + f_i)η_i + z_i ρ_i + e_i2 sign(f_i + Ω - ω_i)
 
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
-    #u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
-    u_r = -ro_i * omega_i**2 - eta_norm - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
-    u_theta = ((omega_i + Omega + fi) * eta_norm + zi * ro_i + e_i_2_integral[j] * np.sign(fi + Omega - omega_i))
+    # u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
+    u_r = (
+        -ro_i * omega_i**2 - eta_norm - e_i_1_integral[j] * np.sign(ro_i - R + eta_norm)
+    )
+    u_theta = (
+        (omega_i + Omega + fi) * eta_norm
+        + zi * ro_i
+        + e_i_2_integral[j] * np.sign(fi + Omega - omega_i)
+    )
 
-    #u_r(放射方向)とu_theta(接線方向)の調整
+    # u_r(放射方向)とu_theta(接線方向)の調整
     if ro_i > 1.5 * R or ro_i < 0.5 * R:
         u_r = u_r * 1
     else:
@@ -42,5 +55,5 @@ def caluculate(i,j,alpha_i,alpha_i_minus,omega_i_plus,omega_i,omega_i_minus,ro_i
         u_theta = u_theta * 1
     else:
         u_theta = u_theta * 1
-    #print(u_theta)
-    return u_r,u_theta
+    # print(u_theta)
+    return u_r, u_theta
