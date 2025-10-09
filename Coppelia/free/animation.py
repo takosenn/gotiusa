@@ -1,13 +1,14 @@
 import numpy as np
 from connect_Coppelia import Simulation
 from parameter import num_agents, frame_time, omega_target
-from various_calculation import coordinate_trans, coordinate_trans_inverse
+from various_calculation import coordinate_trans, coordinate_trans_inverse , Various
 from caluculation import caluculate
 
 
 class Animation:
     def __init__(self):
         self.sim = Simulation()
+        self.various = Various()
         self.ro_i = [5, 5, 5, 5, 5, 5]
         self.prev_ro_i = [5, 5, 5, 5, 5, 5]
         self.target_position = [0, 5, 2]
@@ -68,7 +69,7 @@ class Animation:
                 -5 * omega_target * np.sin(target_theta),  # y方向の速度成分
             ]
         )
-
+        
         # ここから下はAgentの位置更新
         j = i % num_agents
         j_plus = (i + 1) % num_agents
@@ -90,42 +91,22 @@ class Animation:
         )  # target-Agent間の距離(スカラー)
         print(f"targetとAgent[{j+1}]の距離: {self.ro_i[j]}")                                                                    # 論文中のρ_i(t)
 
-        self.theta[j] = np.arctan2(
-            self.local_agent_positions[j][1], self.local_agent_positions[j][0]
-        )  # targetとAgentのなす角                                                                                              theta_now
-        if self.theta[j] >= 0:
-            self.theta[j] = self.theta[j]
-        else:
-            self.theta[j] = self.theta[j] + 2 * np.pi
+        self.theta[j] = self.various.Theta(self.local_agent_positions[j])
         print(
             f"targetとAgent[{j+1}]とのなす角度: {self.theta[j]}"                                                                # 論文中のα[j]
         )  # なす角を0~2πの範囲に
 
         # Agent[i]とAgent[i+1]の間の角距離(例: π/3とかπ/4など)
-        diff = self.theta[j_plus] - self.theta[j]
-        if diff >= 0:
-            self.alpha_i[j] = diff
-        else:
-            self.alpha_i[j] = diff + 2 * np.pi
-        print(
-            f"Agent[{j+1}]とAgent[{j_plus+1}]の角距離: {self.alpha_i[j]}"
-        )                                                                                                                       # 論文中のα_hat[j]
-
-        diff_minus = self.theta[j] - self.theta[j_minus]
-        if diff_minus >= 0:
-            self.alpha_i_minus[j] = diff_minus
-        else:
-            self.alpha_i_minus[j] = diff_minus + 2 * np.pi
-        print(
-            f"Agent[{j+1}]とAgent[{j_minus+1}]の角距離: {self.alpha_i_minus[j]}"
-        )                                                                                                                       # 論文中のα_hat[j_minus]
+        
+        self.alpha_i[j] , self.alpha_i_minus[j] = self.various.Angular_distance(self.theta[j_plus] , self.theta[j] , self.theta[j_minus])
+        print(f"Agent[{j+1}]とAgent[{j_plus+1}]の角距離: {self.alpha_i[j]}")                                                                                                                       # 論文中のα_hat[j]
+        print(f"Agent[{j+1}]とAgent[{j_minus+1}]の角距離: {self.alpha_i_minus[j]}")                                                                                                                # 論文中のα_hat[j_minus]
 
         # print(np.array(self.prev_theta))
-        self.omega_i[j] = (self.theta[j] - self.prev_theta[j]) / frame_time
+        self.omega_i[j] = self.various.Angular_velocity(self.theta[j] , self.prev_theta[j])
         print(
             f"Agent[{j+1}]がtargetの周りを回る角速度: {self.omega_i[j]}"
         )                                                                                                                           # 論文中のω_i[j]
-
         # 隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)
         self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
         print(
@@ -142,10 +123,7 @@ class Animation:
         print(
             f"targetから見たAgent[{j+1}]の前々回のLocal座標系の位置: {np.array(self.prev_prev_local_agent_positions[j])}"
         )
-        agent_velocity = (
-            np.array(self.current_world_agent_positions[j])
-            - np.array(self.prev_world_agent_positions[j])
-        ) / frame_time                                                                                                              #論文中のv_i(t)
+        agent_velocity = self.various.Velocity(self.current_world_agent_positions[j] , self.prev_prev_world_agent_positions[j])                                                                                                #論文中のv_i(t)
         print(f"Agent[{j+1}]の速度: {agent_velocity}")  # ワールド座標系のAgentの速度
 
         # 論文の式(5)に従ったローカル座標系の定義
@@ -166,7 +144,7 @@ class Animation:
 
         # 論文の式(6)に従った相対速度の計算
         # ワールド座標系での相対速度を計算
-        relative_velocity_world = agent_velocity[:2] - self.target_velocity
+        relative_velocity_world = - self.target_velocity# + agent_velocity[:2] 
 
         # ローカル座標系に変換（論文の式(5)の回転行列A_i(t)の逆行列を使用）
         # A_i(t) = [[cos(α_i), -sin(α_i)], [sin(α_i), cos(α_i)]]
