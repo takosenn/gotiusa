@@ -1,7 +1,7 @@
 import numpy as np
 from connect_Coppelia import Simulation
 from parameter import num_agents, frame_time, omega_target
-from various_calculation import coordinate_trans, coordinate_trans_inverse , Various
+from various_calculation import Various
 from caluculation import caluculate
 
 
@@ -190,7 +190,7 @@ class Animation:
 
             print(f"ワールド座標系での制御入力: {u_world}")
 
-            local_agent_velocity = coordinate_trans(self.theta[j], agent_velocity[:2])
+            local_agent_velocity = self.various.coordinate_trans(self.theta[j], agent_velocity[:2])
             print(f"ローカル速度: {local_agent_velocity}")
 
             updated_position = (

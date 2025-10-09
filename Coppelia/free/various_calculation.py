@@ -3,44 +3,9 @@
 import numpy as np
 from parameter import frame_time , num_agents
 
-def omega_i_local_calculation(ro_i , agent_velocity):
-    # ローカル角速度
-    omega_i_local = agent_velocity / ro_i
-    omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
-    print(f"これはomega_i_localです{omega_i_local}")
-    return omega_i_local
 
-def coordinate_trans(theta_global, u):
-    A = np.array(
-        [
-            [np.cos(theta_global), -np.sin(theta_global)],
-            [np.sin(theta_global), np.cos(theta_global)],
-        ]
-    )
-    u_vec_local = np.array([u[0], u[1]])
-    u_vec = A @ u_vec_local
-    return u_vec
 
-def coordinate_trans_inverse(theta_global, u):
-    A = np.array(
-        [
-            [np.cos(theta_global), -np.sin(theta_global)],
-            [np.sin(theta_global), np.cos(theta_global)],
-        ]
-    )
-    u_vec_local = np.array([u[0], u[1]])
-    u_vec = np.linalg.inv(A) @ u_vec_local
-    return u_vec
 
-def Coordinate_Correction(Yaw):
-    correction_x = 0.4*np.cos(Yaw)
-    correction_y = 0.4*np.sin(Yaw)
-    #print(f"これは関数内の位置座標補正の値です{np.array([correction_x, correction_y])}")
-    return np.array([correction_x, correction_y])
-
-def velocity_calculation(positions , prev_positions):
-    velocity = (np.array(positions)- np.array(prev_positions)) / frame_time
-    return velocity
 
 class Various:
     def __init__(self):
@@ -87,6 +52,31 @@ class Various:
     def Velocity(self , current_pos , prev_pos):
         velocity = (np.array(current_pos) - np.array(prev_pos)) / frame_time
         return velocity
+
+    def omega_i_local_calculation(self , ro_i , agent_velocity):
+        # ローカル角速度
+        omega_i_local = agent_velocity / ro_i
+        omega_i_local = (omega_i_local + np.pi) % (2 * np.pi) - np.pi
+        print(f"これはomega_i_localです{omega_i_local}")
+        return omega_i_local
     
+    def coordinate_trans(self , theta_global, u):
+        A = np.array(
+            [
+                [np.cos(theta_global), -np.sin(theta_global)],
+                [np.sin(theta_global), np.cos(theta_global)],
+            ]
+        )
+        u_vec_local = np.array([u[0], u[1]])
+        u_vec = A @ u_vec_local
+        return u_vec
+    
+    def Coordinate_Correction(self , Yaw):
+        correction_x = 0.4*np.cos(Yaw)
+        correction_y = 0.4*np.sin(Yaw)
+        #print(f"これは関数内の位置座標補正の値です{np.array([correction_x, correction_y])}")
+        return np.array([correction_x, correction_y])
 
-
+    def velocity_calculation(self , positions , prev_positions):
+        velocity = (np.array(positions)- np.array(prev_positions)) / frame_time
+        return velocity
