@@ -76,7 +76,12 @@ class Various:
         return self.alpha , self.alpha_minus
     
     def Angular_velocity(self , theta , prev_theta):                                          #prev_thetaはi番目の角度 theta = 2πの際に問題あり
-        omega = (theta - prev_theta) #/ frame_time
+        delta = theta - prev_theta
+        if delta > np.pi:
+            delta -= 2 * np.pi
+        elif delta < -np.pi:
+            delta += 2 * np.pi
+        omega = delta #/ frame_time
         return omega
     
     def Velocity(self , current_pos , prev_pos):
