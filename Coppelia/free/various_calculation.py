@@ -50,7 +50,7 @@ class Various:
             self.theta.append(theta)
         self.alpha = []
         for i in range(num_agents):
-            alpha = np.pi / 3
+            alpha = i * np.pi / 3
             self.alpha.append(alpha)
         self.alpha_minus = np.copy(self.alpha)
 
@@ -67,16 +67,16 @@ class Various:
         if diff_plus >= 0:
             self.alpha = diff_plus
         else:
-            self.alpha = diff_plus + 2 * np.pi
+            self.alpha = diff_plus + (2 * np.pi)
         diff_minus = theta - theta_minus
         if diff_minus >= 0:
             self.alpha_minus = diff_minus
         else:
-            self.alpha_minus = diff_minus + 2 * np.pi
+            self.alpha_minus = diff_minus + (2 * np.pi)
         return self.alpha , self.alpha_minus
     
     def Angular_velocity(self , theta , prev_theta):                                          #prev_thetaはi番目の角度
-        omega = (theta - prev_theta) / frame_time
+        omega = (theta - prev_theta) #/ frame_time
         return omega
     
     def Velocity(self , current_pos , prev_pos):

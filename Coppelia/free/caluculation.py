@@ -8,13 +8,13 @@ from DataStrage import e_i_1_integral, e_i_2_integral
 def caluculate(
     i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm
 ):
-    # print(f"alpah_i: {alpha_i}")
-    # print(f"alpha_i_minus: {alpha_i_minus}")
-    # print(f"omega_i: {omega_i}")
-    # print(f"omega_i_minus: {omega_i_minus}")
-    # print(f"omega_i_plus: {omega_i_plus}")
-    # print(f"ro_i: {ro_i}")
-    # print(f"eta_norm: {eta_norm}")
+    #print(f"alpah_i: {alpha_i}")
+    #print(f"alpha_i_minus: {alpha_i_minus}")
+    #print(f"omega_i: {omega_i}")
+    #print(f"omega_i_minus: {omega_i_minus}")
+    #print(f"omega_i_plus: {omega_i_plus}")
+    #print(f"ro_i: {ro_i}")
+    #print(f"eta_norm: {eta_norm}")
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
