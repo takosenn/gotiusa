@@ -46,9 +46,10 @@ class Simulation:
             self.Agent_handles.append(Agent_handle)
             print(f"取得: {object_name} のtarget")
 
-    def initial_setAgentpositions(self, i, Agent_positions):
-        self.sim.setObjectPosition(self.Drone_handles[i], -1, Agent_positions)
-        self.sim.setObjectPosition(self.Agent_handles[i], -1, Agent_positions)
+    def initial_setAgentpositions(self, Agent_positions):
+        for i in range(num_agents):
+            self.sim.setObjectPosition(self.Drone_handles[i], -1, Agent_positions[i])
+            self.sim.setObjectPosition(self.Agent_handles[i], -1, Agent_positions[i])
 
     def initial_settargetposition(self, target_position):
         self.sim.setObjectPosition(self.target_Drone_handle, -1, target_position)

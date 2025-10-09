@@ -62,7 +62,7 @@ class Various:
             self.theta = self.theta + 2 * np.pi
         return self.theta
 
-    def Angular_distance(self , theta , theta_plus , theta_minus):                          #theta_minusは(i-1)番目、theta_plusは(i+1)番目の角度(World座標系)
+    def Angular_distance(self , theta , theta_plus , theta_minus):                          #theta_minusは(i-1)番目、theta_plusは(i+1)番目の角度(World座標系) 
         diff_plus = theta_plus - theta
         if diff_plus >= 0:
             self.alpha = diff_plus
@@ -75,7 +75,7 @@ class Various:
             self.alpha_minus = diff_minus + (2 * np.pi)
         return self.alpha , self.alpha_minus
     
-    def Angular_velocity(self , theta , prev_theta):                                          #prev_thetaはi番目の角度
+    def Angular_velocity(self , theta , prev_theta):                                          #prev_thetaはi番目の角度 theta = 2πの際に問題あり
         omega = (theta - prev_theta) #/ frame_time
         return omega
     
