@@ -46,7 +46,7 @@ class Various:
             delta -= 2 * np.pi
         elif delta < -np.pi:
             delta += 2 * np.pi
-        omega = delta #/ frame_time
+        omega = delta / frame_time
         return omega
     
     def Velocity(self , current_pos , prev_pos):
