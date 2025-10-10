@@ -34,6 +34,7 @@ class Animation:
         self.prev_prev_local_agent_positions = [
             pos.copy() for pos in self.prev_local_agent_positions
         ]
+        self.target_theta = 0
         self.theta = []
         for i in range(num_agents):
             theta = i * np.pi / 3
@@ -56,17 +57,17 @@ class Animation:
 
     def animate(self, i):
         # ここから下はtargetの位置更新
-        target_theta = omega_target * i
-        target_x = 5 * np.sin(target_theta)
-        target_y = 5 * np.cos(target_theta)
+        self.target_theta = omega_target * i
+        target_x = 5 * np.sin(self.target_theta)
+        target_y = 5 * np.cos(self.target_theta)
         self.target_position = [target_x, target_y, 2]
         print(
             f"現在のtargetのWorld座標系の位置座標: {np.array(self.target_position)}"
         )                                                                                                                   # 論文中のP_0(t)
         self.target_velocity = np.array(
             [
-                -5 * omega_target * np.cos(target_theta),  # x方向の速度成分
-                -5 * omega_target * np.sin(target_theta),  # y方向の速度成分
+                -5 * omega_target * np.cos(self.target_theta),  # x方向の速度成分
+                -5 * omega_target * np.sin(self.target_theta),  # y方向の速度成分
             ]
         )
         for j in range(num_agents):

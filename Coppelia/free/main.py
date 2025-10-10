@@ -29,7 +29,7 @@ class Main:
             self.sim.start_simulation()
             self.sim.initial_settargetposition(self.initial_target_pos)
             self.sim.initial_setAgentpositions(self.initial_agent_pos)
-            for i in range(1000):
+            for i in range(10000):
                 self.ani.animate(i)
                 time.sleep(frame_time)
         except KeyboardInterrupt:
