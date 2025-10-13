@@ -1,9 +1,9 @@
 import numpy as np
 from connect_Coppelia import Simulation
-from parameter import num_agents, frame_time, omega_target
+from parameter import num_agents, frame_time, omega_target, radius_limit, radius
 from various_calculation import Various
 from caluculation import caluculate
-from csv_save import set_csv_header , save_csv_data
+from csv_save import set_csv_header, save_csv_data
 import csv
 from datetime import datetime
 
@@ -16,14 +16,28 @@ class Animation:
     def __init__(self):
         self.sim = Simulation()
         self.various = Various()
-        self.ro_i = [5, 5, 5, 5, 5, 5]  # [m]
-        self.prev_ro_i = [5, 5, 5, 5, 5, 5]
-        self.target_position = [0, 5, 2]
+        self.ro_i = [
+            radius_limit,
+            radius_limit,
+            radius_limit,
+            radius_limit,
+            radius_limit,
+            radius_limit,
+        ]  # [m]
+        self.prev_ro_i = [
+            radius_limit,
+            radius_limit,
+            radius_limit,
+            radius_limit,
+            radius_limit,
+            radius_limit,
+        ]
+        self.target_position = [0, radius, 2]
         self.current_world_agent_positions = []
         for i in range(num_agents):
             current_world_agent_positions = [
-                5 * np.cos(i * np.pi / 3),
-                5 + 5 * np.sin(i * np.pi / 3),
+                radius_limit * np.cos(i * np.pi / 3),
+                radius + radius_limit * np.sin(i * np.pi / 3),
                 2,
             ]
             self.current_world_agent_positions.append(current_world_agent_positions)
@@ -71,16 +85,16 @@ class Animation:
         # ここから下はtargetの位置更新
         self.target_theta = omega_target * i * frame_time  # [rad]
         current_time = i * frame_time
-        print(f"現在の経過時間：{current_time}")
+        #print(f"現在の経過時間：{current_time}")
         # print(f"targetの角度: {self.target_theta}")
-        target_x = 5 * np.sin(self.target_theta)  # [m]
-        target_y = 5 * np.cos(self.target_theta)  # [m]
+        target_x = radius * np.sin(self.target_theta)  # [m]
+        target_y = radius * np.cos(self.target_theta)  # [m]
         self.target_position = [target_x, target_y, 2]
         # print(f"現在のtargetのWorld座標系の位置座標: {np.array(self.target_position)}")                                                                                                                   # 論文中のP_0(t)[m]
         self.target_velocity = np.array(
             [
-                -5 * omega_target * np.cos(self.target_theta),  # x方向の速度成分
-                -5 * omega_target * np.sin(self.target_theta),  # y方向の速度成分
+                -radius * omega_target * np.cos(self.target_theta),  # x方向の速度成分
+                -radius * omega_target * np.sin(self.target_theta),  # y方向の速度成分
             ]
         )  # [m/s]
 
@@ -89,7 +103,7 @@ class Animation:
             # j = i % num_agents
             j_plus = (j + 1) % num_agents
             j_minus = (j - 1) % num_agents
-            # print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}")                          # 論文中のP_i(t)[m]
+            print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}")                          # 論文中のP_i(t)[m]
 
             self.local_agent_positions[j] = np.array(
                 self.current_world_agent_positions[j]
@@ -113,11 +127,28 @@ class Animation:
             # print(f"Agent[{j+1}]とAgent[{j_plus+1}]の角距離: {self.alpha_i[j]}")                                                                                                                       # 論文中のα_hat[j]
             # print(f"Agent[{j+1}]とAgent[{j_minus+1}]の角距離: {self.alpha_i_minus[j]}")                                                                                                                # 論文中のα_hat[j_minus]
 
+            agent_velocity = self.various.Velocity(
+                self.current_world_agent_positions[j],
+                self.prev_prev_world_agent_positions[j],
+            )  # 論文中のv_i(t) 1ステップ差分に修正
+            print(f"Agent[{j+1}]の速度: {agent_velocity}")  # ワールド座標系のAgentの速度
+
+            # 論文の式(6)に従った相対速度の計算
+            # ワールド座標系での相対速度を計算
+            relative_velocity_world = -self.target_velocity + agent_velocity[:2]
+
+            # ローカル座標系に変換（論文の式(5)の回転行列A_i(t)の逆行列を使用）
+            # A_i(t) = [[cos(α_i), -sin(α_i)], [sin(α_i), cos(α_i)]]
+            cos_alpha = np.cos(self.theta[j])
+            sin_alpha = np.sin(self.theta[j])
+            A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
+            relative_velocity = A_inv @ relative_velocity_world
+
+            # print(f"ローカル座標系での相対速度: {relative_velocity}")                                                                     #別ファイルのrelative_velocity_rに当てはまる
+
             # print(np.array(self.prev_theta))
-            self.omega_i[j] = self.various.Angular_velocity(
-                self.theta[j], self.prev_theta[j]
-            )
-            # print(f"Agent[{j+1}]がtargetの周りを回る角速度: {self.omega_i[j]}")                                                                                                                           # 論文中のω_i[j]
+            self.omega_i[j] = relative_velocity[1]/self.ro_i[j]#self.various.Angular_velocity(self.theta[j], self.prev_theta[j])
+            print(f"Agent[{j+1}]がtargetの周りを回る角速度: {self.omega_i[j]}")                                                                                                                           # 論文中のω_i[j]
             # 隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)
             # print(f"omega_i_plusを求める際に使う値: theta={self.theta[j_plus]} , prev_theta={self.prev_theta[j_plus]}")
             self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
@@ -128,11 +159,6 @@ class Animation:
 
             # print(f"targetから見たAgent[{j+1}]の前回のLocal座標系の位置: {np.array(self.prev_local_agent_positions[j])}")
             # print(f"targetから見たAgent[{j+1}]の前々回のLocal座標系の位置: {np.array(self.prev_prev_local_agent_positions[j])}")
-            agent_velocity = self.various.Velocity(
-                self.current_world_agent_positions[j],
-                self.prev_prev_world_agent_positions[j],
-            )  # 論文中のv_i(t)
-            # print(f"Agent[{j+1}]の速度: {agent_velocity}")  # ワールド座標系のAgentの速度
 
             # 論文の式(5)に従ったローカル座標系の定義
             # x軸はターゲットからエージェントへの方向
@@ -150,22 +176,14 @@ class Animation:
             # print(f"targetの速度について: {self.target_velocity}")
             # print(f"Agent[{j+1}]の速度について: {agent_velocity[:2]}")
 
-            # 論文の式(6)に従った相対速度の計算
-            # ワールド座標系での相対速度を計算
-            relative_velocity_world = -self.target_velocity + agent_velocity[:2]
-
-            # ローカル座標系に変換（論文の式(5)の回転行列A_i(t)の逆行列を使用）
-            # A_i(t) = [[cos(α_i), -sin(α_i)], [sin(α_i), cos(α_i)]]
-            cos_alpha = np.cos(self.theta[j])
-            sin_alpha = np.sin(self.theta[j])
-            A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
-            relative_velocity = A_inv @ relative_velocity_world
-
-            # print(f"ローカル座標系での相対速度: {relative_velocity}")                                                                       #別ファイルのrelative_velocity_rに当てはまる
-
             # 論文の式(6)に従ったη_i（距離の時間微分）の計算
             eta = relative_velocity[0]  # ローカル座標系のx成分
             # print(f"targetとAgent[{j+1}]の距離の時間微分η_i: {eta}")
+            # ro_iのスパイクを簡易検知（下側領域付近の挙動確認用）
+            if self.ro_i[j] > 1.5 * radius:
+                print(
+                    f"[warn] ro_i spike: idx={j}, ro_i={self.ro_i[j]:.3f}, theta={self.theta[j]:.3f}"
+                )
 
             u_r, u_theta = caluculate(
                 i,
@@ -219,8 +237,6 @@ class Animation:
 
             # print(f"位置座標更新後のAgent[{j + 1}]のWorld座標系の位置: {np.array(self.current_world_agent_positions[j])}")
 
-            
-
             # ここから上のself.prev_ro_iは前回のself.ro_iをコピーできてる
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
             # print(f"前回のtargetとAgent[{j+1}]との距離を正しくコピーできているか確認: {self.prev_ro_i[j]}")
@@ -236,15 +252,15 @@ class Animation:
             self.prev_prev_world_agent_positions[j] = np.copy(
                 self.prev_world_agent_positions[j]
             )
-            # print(f"前回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_prev_world_agent_positions[j]}")
+            #print(f"前回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_prev_world_agent_positions[j]}")
             self.prev_world_agent_positions[j] = np.copy(
                 self.current_world_agent_positions[j]
             )
-            # print(f"今回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_world_agent_positions[j]}")
+            #print(f"今回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_world_agent_positions[j]}")
 
             # print("\n")
 
-        save_csv_data(Japan_time , current_time , self.ro_i , self.alpha_i , self.omega_i)
+        save_csv_data(Japan_time, current_time, self.ro_i, self.alpha_i, self.omega_i)
 
         """Coppeliasim上のAgentの位置同期"""
         # print(f"位置更新する際のAgentの位置: {np.array(self.current_world_agent_positions)}")

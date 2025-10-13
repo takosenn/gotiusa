@@ -1,6 +1,6 @@
 # これを実行するとシミュレーションスタート
 
-from parameter import frames, frame_time
+from parameter import frames, frame_time , radius , radius_limit , initial_target_position , initial_agents_positions
 from animation import Animation
 from connect_Coppelia import Simulation
 import time
@@ -19,10 +19,10 @@ class Main:
         self.sim.get_handles(num_agents)
         self.ani = Animation()
         self.ani.sim = self.sim
-        self.initial_target_pos = [0, 5, 2]
+        self.initial_target_pos = initial_target_position
         self.initial_agent_pos = []
         for i in range(num_agents):
-            agent_pos = [5 * np.cos(i * np.pi / 3), 5 + 5 * np.sin(i * np.pi / 3), 2]
+            agent_pos = initial_agents_positions[i]
             self.initial_agent_pos.append(agent_pos)
 
     def run(self):
@@ -31,7 +31,7 @@ class Main:
             self.sim.start_simulation()
             self.sim.initial_settargetposition(self.initial_target_pos)
             self.sim.initial_setAgentpositions(self.initial_agent_pos)
-            for i in range(10000):
+            for i in range(frames):
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 self.ani.animate(i)
                 time.sleep(frame_time)

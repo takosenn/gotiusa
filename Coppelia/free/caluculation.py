@@ -8,28 +8,33 @@ from DataStrage import e_i_1_integral, e_i_2_integral
 def caluculate(
     i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm
 ):
-    #print(f"alpah_i: {alpha_i}")
-    #print(f"alpha_i_minus: {alpha_i_minus}")
-    #print(f"omega_i: {omega_i}")
-    #print(f"omega_i_minus: {omega_i_minus}")
-    #print(f"omega_i_plus: {omega_i_plus}")
-    #print(f"ro_i: {ro_i}")
-    #print(f"eta_norm: {eta_norm}")
+    # print(f"alpah_i: {alpha_i}")
+    # print(f"alpha_i_minus: {alpha_i_minus}")
+    # print(f"omega_i: {omega_i}")
+    # print(f"omega_i_minus: {omega_i_minus}")
+    # print(f"omega_i_plus: {omega_i_plus}")
+    # print(f"ro_i: {ro_i}")
+    # print(f"eta_norm: {eta_norm}")
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
 
     # e_i_1, e_i_2の初期値は0、それ以降は式で計算
-
-    tau_i_1 = 2
-    tau_i_2 = 2
-    e_i_1 = tau_i_1 * abs(ro_i - R + eta_norm)
-    e_i_2 = tau_i_2 * abs(ro_i * (omega_i - Omega - fi))
+    if i == 0:
+        tau_i_1 = 0
+        tau_i_2 = 0
+    else:
+        tau_i_1 = 2
+        tau_i_2 = 2
+    e_i_1 = tau_i_1 * abs(np.linalg.norm(ro_i) - R + eta_norm)
+    e_i_2 = tau_i_2 * abs(np.linalg.norm(ro_i) * (omega_i - Omega - fi))
 
     # --- e_i_1, e_i_2の時間積分 ---
     e_i_1_integral[j] += e_i_1 * frame_time
     e_i_2_integral[j] += e_i_2 * frame_time
 
+    print(f"e_i_1: {e_i_1_integral[j]}")
+    print(f"e_i_2: {e_i_2_integral[j]}")
     # 論文の式(21)に従った制御プロトコルの計算
     # u^e_i = [u^e_i1, u^e_i2]^T
     # u^e_i1 = -ω_i^2 ρ_i - η_i - e_i1 sign(ρ_i - R_i + η_i)
@@ -52,8 +57,8 @@ def caluculate(
     else:
         u_r = u_r * 1
     if alpha_i < np.pi / 3.4 or alpha_i > np.pi / 2.6:
-        u_theta = u_theta * 1
+        u_theta = u_theta * 0.5
     else:
-        u_theta = u_theta * 1
+        u_theta = u_theta * 0.5
     # print(u_theta)
     return u_r, u_theta
