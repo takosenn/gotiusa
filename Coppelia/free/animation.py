@@ -80,6 +80,8 @@ class Animation:
             alpha_i_minus = i * np.pi / 3
             self.alpha_i_minus.append(alpha_i_minus)
         self.current_world_agent_velocities = [[0, 0, 0] for _ in range(num_agents)]
+        self.e_i_1 = [0, 0, 0, 0, 0, 0]
+        self.e_i_2 = [0, 0, 0, 0, 0, 0]
 
     def animate(self, i):
         # ここから下はtargetの位置更新
@@ -180,7 +182,7 @@ class Animation:
                     f"[warn] ro_i spike: idx={j}, ro_i={self.ro_i[j]:.3f}, theta={self.theta[j]:.3f}"
                 )
 
-            u_r, u_theta = caluculate(
+            u_r, u_theta , self.e_i_1[j] , self.e_i_2[j] = caluculate(
                 i,
                 j,
                 self.alpha_i[j],
@@ -248,7 +250,7 @@ class Animation:
             )
             
 
-        save_csv_data(Japan_time, current_time, self.ro_i, self.alpha_i, self.omega_i)
+        save_csv_data(Japan_time, current_time, self.ro_i, self.alpha_i, self.omega_i , self.e_i_1 , self.e_i_2)
 
         """Coppeliasim上のAgentの位置同期"""
         self.sim.setAgentposition(j, self.current_world_agent_positions)

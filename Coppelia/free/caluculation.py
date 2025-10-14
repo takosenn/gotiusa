@@ -54,4 +54,4 @@ def caluculate(
     else:
         u_theta = u_theta * 0.5
     # print(u_theta)
-    return u_r, u_theta
+    return u_r, u_theta , e_i_1_integral[j] , e_i_2_integral[j]
