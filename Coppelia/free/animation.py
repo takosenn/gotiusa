@@ -124,14 +124,12 @@ class Animation:
 
 
             # Agent[i]とAgent[i+1]の間の角距離(例: π/3とかπ/4など)
-            self.alpha_i[j], self.alpha_i_minus[j] = self.various.Angular_distance(
-                self.theta[j], self.theta[j_plus], self.theta[j_minus]
-            )
+            self.alpha_i[j], self.alpha_i_minus[j] = self.various.Angular_distance(self.theta[j], self.theta[j_plus], self.theta[j_minus])
             # 論文中のα_hat[j]
             # 論文中のα_hat[j_minus]
 
             # 論文中のv_i(t) 1ステップ差分に修正 , ワールド座標系のAgentの速度
-            agent_velocity = self.various.Velocity(self.current_world_agent_positions[j],self.prev_world_agent_positions[j],)
+            agent_velocity = self.various.Velocity(self.current_world_agent_positions[j],self.prev_world_agent_positions[j])
 
             # 論文の式(6)に従った相対速度の計算
             # ワールド座標系での相対速度を計算

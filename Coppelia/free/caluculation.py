@@ -47,8 +47,8 @@ def caluculate(i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minu
     else:
         u_r = u_r * 1
     if alpha_i < np.pi / 3.4 or alpha_i > np.pi / 2.6:
-        u_theta = u_theta * 0.5
+        u_theta = u_theta * 1
     else:
-        u_theta = u_theta * 0.5
+        u_theta = u_theta * 1
     # print(u_theta)
     return u_r, u_theta , e_i_1_integral[j] , e_i_2_integral[j]
