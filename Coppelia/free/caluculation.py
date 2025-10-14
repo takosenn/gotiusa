@@ -11,13 +11,6 @@ def update_integral(current_value, previous_integral):
 def caluculate(
     i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm
 ):
-    # print(f"alpah_i: {alpha_i}")
-    # print(f"alpha_i_minus: {alpha_i_minus}")
-    # print(f"omega_i: {omega_i}")
-    # print(f"omega_i_minus: {omega_i_minus}")
-    # print(f"omega_i_plus: {omega_i_plus}")
-    # print(f"ro_i: {ro_i}")
-    # print(f"eta_norm: {eta_norm}")
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
@@ -39,9 +32,6 @@ def caluculate(
     print(f"e_i_1: {e_i_1_integral[j]}")
     print(f"e_i_2: {e_i_2_integral[j]}")
     # 論文の式(21)に従った制御プロトコルの計算
-    # u^e_i = [u^e_i1, u^e_i2]^T
-    # u^e_i1 = -ω_i^2 ρ_i - η_i - e_i1 sign(ρ_i - R_i + η_i)
-    # u^e_i2 = (ω_i + Ω + f_i)η_i + z_i ρ_i + e_i2 sign(f_i + Ω - ω_i)
 
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
     # u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
