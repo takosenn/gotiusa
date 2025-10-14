@@ -11,6 +11,7 @@ Japan_time = datetime.now()
 set_csv_header(Japan_time , "ro_i")
 set_csv_header(Japan_time , "alpha_i")
 set_csv_header(Japan_time , "omega_i")
+set_csv_header(Japan_time , "eta")
 set_csv_header(Japan_time , "e_i_1")
 set_csv_header(Japan_time , "e_i_2")
 
@@ -85,6 +86,7 @@ class Animation:
         self.current_world_agent_velocities = [[0, 0, 0] for _ in range(num_agents)]
         self.e_i_1 = [0, 0, 0, 0, 0, 0]
         self.e_i_2 = [0, 0, 0, 0, 0, 0]
+        self.eta = [0, 0, 0, 0, 0, 0]
 
     def animate(self, i):
         # ここから下はtargetの位置更新
@@ -107,20 +109,14 @@ class Animation:
             # ここから下はAgentの位置更新
             j_plus = (j + 1) % num_agents
             j_minus = (j - 1) % num_agents
-            print(
-                f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}"
-            )  # 論文中のP_i(t)[m]
+            #print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}")  # 論文中のP_i(t)[m]
 
-            self.local_agent_positions[j] = np.array(
-                self.current_world_agent_positions[j]
-            ) - np.array(
-                self.target_position
-            )  # targetから見たAgentの座標(x,y,zの要素3つ)
-            # vec # 論文中のP_bar_i(t)
-            self.ro_i[j] = np.linalg.norm(
-                self.local_agent_positions[j]
-            )  # target-Agent間の距離(スカラー)
-            # 論文中のρ_i(t)
+            # targetから見たAgentの座標(x,y,zの要素3つ) , vec # 論文中のP_bar_i(t)
+            self.local_agent_positions[j] = np.array(self.current_world_agent_positions[j]) - np.array(self.target_position)  
+            
+            # target-Agent間の距離(スカラー) ,  論文中のρ_i(t)
+            self.ro_i[j] = np.linalg.norm(self.local_agent_positions[j])
+            
 
 
             self.theta[j] = self.various.Theta(self.local_agent_positions[j])
@@ -134,11 +130,8 @@ class Animation:
             # 論文中のα_hat[j]
             # 論文中のα_hat[j_minus]
 
-            agent_velocity = self.various.Velocity(
-                self.current_world_agent_positions[j],
-                self.prev_world_agent_positions[j],
-            )  # 論文中のv_i(t) 1ステップ差分に修正
-            # ワールド座標系のAgentの速度
+            # 論文中のv_i(t) 1ステップ差分に修正 , ワールド座標系のAgentの速度
+            agent_velocity = self.various.Velocity(self.current_world_agent_positions[j],self.prev_world_agent_positions[j],)
 
             # 論文の式(6)に従った相対速度の計算
             # ワールド座標系での相対速度を計算
@@ -151,19 +144,17 @@ class Animation:
             A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
             relative_velocity = A_inv @ relative_velocity_world
 
-            #別ファイルのrelative_velocity_rに当てはまる
-
-
-            self.omega_i[j] = (
-                relative_velocity[1] / self.ro_i[j]
-            )  # self.various.Angular_velocity(self.theta[j], self.prev_theta[j])
             # 論文中のω_i[j]
+            self.omega_i[j] = (relative_velocity[1] / self.ro_i[j])
+            
 
-            # 隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)
-            self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
+            """隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)"""
+
             # 論文中のω_i[j_plus]
-            self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
+            self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
             # 論文中のω_i[j_minus]
+            self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
+            
 
             # 論文の式(5)に従ったローカル座標系の定義
             # x軸はターゲットからエージェントへの方向
@@ -177,13 +168,11 @@ class Animation:
             e_i_y = np.array([-e_i_x[1], e_i_x[0]])  # 論文中のe_i_y
 
             # 論文の式(6)に従ったη_i（距離の時間微分）の計算
-            eta = relative_velocity[0]  # ローカル座標系のx成分
+            self.eta[j] = relative_velocity[0]  # ローカル座標系のx成分
 
             # ro_iのスパイクを簡易検知（下側領域付近の挙動確認用）
-            if self.ro_i[j] > 1.5 * radius:
-                print(
-                    f"[warn] ro_i spike: idx={j}, ro_i={self.ro_i[j]:.3f}, theta={self.theta[j]:.3f}"
-                )
+            #if self.ro_i[j] > 1.5 * radius:
+            #    print(f"[warn] ro_i spike: idx={j}, ro_i={self.ro_i[j]:.3f}, theta={self.theta[j]:.3f}")
 
             u_r, u_theta , self.e_i_1[j] , self.e_i_2[j] = caluculate(
                 i,
@@ -194,7 +183,7 @@ class Animation:
                 self.omega_i[j],
                 self.omega_i_minus[j],
                 self.ro_i[j],
-                eta,
+                self.eta[j],
             )
 
             # 論文の式(5)に従ったローカル座標系からワールド座標系への変換
@@ -232,29 +221,24 @@ class Animation:
             )  # 要素に追加
 
 
-            # ここから上のself.prev_ro_iは前回のself.ro_iをコピーできてる
+            """値のコピーを開始"""
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
 
             self.prev_theta[j] = np.copy(self.theta[j])
             
-            self.prev_prev_local_agent_positions = np.copy(
-                self.prev_local_agent_positions
-            )
+            self.prev_prev_local_agent_positions = np.copy(self.prev_local_agent_positions)
             
             # ここから上はself.prev_agent_positionsは前回のself.aget_positionsをコピーできてる
             self.prev_local_agent_positions[j] = np.copy(self.local_agent_positions[j])
             
-            self.prev_prev_world_agent_positions[j] = np.copy(
-                self.prev_world_agent_positions[j]
-            )
+            self.prev_prev_world_agent_positions[j] = np.copy(self.prev_world_agent_positions[j])
             
-            self.prev_world_agent_positions[j] = np.copy(
-                self.current_world_agent_positions[j]
-            )
+            self.prev_world_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
             
         save_csv_data(Japan_time , current_time , self.ro_i , "ro_i")
         save_csv_data(Japan_time , current_time , self.alpha_i , "alpha_i")
         save_csv_data(Japan_time , current_time , self.omega_i , "omega_i")
+        save_csv_data(Japan_time , current_time , self.eta , "eta")
         save_csv_data(Japan_time , current_time , self.e_i_1 , "e_i_1")
         save_csv_data(Japan_time , current_time , self.e_i_2 , "e_i_2")
 

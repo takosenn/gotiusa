@@ -5,13 +5,8 @@ from parameter import R, Omega, frame_time, d_i
 from DataStrage import e_i_1_integral, e_i_2_integral
 
 
-def caluculate(
-    i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm
-):
-    print(f"Agent[{j+1}]の相対距離: {ro_i}")
-    print(f"Agent[{j+1}]の各距離: {alpha_i}")
-    print(f"Agent[{j+1}]の角速度: {omega_i}")
-    print(f"Agent[{j+1}]の相対距離の時間微分: {eta_norm}")
+def caluculate(i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm):
+
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
@@ -31,8 +26,8 @@ def caluculate(
     e_i_1_integral[j] += e_i_1 * frame_time
     e_i_2_integral[j] += e_i_2 * frame_time
 
-    print(f"e_i_1: {e_i_1_integral[j]}")
-    print(f"e_i_2: {e_i_2_integral[j]}")
+    #print(f"e_i_1: {e_i_1_integral[j]}")
+    #print(f"e_i_2: {e_i_2_integral[j]}")
     # 論文の式(21)に従った制御プロトコルの計算
 
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
