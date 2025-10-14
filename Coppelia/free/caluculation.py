@@ -4,19 +4,21 @@ import numpy as np
 from parameter import R, Omega, frame_time, d_i
 from DataStrage import e_i_1_integral, e_i_2_integral
 
-def update_integral(current_value, previous_integral):
-    return previous_integral + current_value * frame_time
-
 
 def caluculate(
     i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta_norm
 ):
+    print(f"Agent[{j+1}]の相対距離: {ro_i}")
+    print(f"Agent[{j+1}]の各距離: {alpha_i}")
+    print(f"Agent[{j+1}]の角速度: {omega_i}")
+    print(f"Agent[{j+1}]の相対距離の時間微分: {eta_norm}")
     # --- fi, zi の計算と表示 ---
     fi = (d_i * alpha_i - d_i * alpha_i_minus) / (2 * d_i)
     zi = (d_i * (omega_i_plus - omega_i) - d_i * (omega_i - omega_i_minus)) / (2 * d_i)
 
     # e_i_1, e_i_2の初期値は0、それ以降は式で計算
-    if i == 0 or i == 1 or i ==2 or i==3 or i==4 or i == 5:
+    
+    if i == 0 or i ==1 or i==2 or i==3 or i==4 or i==5:
         tau_i_1 = 0
         tau_i_2 = 0
     else:

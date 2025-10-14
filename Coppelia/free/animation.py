@@ -9,7 +9,11 @@ from datetime import datetime
 
 Japan_time = datetime.now()
 
-set_csv_header(Japan_time)
+set_csv_header(Japan_time , "ro_i")
+set_csv_header(Japan_time , "alpha_i")
+set_csv_header(Japan_time , "omega_i")
+set_csv_header(Japan_time , "e_i_1")
+set_csv_header(Japan_time , "e_i_2")
 
 
 class Animation:
@@ -249,8 +253,11 @@ class Animation:
                 self.current_world_agent_positions[j]
             )
             
-
-        save_csv_data(Japan_time, current_time, self.ro_i, self.alpha_i, self.omega_i , self.e_i_1 , self.e_i_2)
+        save_csv_data(Japan_time , current_time , self.ro_i , "ro_i")
+        save_csv_data(Japan_time , current_time , self.alpha_i , "alpha_i")
+        save_csv_data(Japan_time , current_time , self.omega_i , "omega_i")
+        save_csv_data(Japan_time , current_time , self.e_i_1 , "e_i_1")
+        save_csv_data(Japan_time , current_time , self.e_i_2 , "e_i_2")
 
         """Coppeliasim上のAgentの位置同期"""
         self.sim.setAgentposition(j, self.current_world_agent_positions)
