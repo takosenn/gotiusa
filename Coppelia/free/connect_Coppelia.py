@@ -63,19 +63,3 @@ class Simulation:
     def settargetposition(self, target_pos_3d):
         # Coppeliasim側でtargetの緑の球(target)の位置同期
         self.sim.setObjectPosition(self.target_handle, -1, target_pos_3d)
-
-    def set_all_positions_batch(self, all_agent_positions, target_position=None):
-        """全てのエージェントの位置を一括で設定（バッチ処理）"""
-        # 全てのエージェントの位置を同時に設定
-        for j, pos in all_agent_positions.items():
-            self.sim.setObjectPosition(self.Agent_handles[j], -1, pos)
-
-        # ターゲット位置も同時に設定
-        if target_position is not None:
-            self.sim.setObjectPosition(self.target_handle, -1, target_position)
-
-    def get_agent_velocity(self, j):
-        linear_velocity, angular_velocity = self.sim.getObjectVelocity(
-            self.Agent_handles[j]
-        )
-        return linear_velocity, angular_velocity

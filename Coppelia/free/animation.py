@@ -4,7 +4,6 @@ from parameter import num_agents, frame_time, omega_target, radius_limit, radius
 from various_calculation import Various
 from caluculation import caluculate
 from csv_save import set_csv_header, save_csv_data
-import csv
 from datetime import datetime
 
 Japan_time = datetime.now()

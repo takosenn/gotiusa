@@ -1,10 +1,9 @@
 # これを実行するとシミュレーションスタート
 
-from parameter import frames, frame_time , radius , radius_limit , initial_target_position , initial_agents_positions
+from parameter import frames, frame_time , initial_target_position , initial_agents_positions
 from animation import Animation
 from connect_Coppelia import Simulation
 import time
-import numpy as np
 
 
 # import japanize_matplotlib      # type: ignore
