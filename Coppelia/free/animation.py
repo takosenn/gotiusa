@@ -131,7 +131,7 @@ class Animation:
 
             agent_velocity = self.various.Velocity(
                 self.current_world_agent_positions[j],
-                self.prev_prev_world_agent_positions[j],
+                self.prev_world_agent_positions[j],
             )  # 論文中のv_i(t) 1ステップ差分に修正
             print(
                 f"Agent[{j+1}]の速度: {agent_velocity}"
