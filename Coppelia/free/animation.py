@@ -85,7 +85,7 @@ class Animation:
         # ここから下はtargetの位置更新
         self.target_theta = omega_target * i * frame_time  # [rad]
         current_time = i * frame_time
-        #print(f"現在の経過時間：{current_time}")
+        # print(f"現在の経過時間：{current_time}")
         # print(f"targetの角度: {self.target_theta}")
         target_x = radius * np.sin(self.target_theta)  # [m]
         target_y = radius * np.cos(self.target_theta)  # [m]
@@ -103,7 +103,9 @@ class Animation:
             # j = i % num_agents
             j_plus = (j + 1) % num_agents
             j_minus = (j - 1) % num_agents
-            print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}")                          # 論文中のP_i(t)[m]
+            print(
+                f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}"
+            )  # 論文中のP_i(t)[m]
 
             self.local_agent_positions[j] = np.array(
                 self.current_world_agent_positions[j]
@@ -131,7 +133,9 @@ class Animation:
                 self.current_world_agent_positions[j],
                 self.prev_prev_world_agent_positions[j],
             )  # 論文中のv_i(t) 1ステップ差分に修正
-            print(f"Agent[{j+1}]の速度: {agent_velocity}")  # ワールド座標系のAgentの速度
+            print(
+                f"Agent[{j+1}]の速度: {agent_velocity}"
+            )  # ワールド座標系のAgentの速度
 
             # 論文の式(6)に従った相対速度の計算
             # ワールド座標系での相対速度を計算
@@ -147,8 +151,12 @@ class Animation:
             # print(f"ローカル座標系での相対速度: {relative_velocity}")                                                                     #別ファイルのrelative_velocity_rに当てはまる
 
             # print(np.array(self.prev_theta))
-            self.omega_i[j] = relative_velocity[1]/self.ro_i[j]#self.various.Angular_velocity(self.theta[j], self.prev_theta[j])
-            print(f"Agent[{j+1}]がtargetの周りを回る角速度: {self.omega_i[j]}")                                                                                                                           # 論文中のω_i[j]
+            self.omega_i[j] = (
+                relative_velocity[1] / self.ro_i[j]
+            )  # self.various.Angular_velocity(self.theta[j], self.prev_theta[j])
+            print(
+                f"Agent[{j+1}]がtargetの周りを回る角速度: {self.omega_i[j]}"
+            )  # 論文中のω_i[j]
             # 隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)
             # print(f"omega_i_plusを求める際に使う値: theta={self.theta[j_plus]} , prev_theta={self.prev_theta[j_plus]}")
             self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
@@ -252,11 +260,11 @@ class Animation:
             self.prev_prev_world_agent_positions[j] = np.copy(
                 self.prev_world_agent_positions[j]
             )
-            #print(f"前回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_prev_world_agent_positions[j]}")
+            # print(f"前回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_prev_world_agent_positions[j]}")
             self.prev_world_agent_positions[j] = np.copy(
                 self.current_world_agent_positions[j]
             )
-            #print(f"今回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_world_agent_positions[j]}")
+            # print(f"今回のAgent[{j+1}]の位置がコピーできているか確認: {self.prev_world_agent_positions[j]}")
 
             # print("\n")
 
