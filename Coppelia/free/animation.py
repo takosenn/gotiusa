@@ -77,18 +77,18 @@ class Animation:
 
     def animate(self, i):
         # ここから下はtargetの位置更新
-        self.target_theta = omega_target * i * frame_time  # [rad]
+        self.target_theta = -omega_target * i * frame_time + np.pi / 2  # [rad]
         current_time = i * frame_time
         # print(f"現在の経過時間：{current_time}")
-        # print(f"targetの角度: {self.target_theta}")
-        target_x = radius * np.sin(self.target_theta)  # [m]
-        target_y = radius * np.cos(self.target_theta)  # [m]
+        #print(f"targetの角度: {self.target_theta}")
+        target_x = radius * np.cos(self.target_theta)  # [m]
+        target_y = radius * np.sin(self.target_theta)  # [m]
         self.target_position = [target_x, target_y, 2]
         # print(f"現在のtargetのWorld座標系の位置座標: {np.array(self.target_position)}")                                                                                                                   # 論文中のP_0(t)[m]
         self.target_velocity = np.array(
             [
-                -radius * omega_target * np.cos(self.target_theta),  # x方向の速度成分
-                -radius * omega_target * np.sin(self.target_theta),  # y方向の速度成分
+                radius * omega_target * np.sin(self.target_theta),  # x方向の速度成分
+                -radius * omega_target * np.cos(self.target_theta),  # y方向の速度成分
             ]
         )  # [m/s]
 
@@ -99,7 +99,7 @@ class Animation:
             #print(f"現在のAgent[{j+1}]のWorld座標系の位置座標: {np.array(self.current_world_agent_positions[j])}")  # 論文中のP_i(t)[m]
 
             # targetから見たAgentの座標(x,y,zの要素3つ) , vec # 論文中のP_bar_i(t)
-            self.local_agent_positions[j] = np.array(self.current_world_agent_positions[j]) - np.array(self.target_position)  
+            self.local_agent_positions[j] = np.array(self.current_world_agent_positions[j]) - np.array(self.target_position)
             
             # target-Agent間の距離(スカラー) ,  論文中のρ_i(t)
             self.ro_i[j] = np.linalg.norm(self.local_agent_positions[j])
@@ -183,11 +183,6 @@ class Animation:
             # ワールド座標系に変換
             u_world_2d = A @ u_local
             u_world = np.append(u_world_2d, 0)  # z成分を追加
-
-
-            local_agent_velocity = self.various.coordinate_trans(
-                self.theta[j], agent_velocity[:2]
-            )
 
             # 速度と位置を更新
             # v_new = v_old + u * dt
