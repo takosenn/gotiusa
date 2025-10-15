@@ -87,6 +87,7 @@ class Animation:
         self.e_i_1 = [0, 0, 0, 0, 0, 0]
         self.e_i_2 = [0, 0, 0, 0, 0, 0]
         self.eta = [0, 0, 0, 0, 0, 0]
+        self.relative_velocity = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
 
     def animate(self, i):
         # ここから下はtargetの位置更新
@@ -140,18 +141,22 @@ class Animation:
             cos_alpha = np.cos(self.theta[j])
             sin_alpha = np.sin(self.theta[j])
             A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
-            relative_velocity = A_inv @ relative_velocity_world
+            self.relative_velocity[j] = A_inv @ relative_velocity_world
 
             # 論文中のω_i[j]
-            self.omega_i[j] = (relative_velocity[1] / self.ro_i[j])
+            self.omega_i[j] = (self.relative_velocity[j][1] / self.ro_i[j])
             
 
             """隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)"""
 
             # 論文中のω_i[j_plus]
-            self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
+            self.omega_i_plus[j] = (self.relative_velocity[j_plus][1] / self.ro_i[j_plus])
             # 論文中のω_i[j_minus]
-            self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
+            self.omega_i_minus[j] = (self.relative_velocity[j_minus][1] / self.ro_i[j_minus])
+
+            self.a[j] = self.omega_i[j] - self.omega_i_minus[j]
+
+
             
 
             # 論文の式(5)に従ったローカル座標系の定義
@@ -166,7 +171,7 @@ class Animation:
             e_i_y = np.array([-e_i_x[1], e_i_x[0]])  # 論文中のe_i_y
 
             # 論文の式(6)に従ったη_i（距離の時間微分）の計算
-            self.eta[j] = relative_velocity[0]  # ローカル座標系のx成分
+            self.eta[j] = self.relative_velocity[j][0]  # ローカル座標系のx成分
 
             # ro_iのスパイクを簡易検知（下側領域付近の挙動確認用）
             #if self.ro_i[j] > 1.5 * radius:
@@ -202,7 +207,7 @@ class Animation:
                 self.theta[j], agent_velocity[:2]
             )
 
-            # 論文の式(2)に基づき、速度と位置を更新
+            # 速度と位置を更新
             # v_new = v_old + u * dt
             new_velocity = (
                 np.array(self.current_world_agent_velocities[j]) + u_world * frame_time
@@ -219,19 +224,14 @@ class Animation:
             )  # 要素に追加
 
 
-            """値のコピーを開始"""
+            """今回の値を前回の値にコピー"""
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
-
             self.prev_theta[j] = np.copy(self.theta[j])
-            
             self.prev_prev_local_agent_positions = np.copy(self.prev_local_agent_positions)
-            
-            # ここから上はself.prev_agent_positionsは前回のself.aget_positionsをコピーできてる
             self.prev_local_agent_positions[j] = np.copy(self.local_agent_positions[j])
-            
             self.prev_prev_world_agent_positions[j] = np.copy(self.prev_world_agent_positions[j])
-            
             self.prev_world_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
+            
             
         save_csv_data(Japan_time , current_time , self.ro_i , "ro_i")
         save_csv_data(Japan_time , current_time , self.alpha_i , "alpha_i")
