@@ -54,7 +54,6 @@ class Animation:
             local_agent_positions = np.array(self.current_world_agent_positions[i] - np.array(self.target_position))
             self.local_agent_positions.append(local_agent_positions)
         self.prev_local_agent_positions = [pos.copy() for pos in self.local_agent_positions]
-        self.prev_prev_local_agent_positions = [pos.copy() for pos in self.prev_local_agent_positions]
         self.target_theta = 0
         self.theta = []
         for i in range(num_agents):
@@ -204,7 +203,6 @@ class Animation:
             """今回の値を前回の値にコピー"""
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
             self.prev_theta[j] = np.copy(self.theta[j])
-            self.prev_prev_local_agent_positions = np.copy(self.prev_local_agent_positions)
             self.prev_local_agent_positions[j] = np.copy(self.local_agent_positions[j])
             self.prev_prev_world_agent_positions[j] = np.copy(self.prev_world_agent_positions[j])
             self.prev_world_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
