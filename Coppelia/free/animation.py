@@ -43,12 +43,8 @@ class Animation:
         for i in range(num_agents):
             current_world_agent_positions = [radius_limit * np.cos(i * np.pi / 3),radius + radius_limit * np.sin(i * np.pi / 3),2,]
             self.current_world_agent_positions.append(current_world_agent_positions)
-        self.prev_world_agent_positions = [
-            pos.copy() for pos in self.current_world_agent_positions
-        ]
-        self.prev_prev_world_agent_positions = [
-            pos.copy() for pos in self.prev_world_agent_positions
-        ]
+        self.prev_world_agent_positions = [pos.copy() for pos in self.current_world_agent_positions]
+        self.prev_prev_world_agent_positions = [pos.copy() for pos in self.prev_world_agent_positions]
         self.local_agent_positions = []
         for i in range(num_agents):
             local_agent_positions = np.array(self.current_world_agent_positions[i] - np.array(self.target_position))
