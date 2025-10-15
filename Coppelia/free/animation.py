@@ -140,10 +140,6 @@ class Animation:
             # 論文中のω_i[j_minus]
             self.omega_i_minus[j] = (self.relative_velocity[j_minus][1] / self.ro_i[j_minus])
 
-            self.a[j] = self.omega_i[j] - self.omega_i_minus[j]
-
-
-            
 
             # 論文の式(5)に従ったローカル座標系の定義
             # x軸はターゲットからエージェントへの方向
