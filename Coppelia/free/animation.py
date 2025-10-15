@@ -6,8 +6,10 @@ from caluculation import caluculate
 from csv_save import set_csv_header, save_csv_data
 from datetime import datetime
 
+"""現実時間の日本時間"""
 Japan_time = datetime.now()
 
+"""CSVのヘッダーを設定"""
 set_csv_header(Japan_time , "ro_i")
 set_csv_header(Japan_time , "alpha_i")
 set_csv_header(Japan_time , "omega_i")
@@ -39,11 +41,7 @@ class Animation:
         self.target_position = [0, radius, 2]
         self.current_world_agent_positions = []
         for i in range(num_agents):
-            current_world_agent_positions = [
-                radius_limit * np.cos(i * np.pi / 3),
-                radius + radius_limit * np.sin(i * np.pi / 3),
-                2,
-            ]
+            current_world_agent_positions = [radius_limit * np.cos(i * np.pi / 3),radius + radius_limit * np.sin(i * np.pi / 3),2,]
             self.current_world_agent_positions.append(current_world_agent_positions)
         self.prev_world_agent_positions = [
             pos.copy() for pos in self.current_world_agent_positions
@@ -53,25 +51,16 @@ class Animation:
         ]
         self.local_agent_positions = []
         for i in range(num_agents):
-            local_agent_positions = np.array(
-                self.current_world_agent_positions[i] - np.array(self.target_position)
-            )
+            local_agent_positions = np.array(self.current_world_agent_positions[i] - np.array(self.target_position))
             self.local_agent_positions.append(local_agent_positions)
-        self.prev_local_agent_positions = [
-            pos.copy() for pos in self.local_agent_positions
-        ]
-        self.prev_prev_local_agent_positions = [
-            pos.copy() for pos in self.prev_local_agent_positions
-        ]
+        self.prev_local_agent_positions = [pos.copy() for pos in self.local_agent_positions]
+        self.prev_prev_local_agent_positions = [pos.copy() for pos in self.prev_local_agent_positions]
         self.target_theta = 0
         self.theta = []
         for i in range(num_agents):
             theta = i * np.pi / 3
             self.theta.append(theta)
-        self.prev_theta = []
-        for i in range(num_agents):
-            prev_theta = i * np.pi / 3
-            self.prev_theta.append(prev_theta)
+        self.prev_theta = self.theta.copy()
         self.omega_i = [0, 0, 0, 0, 0, 0]
         self.omega_i_plus = [0, 0, 0, 0, 0, 0]
         self.omega_i_minus = [0, 0, 0, 0, 0, 0]
@@ -79,10 +68,7 @@ class Animation:
         for i in range(num_agents):
             alpha_i = i * np.pi / 3
             self.alpha_i.append(alpha_i)
-        self.alpha_i_minus = []
-        for i in range(num_agents):
-            alpha_i_minus = i * np.pi / 3
-            self.alpha_i_minus.append(alpha_i_minus)
+        self.alpha_i_minus = self.alpha_i.copy()
         self.current_world_agent_velocities = [[0, 0, 0] for _ in range(num_agents)]
         self.e_i_1 = [0, 0, 0, 0, 0, 0]
         self.e_i_2 = [0, 0, 0, 0, 0, 0]
@@ -231,8 +217,8 @@ class Animation:
             self.prev_local_agent_positions[j] = np.copy(self.local_agent_positions[j])
             self.prev_prev_world_agent_positions[j] = np.copy(self.prev_world_agent_positions[j])
             self.prev_world_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
-            
-            
+
+        """CSVに保存"""
         save_csv_data(Japan_time , current_time , self.ro_i , "ro_i")
         save_csv_data(Japan_time , current_time , self.alpha_i , "alpha_i")
         save_csv_data(Japan_time , current_time , self.omega_i , "omega_i")
