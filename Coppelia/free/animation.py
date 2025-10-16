@@ -11,6 +11,7 @@ Japan_time = datetime.now()
 
 """CSVのヘッダーを設定"""
 set_csv_header(Japan_time , "ro_i")
+set_csv_header(Japan_time , "theta")
 set_csv_header(Japan_time , "alpha_i")
 set_csv_header(Japan_time , "omega_i")
 set_csv_header(Japan_time , "eta")
@@ -212,6 +213,7 @@ class Animation:
         save_csv_data(Japan_time , current_time , self.eta , "eta")
         save_csv_data(Japan_time , current_time , self.e_i_1 , "e_i_1")
         save_csv_data(Japan_time , current_time , self.e_i_2 , "e_i_2")
+        save_csv_data(Japan_time , current_time , self.theta , "theta")
 
         """Coppeliasim上のAgentの位置同期"""
         self.sim.setAgentposition(j, self.current_world_agent_positions)
