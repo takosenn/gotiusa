@@ -13,10 +13,12 @@ Japan_time = datetime.now()
 set_csv_header(Japan_time , "ro_i")
 set_csv_header(Japan_time , "theta")
 set_csv_header(Japan_time , "alpha_i")
+set_csv_header(Japan_time , "alpha_i_minus")
 set_csv_header(Japan_time , "omega_i")
 set_csv_header(Japan_time , "eta")
 set_csv_header(Japan_time , "e_i_1")
 set_csv_header(Japan_time , "e_i_2")
+set_csv_header(Japan_time , "fi")
 
 
 class Animation:
@@ -71,12 +73,13 @@ class Animation:
         self.e_i_2 = [0, 0, 0, 0, 0, 0]
         self.eta = [0, 0, 0, 0, 0, 0]
         self.relative_velocity = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
+        self.fi = [0, 0, 0, 0, 0, 0]
 
     def animate(self, i):
         # ここから下はtargetの位置更新
         self.target_theta = -omega_target * i * frame_time + np.pi / 2  # [rad]
         current_time = i * frame_time
-        # print(f"現在の経過時間：{current_time}")
+        print(f"現在の経過時間：{current_time}")
         #print(f"targetの角度: {self.target_theta}")
         target_x = radius * np.cos(self.target_theta)  # [m]
         target_y = radius * np.sin(self.target_theta)  # [m]
@@ -104,6 +107,7 @@ class Animation:
             
             self.theta[j] = self.various.Theta(self.local_agent_positions[j])
             # 論文中のα[j]  # なす角を0~2πの範囲に
+            self.prev_theta[j] = self.various.Theta(self.prev_local_agent_positions[j])
 
 
             # Agent[i]とAgent[i+1]の間の角距離(例: π/3とかπ/4など)
@@ -124,18 +128,20 @@ class Animation:
             sin_alpha = np.sin(self.theta[j])
             A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
             self.relative_velocity[j] = A_inv @ relative_velocity_world
-            print(f"Agent[{j+1}]の相対速度: {self.relative_velocity[j]}")
+            #print(f"Agent[{j+1}]の相対速度: {self.relative_velocity[j]}")
 
             # 論文中のω_i[j]
-            self.omega_i[j] = (self.relative_velocity[j][1] / self.ro_i[j])
-            
+            self.omega_i[j] = (self.theta[j] - self.prev_theta[j])/frame_time#(self.relative_velocity[j][1] / self.ro_i[j])
+            delta_theta = np.arctan2(np.sin(self.theta[j] - self.prev_theta[j]),
++                                     np.cos(self.theta[j] - self.prev_theta[j]))
+            self.omega_i[j] = delta_theta/frame_time
 
             """隣接Agentのtargetの周りを回る角速度(self.omega_iが更新されるごとにきちんと更新されている)"""
 
             # 論文中のω_i[j_plus]
-            self.omega_i_plus[j] = (self.relative_velocity[j_plus][1] / self.ro_i[j_plus])
+            self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])#(self.relative_velocity[j_plus][1] / self.ro_i[j_plus])
             # 論文中のω_i[j_minus]
-            self.omega_i_minus[j] = (self.relative_velocity[j_minus][1] / self.ro_i[j_minus])
+            self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])#(self.relative_velocity[j_minus][1] / self.ro_i[j_minus])
 
 
             # 論文の式(5)に従ったローカル座標系の定義
@@ -148,15 +154,16 @@ class Animation:
             )  # 論文中のe_i_x
             # y軸はx軸をπ/2回転（反時計回り）
             e_i_y = np.array([-e_i_x[1], e_i_x[0]])  # 論文中のe_i_y
+            
 
             # 論文の式(6)に従ったη_i（距離の時間微分）の計算
-            self.eta[j] = self.relative_velocity[j][0]  # ローカル座標系のx成分
+            self.eta[j] = (self.ro_i[j] - self.prev_ro_i[j]) / frame_time#self.relative_velocity[j][0]  # ローカル座標系のx成分
 
             # ro_iのスパイクを簡易検知（下側領域付近の挙動確認用）
             #if self.ro_i[j] > 1.5 * radius:
             #    print(f"[warn] ro_i spike: idx={j}, ro_i={self.ro_i[j]:.3f}, theta={self.theta[j]:.3f}")
 
-            u_r, u_theta , self.e_i_1[j] , self.e_i_2[j] = caluculate(
+            u_r, u_theta , self.e_i_1[j] , self.e_i_2[j] , self.fi[j] = caluculate(
                 i,
                 j,
                 self.alpha_i[j],
@@ -184,7 +191,7 @@ class Animation:
             # 速度と位置を更新
             # v_new = v_old + u * dt
             new_velocity = (
-                np.array(self.current_world_agent_velocities[j]) + u_world * frame_time
+                 u_world * frame_time + np.array(self.current_world_agent_velocities[j])
             )
             self.current_world_agent_velocities[j] = new_velocity.tolist()
 
@@ -197,6 +204,9 @@ class Animation:
                 updated_position.tolist()
             )  # 要素に追加
 
+            #u_vec = u_r*e_i_x+u_theta*e_i_y
+            #self.current_world_agent_positions[j][:2] += u_vec*frame_time
+
 
             """今回の値を前回の値にコピー"""
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
@@ -206,14 +216,18 @@ class Animation:
             self.prev_world_agent_positions[j] = np.copy(self.current_world_agent_positions[j])
         self.prev_target_position = np.copy(self.target_position)
 
+
         """CSVに保存"""
         save_csv_data(Japan_time , current_time , self.ro_i , "ro_i")
         save_csv_data(Japan_time , current_time , self.alpha_i , "alpha_i")
+        save_csv_data(Japan_time , current_time , self.alpha_i_minus , "alpha_i_minus")
         save_csv_data(Japan_time , current_time , self.omega_i , "omega_i")
         save_csv_data(Japan_time , current_time , self.eta , "eta")
         save_csv_data(Japan_time , current_time , self.e_i_1 , "e_i_1")
         save_csv_data(Japan_time , current_time , self.e_i_2 , "e_i_2")
         save_csv_data(Japan_time , current_time , self.theta , "theta")
+        save_csv_data(Japan_time , current_time , self.fi , "fi")
+
 
         """Coppeliasim上のAgentの位置同期"""
         self.sim.setAgentposition(j, self.current_world_agent_positions)
