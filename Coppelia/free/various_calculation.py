@@ -26,15 +26,15 @@ class Various:
     def Angular_distance(self , theta , theta_plus , theta_minus):                          #theta_minusは(i-1)番目、theta_plusは(i+1)番目の角度(World座標系) 
         diff_plus = theta_plus - theta
         if diff_plus >= 0:
-            self.alpha = diff_plus
+            alpha = diff_plus
         else:
-            self.alpha = diff_plus + (2 * np.pi)
+            alpha = diff_plus + (2 * np.pi)
         diff_minus = theta - theta_minus
         if diff_minus >= 0:
-            self.alpha_minus = diff_minus
+            alpha_minus = diff_minus
         else:
-            self.alpha_minus = diff_minus + (2 * np.pi)
-        return self.alpha , self.alpha_minus
+            alpha_minus = diff_minus + (2 * np.pi)
+        return alpha , alpha_minus
     
     def Angular_velocity(self , theta , prev_theta):                                          #prev_thetaはi番目の角度 theta = 2πの際に問題あり
         delta = theta - prev_theta
