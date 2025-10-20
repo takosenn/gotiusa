@@ -6,7 +6,7 @@ from connect_coppelia import Simulation
 class Test:
     def __init__(self, num_agents):
         self.sim = Simulation()
-        self.initial_target_position = [15, 15, 2]
+        self.initial_target_position = [20, 20, 2]
         # keep initial_target_position as a plain list for API calls,
         # but use a numpy array for internal element-wise updates
         self.target_position = np.array(self.initial_target_position, dtype=float)
