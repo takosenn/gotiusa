@@ -3,7 +3,7 @@ from connect_coppelia import Simulation
 import numpy as np
 import time
 
-num_agents=4
+num_agents=6
 class Main:
     def __init__(self):
         self.sim = Simulation()
@@ -12,7 +12,7 @@ class Main:
         self.sim.get_handles(num_agents)
         self.ani = Test(num_agents)
         self.ani.sim = self.sim
-        self.initial_target_pos = [15, 15, 2]
+        self.initial_target_pos = [20, 20, 2]
         self.initial_agent_pos = []
         
         agent_position = (
@@ -20,8 +20,8 @@ class Main:
             [10, 5, 2],
             [5, 10, 2],
             [0, 5, 2],
-            [3.3, 3.3, 2],
-            [6.6, 6.6, 2],
+            [3.3, 6.6, 2],
+            [6.6, 3.3, 2],
         )
         self.initial_agent_pos = list(agent_position)
 
