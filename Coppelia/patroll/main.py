@@ -12,7 +12,7 @@ class Main:
         self.sim.get_handles(num_agents)
         self.ani = Test(num_agents)
         self.ani.sim = self.sim
-        self.initial_target_pos = [20, 20, 2]
+        self.initial_target_pos = [15, 15, 2]
         self.initial_agent_pos = []
         
         agent_position = (
@@ -31,7 +31,7 @@ class Main:
             self.sim.start_simulation()
             self.sim.initial_settargetposition(self.initial_target_pos)
             self.sim.initial_setAgentpositions(self.initial_agent_pos)
-            for i in range(1000):
+            for i in range(100):
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 self.ani.animate()
                 time.sleep(0.05)
