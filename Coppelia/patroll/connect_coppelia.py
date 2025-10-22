@@ -2,7 +2,7 @@
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import time
 
-num_agents = 4
+num_agents = 6
 
 class Simulation:
     def __init__(self):

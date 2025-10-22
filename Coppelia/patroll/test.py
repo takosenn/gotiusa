@@ -53,32 +53,31 @@ class Test:
                     self.agent_positions[i][0] -= 0.1
                 else:
                     self.agent_positions[i][1] += 0.1
-        for i in range(2):
-            j = i + 4
+        for i in range(4,6):
             #左下
-            if self.agent_positions[j][0] <= 3.3:
-                if self.agent_positions[j][1] <= 6.6:
-                    self.agent_positions[j][1] += 0.1
+            if self.agent_positions[i][0] <= 3.3:
+                if self.agent_positions[i][1] <= 6.6:
+                    self.agent_positions[i][1] += 0.1
                 else:
-                    self.agent_positions[j][0] += 0.1
+                    self.agent_positions[i][0] += 0.1
             #右上
-            elif self.agent_positions[j][1] >= 6.6:
-                if self.agent_positions[j][0] >= 6.6:
-                    self.agent_positions[j][1] -= 0.1
+            elif self.agent_positions[i][1] >= 6.6:
+                if self.agent_positions[i][0] >= 6.6:
+                    self.agent_positions[i][1] -= 0.1
                 else:
-                    self.agent_positions[j][0] += 0.1
+                    self.agent_positions[i][0] += 0.1
             #左上
-            elif self.agent_positions[j][0] >= 6.6:
-                if self.agent_positions[j][1] <= 3.3:
-                    self.agent_positions[j][0] -= 0.1
+            elif self.agent_positions[i][0] >= 6.6:
+                if self.agent_positions[i][1] <= 3.3:
+                    self.agent_positions[i][0] -= 0.1
                 else:
-                    self.agent_positions[j][1] -= 0.1
+                    self.agent_positions[i][1] -= 0.1
             #右下
-            elif self.agent_positions[j][1] <= 3.3:
-                if self.agent_positions[j][0] <= 3.3:
-                    self.agent_positions[j][1] += 0.1
+            elif self.agent_positions[i][1] <= 3.3:
+                if self.agent_positions[i][0] <= 3.3:
+                    self.agent_positions[i][1] += 0.1
                 else:
-                    self.agent_positions[j][0] -= 0.1
+                    self.agent_positions[i][0] -= 0.1
 
         # element-wise update using numpy array
         self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
