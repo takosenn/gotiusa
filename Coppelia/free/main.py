@@ -33,6 +33,7 @@ class Main:
             for i in range(frames):
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 self.ani.animate(i)
+                print(distance)
                 time.sleep(frame_time)
                 self.sim.step_simulation()
         except KeyboardInterrupt:

@@ -13,9 +13,10 @@ class Main:
         self.ani = Test(num_agents)
         self.ani.sim = self.sim
         self.initial_target_pos = [20, 20, 2]
+        self.target_position = [20 , 20 , 2]
         self.initial_agent_pos = []
         
-        agent_position = (
+        self.agent_position = (
             [5, 0, 2],
             [10, 5, 2],
             [5, 10, 2],
@@ -23,7 +24,7 @@ class Main:
             [3.3, 6.6, 2],
             [6.6, 3.3, 2],
         )
-        self.initial_agent_pos = list(agent_position)
+        self.initial_agent_pos = list(self.agent_position)
 
     def run(self):
         try:
@@ -31,8 +32,12 @@ class Main:
             self.sim.start_simulation()
             self.sim.initial_settargetposition(self.initial_target_pos)
             self.sim.initial_setAgentpositions(self.initial_agent_pos)
-            for i in range(100):
+            for i in range(1000):
+                j = i % num_agents
                 print(f"現在のfor文を読んだ回数: {i}回目")
+
+                #distance = np.linalg.norm(np.array(self.agent_position) - np.array(self.target_position))
+                #print(distance)
                 self.ani.animate()
                 time.sleep(0.05)
                 self.sim.step_simulation()

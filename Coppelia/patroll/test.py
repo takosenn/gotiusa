@@ -81,6 +81,9 @@ class Test:
 
         # element-wise update using numpy array
         self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
+        for i in range(self.num_agents):
+            distance = np.linalg.norm(np.array(self.agent_positions) - self.target_position)
+        print(distance)
 
         # send updated positions to the simulation (convert numpy -> list)
         for i in range(self.num_agents):
@@ -88,3 +91,5 @@ class Test:
         self.sim.settargetposition(self.target_position.tolist())
 
         self.sim.step_simulation()
+        
+        #return distance
