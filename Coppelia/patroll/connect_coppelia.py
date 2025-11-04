@@ -1,8 +1,8 @@
 
 from coppeliasim_zmqremoteapi_client import RemoteAPIClient
 import time
+from parameter import Params
 
-num_agents = 6
 
 class Simulation:
     def __init__(self):
@@ -48,7 +48,7 @@ class Simulation:
             print(f"取得: {object_name} のtarget")
 
     def initial_setAgentpositions(self, Agent_positions):
-        for i in range(num_agents):
+        for i in range(Params["num_agents"]):
             self.sim.setObjectPosition(self.Drone_handles[i], -1, Agent_positions[i])
             self.sim.setObjectPosition(self.Agent_handles[i], -1, Agent_positions[i])
 
@@ -58,7 +58,7 @@ class Simulation:
 
     def setAgentposition(self, j, Agents_pos_3d):
         # Coppeliasim側でAgentの緑の球(target)の位置同期
-        for j in range(num_agents):
+        for j in range(Params["num_agents"]):
             self.sim.setObjectPosition(self.Agent_handles[j], -1, Agents_pos_3d[j])
 
     def settargetposition(self, target_pos_3d):

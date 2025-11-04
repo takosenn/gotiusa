@@ -3,22 +3,20 @@ from typing import Optional
 from connect_coppelia import Simulation
 
 class Patroll:
-    def __init__(self, num_agents, target_position , agent_positions, distance ,  sim: Optional[Simulation] = None ):
-        # allow caller to inject Simulation instance; otherwise create one
-        self.sim = sim if sim is not None else Simulation()
-        self.initial_target_position = [20, 20, 2]
-        # keep initial_target_position as a plain list for API calls,
-        # but use a numpy array for internal element-wise updates
+    def __init__(self, num_agents, target_position , agent_positions, distance):
         self.frame = 10000
         # remember how many agents we manage
         self.num_agents = num_agents
         self.target_position = target_position
+        self.prev_target_position = np.copy(self.target_position)
         self.agent_positions = list(agent_positions)
+        self.prev_agent_positions = np.copy(self.agent_positions)
         self.distance = list(distance)
-        self.prev_distance:list = []
+        self.prev_distance = []
 
     def animate(self):
 
+        self.prev_agent_positions = np.copy(self.agent_positions)
         for i in range(4):
             # 右下
             if self.agent_positions[i][1] <= 0:
@@ -71,15 +69,10 @@ class Patroll:
                     self.agent_positions[i][0] -= 0.1
 
         # element-wise update using numpy array
-        self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
+        
         self.prev_distance = np.copy(self.distance)
         for i in range(self.num_agents):
             self.distance[i] = np.linalg.norm(np.array(self.agent_positions[i]) - self.target_position)
         # send updated positions to the simulation (convert numpy -> list)
-        for i in range(self.num_agents):
-            self.sim.setAgentposition(i, self.agent_positions)
-        self.sim.settargetposition(self.target_position.tolist())
 
-        self.sim.step_simulation()
-
-        return self.distance , self.agent_positions , self.target_position
+        return self.distance , self.prev_agent_positions ,  self.agent_positions
