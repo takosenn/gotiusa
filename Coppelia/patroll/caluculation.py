@@ -5,15 +5,20 @@ from parameter import Params
 from DataStrage import e_i_1_integral, e_i_2_integral
 
 
-def caluculate(i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta):
+def caluculate(
+    i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta
+):
 
     # --- fi, zi の計算と表示 ---
     fi = (Params["d_i"] * alpha_i - Params["d_i"] * alpha_i_minus) / (2 * Params["d_i"])
-    zi = (Params["d_i"] * (omega_i_plus - omega_i) - Params["d_i"] * (omega_i - omega_i_minus)) / (2 * Params["d_i"])
+    zi = (
+        Params["d_i"] * (omega_i_plus - omega_i)
+        - Params["d_i"] * (omega_i - omega_i_minus)
+    ) / (2 * Params["d_i"])
 
     # e_i_1, e_i_2の初期値は0、それ以降は式で計算
-    
-    if i == 0 or i ==1 or i==2 or i==3 or i==4 or i==5:
+
+    if i == 0 or i == 1 or i == 2 or i == 3 or i == 4 or i == 5:
         tau_i_1 = 0
         tau_i_2 = 0
     else:
@@ -26,15 +31,13 @@ def caluculate(i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minu
     e_i_1_integral[j] += e_i_1 * Params["frame_time"]
     e_i_2_integral[j] += e_i_2 * Params["frame_time"]
 
-    #print(f"e_i_1: {e_i_1_integral[j]}")
-    #print(f"e_i_2: {e_i_2_integral[j]}")
+    # print(f"e_i_1: {e_i_1_integral[j]}")
+    # print(f"e_i_2: {e_i_2_integral[j]}")
     # 論文の式(21)に従った制御プロトコルの計算
 
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
     # u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
-    u_r = (
-        -ro_i * omega_i**2 - eta - 7 * np.sign(ro_i - Params["R"] + eta)
-    )
+    u_r = -ro_i * omega_i**2 - eta - 7 * np.sign(ro_i - Params["R"] + eta)
     u_theta = (
         (omega_i + Params["Omega"] + fi) * eta
         + zi * ro_i
@@ -51,4 +54,4 @@ def caluculate(i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minu
     else:
         u_theta = u_theta * 1
     # print(u_theta)
-    return u_r, u_theta , e_i_1_integral[j] , e_i_2_integral[j] , fi
+    return u_r, u_theta, e_i_1_integral[j], e_i_2_integral[j], fi

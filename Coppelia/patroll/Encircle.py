@@ -1,11 +1,13 @@
-
 import numpy as np
 from various_calculation import Various
 from caluculation import caluculate
 from csv_save import save_csv_data
 
+
 class Siege:
-    def __init__(self, num_agents , frame_time , target_position , agent_positions, distance):
+    def __init__(
+        self, num_agents, frame_time, target_position, agent_positions, distance
+    ):
         self.various = Various()
         self.num_agents = num_agents
         self.frame_time = frame_time
@@ -16,15 +18,21 @@ class Siege:
         self.relative_coordinates = []
         self.prev_relative_coordinates = []
         for j in range(self.num_agents):
-            relative_coordinates = np.array(self.agent_positions[j]) - np.array(self.target_position)
-            prev_relative_coordinates = np.array(self.prev_agent_positions[j]) - np.array(self.prev_target_position)
+            relative_coordinates = np.array(self.agent_positions[j]) - np.array(
+                self.target_position
+            )
+            prev_relative_coordinates = np.array(
+                self.prev_agent_positions[j]
+            ) - np.array(self.prev_target_position)
             self.relative_coordinates.append(relative_coordinates)
             self.prev_relative_coordinates.append(prev_relative_coordinates)
         self.agent_velocities = [np.zeros(3) for _ in range(self.num_agents)]
         self.ro_i = distance
         self.prev_ro_i = []
         for j in range(self.num_agents):
-            prev_ro_i = np.linalg.norm(self.prev_agent_positions[j] - self.target_position)
+            prev_ro_i = np.linalg.norm(
+                self.prev_agent_positions[j] - self.target_position
+            )
             self.prev_ro_i.append(prev_ro_i)
         self.eta = []
         for j in range(self.num_agents):
@@ -34,8 +42,8 @@ class Siege:
         self.theta = []
         self.prev_theta = []
         for j in range(self.num_agents):
-            theta = np.arctan2(self.agent_positions[j][1] , self.agent_positions[j][0])
-            prev_theta = np.arctan2(self.prev_agent_positions[j][1] , self.prev_agent_positions[j][0])
+            theta = self.various.Theta(self.relative_coordinates[j])
+            prev_theta = self.various.Theta(self.prev_relative_coordinates[j])
             self.theta.append(theta)
             self.prev_theta.append(prev_theta)
         self.alpha_i = []
@@ -43,67 +51,93 @@ class Siege:
         for j in range(self.num_agents):
             j_plus = (j + 1) % num_agents
             j_minus = (j - 1) % num_agents
-            alpha_i , alpha_i_minus = self.various.Angular_distance(self.theta[j] , self.theta[j_plus] , self.theta[j_minus])
+            alpha_i, alpha_i_minus = self.various.Angular_distance(
+                self.theta[j], self.theta[j_plus], self.theta[j_minus]
+            )
             self.alpha_i.append(alpha_i)
             self.alpha_i_minus.append(alpha_i_minus)
         self.omega_i = []
         self.omega_i_plus = []
         self.omega_i_minus = []
         for j in range(self.num_agents):
-            j_plus = (j + 1) % self.num_agents
-            j_minus = (j - 1) % self.num_agents
+
             omega_i = (self.theta[j] - self.prev_theta[j]) / self.frame_time
             self.omega_i.append(omega_i)
         for j in range(self.num_agents):
+            j_plus = (j + 1) % self.num_agents
+            j_minus = (j - 1) % self.num_agents
             omega_i_plus = np.copy(self.omega_i[j_plus])
             omega_i_minus = np.copy(self.omega_i[j_minus])
             self.omega_i_plus.append(omega_i_plus)
             self.omega_i_minus.append(omega_i_minus)
-        self.e_i_1 = [0,0,0,0,0,0]
-        self.e_i_2 = [0,0,0,0,0,0]
-        self.fi = [0,0,0,0,0,0]
-        
+        self.e_i_1 = [0, 0, 0, 0, 0, 0]
+        self.e_i_2 = [0, 0, 0, 0, 0, 0]
+        self.fi = [0, 0, 0, 0, 0, 0]
 
-
-    def animate(self , i , Japan_time , current_time , agent_position ,  prev_agent_positions , prev_target_position , target_position):
+    def animate(
+        self,
+        i,
+        Japan_time,
+        current_time,
+        agent_position,
+        prev_agent_positions,
+        prev_target_position,
+        target_position,
+    ):
         self.agent_positions = agent_position
         self.prev_agent_positions = prev_agent_positions
         self.target_position = target_position
         self.prev_target_position = prev_target_position
         for j in range(self.num_agents):
-            agent_velocities = (np.array(self.agent_positions[j]) - np.array(self.prev_agent_positions[j])) / self.frame_time
+            agent_velocities = (
+                np.array(self.agent_positions[j])
+                - np.array(self.prev_agent_positions[j])
+            ) / self.frame_time
             self.agent_velocities[j] = agent_velocities
-            
+
         for j in range(self.num_agents):
             j_plus = (j + 1) % self.num_agents
             j_minus = (j - 1) % self.num_agents
-            self.relative_coordinates[j] = np.array(self.agent_positions[j]) - np.array(self.target_position)
-            self.prev_relative_coordinates[j] = np.array(self.prev_agent_positions[j]) - np.array(self.prev_target_position)
+            self.relative_coordinates[j] = np.array(self.agent_positions[j]) - np.array(
+                self.target_position
+            )
+            self.prev_relative_coordinates[j] = np.array(
+                self.prev_agent_positions[j]
+            ) - np.array(self.prev_target_position)
             self.ro_i[j] = np.linalg.norm(self.relative_coordinates[j])
             self.prev_ro_i[j] = np.linalg.norm(self.prev_relative_coordinates[j])
             self.eta[j] = (self.ro_i[j] - self.prev_ro_i[j]) / self.frame_time
-            self.theta[j] = np.arctan2(self.relative_coordinates[j][1] , self.relative_coordinates[j][0])
-            self.prev_theta[j] = np.arctan2(self.prev_relative_coordinates[j][1] , self.prev_relative_coordinates[j][0])
-            self.alpha_i[j] , self.alpha_i_minus[j] = self.various.Angular_distance(self.theta[j], self.theta[j_plus], self.theta[j_minus])
-        # --- 正規化: 全体合計が 2π になるよう一度だけスケール ---
-        total = sum(self.alpha_i)
-        if total == 0:
-            # 万が一全てゼロなら均等分配（安全策）
-            uniform = 2 * np.pi / self.num_agents
-            for k in range(self.num_agents):
-                self.alpha_i[k] = uniform
-                self.alpha_i_minus[k] = uniform
-        else:
-            scale = 2 * np.pi / total
-            for k in range(self.num_agents):
-                self.alpha_i[k] = self.alpha_i[k] * scale
-                self.alpha_i_minus[k] = self.alpha_i_minus[k] * scale
+            self.theta[j] = self.various.Theta(self.relative_coordinates[j])
+            self.prev_theta[j] = self.various.Theta(self.prev_relative_coordinates[j])
+            self.alpha_i[j], self.alpha_i_minus[j] = self.various.Angular_distance(
+                self.theta[j], self.theta[j_plus], self.theta[j_minus]
+            )
+        ## --- 正規化: 全体合計が 2π になるよう一度だけスケール ---
+        # total = sum(self.alpha_i)
+        # if total == 0:
+        #    # 万が一全てゼロなら均等分配（安全策）
+        #    uniform = 2 * np.pi / self.num_agents
+        #    for k in range(self.num_agents):
+        #        self.alpha_i[k] = uniform
+        #        self.alpha_i_minus[k] = uniform
+        # else:
+        #    scale = 2 * np.pi / total
+        #    for k in range(self.num_agents):
+        #        self.alpha_i[k] = self.alpha_i[k] * scale
+        #        self.alpha_i_minus[k] = self.alpha_i_minus[k] * scale
         for j in range(self.num_agents):
-            self.omega_i[j] = (self.theta[j] - self.prev_theta[j]) / self.frame_time
+            j_plus = (j + 1) % self.num_agents
+            j_minus = (j - 1) % self.num_agents
+            # 角速度 omega_i
+            delta_theta = np.arctan2(
+                np.sin(self.theta[j] - self.prev_theta[j]),
+                np.cos(self.theta[j] - self.prev_theta[j]),
+            )
+            self.omega_i[j] = delta_theta / self.frame_time
             self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
             self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
 
-            u_r , u_theta , self.e_i_1[j] , self.e_i_2[j] , self.fi[j] = caluculate(
+            u_r, u_theta, self.e_i_1[j], self.e_i_2[j], self.fi[j] = caluculate(
                 i,
                 j,
                 self.alpha_i[j],
@@ -126,8 +160,7 @@ class Siege:
             )
             self.agent_velocities[j] = new_velocity.tolist()
             updated_position = (
-                np.array(self.agent_positions[j])
-                + new_velocity * self.frame_time
+                np.array(self.agent_positions[j]) + new_velocity * self.frame_time
             )
             self.agent_positions[j] = updated_position.tolist()
 
@@ -138,15 +171,5 @@ class Siege:
             self.prev_agent_positions[j] = np.copy(self.agent_positions[j])
 
         self.prev_target_position = np.copy(self.target_position)
-        # CSV 保存
-        save_csv_data(Japan_time, current_time, self.ro_i, "ro_i")
-        save_csv_data(Japan_time, current_time, self.alpha_i, "alpha_i")
-        save_csv_data(Japan_time, current_time, self.alpha_i_minus, "alpha_i_minus")
-        save_csv_data(Japan_time, current_time, self.omega_i, "omega_i")
-        save_csv_data(Japan_time, current_time, self.eta, "eta")
-        save_csv_data(Japan_time, current_time, self.e_i_1, "e_i_1")
-        save_csv_data(Japan_time, current_time, self.e_i_2, "e_i_2")
-        save_csv_data(Japan_time, current_time, self.theta, "theta")
-        save_csv_data(Japan_time, current_time, self.fi, "fi")
 
-        return self.agent_positions , self.ro_i
+        return self.agent_positions, self.ro_i
