@@ -43,14 +43,13 @@ class Main:
                 # 現在の位置を前回の位置として保存
                 old_agent_position = np.array([pos[:] for pos in self.agent_position])
                 if any(d <= Params["distance_threshold"] for d in self.distance):           #一つでも距離が10以下になったとき
-                    print("中")
                     new_positions , self.prev_agent_positions , self.distance = self.siege.animate(i , Japan_time , current_time , self.agent_position , self.prev_agent_positions , self.prev_target_position , self.target_position)
                     self.prev_agent_positions = old_agent_position
                     self.agent_position = new_positions
                 else:           #通常時巡回
                     self.distance , self.prev_agent_positions , self.agent_position = self.patroll.animate()
                 self.prev_target_position = np.copy(self.target_position)
-                self.target_position += np.array([-0.05, -0.05, 0], dtype=float)
+                self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
                 for j in range(self.num_agents):
                     if isinstance(self.agent_position, list):
                         self.sim.setAgentposition(j, self.agent_position)

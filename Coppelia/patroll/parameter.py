@@ -9,7 +9,7 @@ Params = {
     "d_i": np.pi/3,
     "Omega": 2,
     "distance_threshold": 15,
-    "target_position": [5,5,2],
+    "target_position": [20,20,2],
     "agent_position": [
         [5, 0, 2],
         [10, 5, 2],
