@@ -15,6 +15,7 @@ class Siege:
         self.prev_target_position = np.copy(self.target_position)
         self.agent_positions = agent_positions
         self.prev_agent_positions = np.copy(self.agent_positions)
+        self.prev_prev_agent_positions = np.copy(self.agent_positions)
         self.relative_coordinates = []
         self.prev_relative_coordinates = []
         for j in range(self.num_agents):
@@ -84,10 +85,10 @@ class Siege:
         prev_target_position,
         target_position,
     ):
-        self.agent_positions = agent_position
-        self.prev_agent_positions = prev_agent_positions
-        self.target_position = target_position
-        self.prev_target_position = prev_target_position
+        self.agent_positions = np.array([pos[:] for pos in agent_position])
+        self.prev_agent_positions = np.array([pos[:] for pos in prev_agent_positions])
+        self.target_position = np.copy(target_position)
+        self.prev_target_position = np.copy(prev_target_position)
         for j in range(self.num_agents):
             agent_velocities = (
                 np.array(self.agent_positions[j])
@@ -168,8 +169,8 @@ class Siege:
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
             self.prev_theta[j] = np.copy(self.theta[j])
             self.prev_relative_coordinates[j] = np.copy(self.relative_coordinates[j])
-            self.prev_agent_positions[j] = np.copy(self.agent_positions[j])
+            self.prev_prev_agent_positions[j] = np.copy(self.prev_agent_positions[j])
 
         self.prev_target_position = np.copy(self.target_position)
 
-        return self.agent_positions, self.ro_i
+        return self.agent_positions, self.prev_prev_agent_positions , self.ro_i

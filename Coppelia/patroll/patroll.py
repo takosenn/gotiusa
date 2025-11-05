@@ -72,7 +72,7 @@ class Patroll:
         
         self.prev_distance = np.copy(self.distance)
         for i in range(self.num_agents):
-            self.distance[i] = np.linalg.norm(np.array(self.agent_positions[i]) - self.target_position)
+            self.distance[i] = np.linalg.norm(np.array(self.agent_positions[i]) - np.array(self.target_position))
         # send updated positions to the simulation (convert numpy -> list)
 
         return self.distance , self.prev_agent_positions ,  self.agent_positions

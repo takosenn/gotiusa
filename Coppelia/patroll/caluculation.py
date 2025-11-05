@@ -37,11 +37,11 @@ def caluculate(
 
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
     # u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
-    u_r = -ro_i * omega_i**2 - eta - 7 * np.sign(ro_i - Params["R"] + eta)
+    u_r = -ro_i * omega_i**2 - eta - 14 * np.sign(ro_i - Params["R"] + eta)
     u_theta = (
         (omega_i + Params["Omega"] + fi) * eta
         + zi * ro_i
-        + 7 * np.sign(fi + Params["Omega"] - omega_i)
+        + 14 * np.sign(fi + Params["Omega"] - omega_i)
     )
 
     # u_r(放射方向)とu_theta(接線方向)の調整
