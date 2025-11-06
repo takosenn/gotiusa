@@ -36,6 +36,7 @@ class Main:
             self.sim.start_simulation()
             self.sim.initial_settargetposition(self.target_position)
             self.sim.initial_setAgentpositions(self.agent_position)
+            time.sleep(2)
             for i in range(Params["frames"]):
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 current_time = i * self.frame_time
@@ -48,14 +49,17 @@ class Main:
                     self.agent_position = new_positions
                 else:           #通常時巡回
                     self.distance , self.prev_agent_positions , self.agent_position = self.patroll.animate()
-                self.prev_target_position = np.copy(self.target_position)
-                self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
+                    self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
+                    self.prev_target_position = np.copy(self.target_position)
                 for j in range(self.num_agents):
                     if isinstance(self.agent_position, list):
                         self.sim.setAgentposition(j, self.agent_position)
                     else:
                         self.sim.setAgentposition(j, self.agent_position.tolist())
-                    self.sim.settargetposition(self.target_position.tolist())
+                    if isinstance(self.target_position, list):
+                        self.sim.settargetposition(self.target_position)
+                    else:
+                        self.sim.settargetposition(self.target_position.tolist())
                 time.sleep(Params["frame_time"])
                 self.sim.step_simulation()
         except KeyboardInterrupt:
