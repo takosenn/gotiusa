@@ -34,18 +34,26 @@ class Simulation:
         """シミュレーションを1ステップ進める（同期モード用）"""
         self.client.step()
 
-    def get_handles(self, num_agents):
+    def get_handles(self):
         self.target_handle = self.sim.getObject("/Quadcopter[0]/target")
         self.target_Drone_handle = self.sim.getObject("/Quadcopter[0]")
         print("取得: Quadcopter[0] のtarget")
         # 各Agentの緑の球(target)のハンドル
-        for i in range(num_agents):
+        for i in range(Params["num_agents"]):
             object_name = f"Quadcopter[{i+1}]"
             Drone_handle = self.sim.getObject(f"/{object_name}")
             self.Drone_handles.append(Drone_handle)
             Agent_handle = self.sim.getObject(f"/{object_name}/target")
             self.Agent_handles.append(Agent_handle)
             print(f"取得: {object_name} のtarget")
+
+    def change_handles(self , sorted_idx):
+        for j in range(Params["num_agents"]):
+            object_name = f"target[{sorted_idx[j]+1}]"
+            Agent_handle = self.sim.getObject(f"/{object_name}")
+            self.Agent_handles.append(Agent_handle)
+            print(f"Agentハンドルの更新: Quadcopter[{j}]のハンドルを{object_name}")
+
 
     def initial_setAgentpositions(self, Agent_positions):
         for i in range(Params["num_agents"]):

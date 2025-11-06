@@ -173,4 +173,4 @@ class Siege:
 
         self.prev_target_position = np.copy(self.target_position)
 
-        return self.agent_positions, self.prev_prev_agent_positions , self.ro_i
+        return self.agent_positions, self.prev_prev_agent_positions , self.ro_i , self.theta

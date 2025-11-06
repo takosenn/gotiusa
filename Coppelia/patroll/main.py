@@ -15,7 +15,7 @@ class Main:
     def __init__(self , num_agents , frame_time , target_position , agent_positions):
         self.sim = Simulation()
         # Simulationのハンドルを取得してからAnimationに同じインスタンスを渡す
-        self.sim.get_handles(num_agents)
+        self.sim.get_handles()
         self.num_agents = num_agents
         self.frame_time = frame_time
         self.target_position = target_position
@@ -28,6 +28,7 @@ class Main:
             self.distance.append(distance)
         self.patroll = Patroll(num_agents , self.target_position , self.agent_position , self.distance)
         self.siege = Siege(num_agents , frame_time , self.target_position , self.agent_position , self.distance)
+        self.theta = np.zeros(self.num_agents)
 
 
     def run(self):
@@ -37,20 +38,25 @@ class Main:
             self.sim.initial_settargetposition(self.target_position)
             self.sim.initial_setAgentpositions(self.agent_position)
             time.sleep(2)
+            k = 0
             for i in range(Params["frames"]):
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 current_time = i * self.frame_time
                 print(f"現在の経過時間：{current_time}")
                 # 現在の位置を前回の位置として保存
                 old_agent_position = np.array([pos[:] for pos in self.agent_position])
-                if any(d <= Params["distance_threshold"] for d in self.distance):           #一つでも距離が10以下になったとき
-                    new_positions , self.prev_agent_positions , self.distance = self.siege.animate(i , Japan_time , current_time , self.agent_position , self.prev_agent_positions , self.prev_target_position , self.target_position)
+                if any(d <= Params["distance_threshold"] for d in self.distance):           #一つでも距離が閾値以下になったとき対象を囲む
+                    k += 1
+                    new_positions , self.prev_agent_positions , self.distance , self.theta = self.siege.animate(i , Japan_time , current_time , self.agent_position , self.prev_agent_positions , self.prev_target_position , self.target_position)
                     self.prev_agent_positions = old_agent_position
                     self.agent_position = new_positions
+                    if k == 1:
+                        sorted_idx = np.argsort(self.theta)
+                        self.sim.change_handles(sorted_idx)
                 else:           #通常時巡回
                     self.distance , self.prev_agent_positions , self.agent_position = self.patroll.animate()
-                    self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
-                    self.prev_target_position = np.copy(self.target_position)
+                self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
+                self.prev_target_position = np.copy(self.target_position)
                 for j in range(self.num_agents):
                     if isinstance(self.agent_position, list):
                         self.sim.setAgentposition(j, self.agent_position)
