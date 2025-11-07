@@ -9,6 +9,16 @@ from datetime import datetime
 
 """現実時間の日本時間"""
 Japan_time = datetime.now()
+"""CSVのヘッダーを設定"""
+set_csv_header(Japan_time, "ro_i")
+set_csv_header(Japan_time, "theta")
+set_csv_header(Japan_time, "alpha_i")
+set_csv_header(Japan_time, "alpha_i_minus")
+set_csv_header(Japan_time, "omega_i")
+set_csv_header(Japan_time, "eta")
+set_csv_header(Japan_time, "e_i_1")
+set_csv_header(Japan_time, "e_i_2")
+set_csv_header(Japan_time, "fi")
 
 
 class Main:
@@ -43,13 +53,13 @@ class Main:
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 current_time = i * self.frame_time
                 print(f"現在の経過時間：{current_time}")
-                # 現在の位置を前回の位置として保存
-                old_agent_position = np.array([pos[:] for pos in self.agent_position])
                 if any(d <= Params["distance_threshold"] for d in self.distance):           #一つでも距離が閾値以下になったとき対象を囲む
                     k += 1
-                    new_positions , self.prev_agent_positions , self.distance , self.theta = self.siege.animate(i , Japan_time , current_time , self.agent_position , self.prev_agent_positions , self.prev_target_position , self.target_position)
-                    self.prev_agent_positions = old_agent_position
-                    self.agent_position = new_positions
+                    self.agent_position , self.prev_agent_positions , self.distance , self.theta = self.siege.animate(i , Japan_time , current_time , self.agent_position , self.prev_agent_positions , self.prev_target_position , self.target_position)
+                    print(self.agent_position)
+                    print(self.prev_agent_positions)
+                    #self.prev_agent_positions = old_agent_position
+                    #self.agent_position = new_positions
                     if k == 1:
                         sorted_idx = np.argsort(self.theta)
                         self.sim.change_handles(sorted_idx)

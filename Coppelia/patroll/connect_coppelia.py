@@ -49,10 +49,13 @@ class Simulation:
 
     def change_handles(self , sorted_idx):
         for j in range(Params["num_agents"]):
-            object_name = f"target[{sorted_idx[j]+1}]"
-            Agent_handle = self.sim.getObject(f"/{object_name}")
+            object_name = f"Quadcopter[{sorted_idx[j]+1}]"
+            Drone_handle = self.sim.getObject(f"/{object_name}")
+            self.Drone_handles.append(Drone_handle)
+            object_target_name = f"target[{sorted_idx[j]+1}]"
+            Agent_handle = self.sim.getObject(f"/{object_target_name}")
             self.Agent_handles.append(Agent_handle)
-            print(f"Agentハンドルの更新: Quadcopter[{j}]のハンドルを{object_name}")
+            print(f"Agentハンドルの更新: Quadcopter[{j}]のハンドルを{object_target_name}")
 
 
     def initial_setAgentpositions(self, Agent_positions):
