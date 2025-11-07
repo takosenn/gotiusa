@@ -65,7 +65,7 @@ class Main:
                         self.sim.change_handles(sorted_idx)
                 else:           #通常時巡回
                     self.distance , self.prev_agent_positions , self.agent_position = self.patroll.animate()
-                self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
+                #self.target_position += np.array([-0.1, -0.1, 0], dtype=float)
                 self.prev_target_position = np.copy(self.target_position)
                 for j in range(self.num_agents):
                     if isinstance(self.agent_position, list):
