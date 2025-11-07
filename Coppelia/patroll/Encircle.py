@@ -85,8 +85,14 @@ class Siege:
         prev_target_position,
         target_position,
     ):
+        # 現在の（更新前の）エージェント位置を保持しておく。
+        # 呼び出し元 `main.py` は animate の戻り値として "直前の" agent_positions を
+        # 受け取り次ループで prev_agent_positions として使う想定。
         self.agent_positions = np.array([pos[:] for pos in agent_position])
+        # 呼び出し時に渡された prev_agent_positions を内部で扱う
         self.prev_agent_positions = np.array([pos[:] for pos in prev_agent_positions])
+        # 呼び出し元が期待する「直前の agent_positions」を返すためにコピーを作成
+        old_agent_positions = np.copy(self.agent_positions)
         self.target_position = np.copy(target_position)
         self.prev_target_position = np.copy(prev_target_position)
         for j in range(self.num_agents):
@@ -168,9 +174,21 @@ class Siege:
             # 前回値の更新
             self.prev_ro_i[j] = np.copy(self.ro_i[j])
             self.prev_theta[j] = np.copy(self.theta[j])
-            self.prev_relative_coordinates[j] = np.copy(self.relative_coordinates[j])
             self.prev_prev_agent_positions[j] = np.copy(self.prev_agent_positions[j])
+            self.prev_relative_coordinates[j] = np.copy(self.relative_coordinates[j])
 
         self.prev_target_position = np.copy(self.target_position)
+        # CSV 保存
+        save_csv_data(Japan_time, current_time, self.ro_i, "ro_i")
+        save_csv_data(Japan_time, current_time, self.alpha_i, "alpha_i")
+        save_csv_data(Japan_time, current_time, self.alpha_i_minus, "alpha_i_minus")
+        save_csv_data(Japan_time, current_time, self.omega_i, "omega_i")
+        save_csv_data(Japan_time, current_time, self.eta, "eta")
+        save_csv_data(Japan_time, current_time, self.e_i_1, "e_i_1")
+        save_csv_data(Japan_time, current_time, self.e_i_2, "e_i_2")
+        save_csv_data(Japan_time, current_time, self.theta, "theta")
+        save_csv_data(Japan_time, current_time, self.fi, "fi")
 
-        return self.agent_positions, self.prev_prev_agent_positions , self.ro_i , self.theta
+        # 戻り値: (更新後の agent_positions, 直前の agent_positions, ro_i, theta)
+        # こうすることで main.py 側の self.prev_agent_positions が正しく更新される。
+        return self.agent_positions, old_agent_positions, self.ro_i, self.theta
