@@ -8,7 +8,8 @@ Params = {
     "R": 2,
     "d_i": np.pi/3,
     "Omega": 2,
-    "distance_threshold": 15,
+    "distance_threshold": 10,
+    "direction": 0.1,
     "target_position": [20,20,2],
     "agent_position": [
         [5, 0, 2],
