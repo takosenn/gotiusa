@@ -72,6 +72,26 @@ class Main:
                     d <= Params["distance_threshold"] for d in self.distance
                 ):  # 一つでも距離が閾値以下になったとき対象を囲む
                     k += 1
+                    # k が 100 になるまでは各エージェントごとに R を設定し、
+                    # k が 100 を超えたら全て 2 に戻す。
+                    if k <= 100:
+                        # 各 Quadcopter の R 値（必要に応じて num_agents に合わせる）
+                        per_agent_R = [2, 2.2, 2.4, 2.6, 2.8, 3]
+                        Params["R"] = per_agent_R[: self.num_agents]
+                    else:
+                        # k が 100 を超えたら全て 2 にする
+                        if Params.get("R") != 2:
+                            Params["R"] = 2
+                            print(f"Params['R'] を全て 2 に変更しました (k={k})")
+                    # kが50増えるごとに Params['Omega'] を指定シーケンスで切り替える
+                    if k % 50 == 0:
+                        # 三角波: 2,3,4,3,2,... を繰り返す
+                        omega_seq = [2, 3, 4, 3, 2]
+                        seq_index = (k // 50 - 1) % len(omega_seq)
+                        Params["Omega"] = omega_seq[seq_index]
+                        print(
+                            f"Params['Omega'] を {Params['Omega']} に変更しました (k={k})"
+                        )
                     print(f"Encircleモード (k={k})")
                     (
                         self.agent_position,
@@ -87,12 +107,54 @@ class Main:
                         self.prev_target_position,
                         self.target_position,
                     )
-                    if k == 1 or k == 100:
+                    if k % 30 == 0:
                         sorted_idx = sorted(
                             range(self.num_agents), key=lambda j: self.theta[j]
                         )
                         print(f"ハンドルを切り替える (sorted_idx={sorted_idx})")
+                        # 切替: シミュレータ内ハンドルを入れ替え
                         self.sim.change_handles(sorted_idx)
+
+                        # --- 追加: アプリ側の状態も同じ順序に並び替える ---
+                        # agent_position
+                        if isinstance(self.agent_position, np.ndarray):
+                            self.agent_position = self.agent_position.tolist()
+                        self.agent_position = [
+                            self.agent_position[idx] for idx in sorted_idx
+                        ]
+
+                        # prev_agent_positions
+                        try:
+                            self.prev_agent_positions = np.array(
+                                [self.prev_agent_positions[idx] for idx in sorted_idx]
+                            )
+                        except Exception:
+                            self.prev_agent_positions = np.array(
+                                [
+                                    self.prev_agent_positions[idx].tolist()
+                                    for idx in sorted_idx
+                                ]
+                            )
+
+                        # distance と theta
+                        self.distance = [self.distance[idx] for idx in sorted_idx]
+                        try:
+                            self.theta = [self.theta[idx] for idx in sorted_idx]
+                        except Exception:
+                            self.theta = list(self.theta)
+
+                        # Siege と Patroll の内部状態も並び替え
+                        try:
+                            self.siege.reorder(sorted_idx)
+                        except Exception as e:
+                            print(f"警告: siege.reorder の実行に失敗しました: {e}")
+                        try:
+                            self.patroll.reorder(sorted_idx)
+                        except Exception as e:
+                            print(f"警告: patroll.reorder の実行に失敗しました: {e}")
+
+                        # 切り替え直後に位置を再設定して瞬間移動を防ぐ
+                        self.sim.setAgentposition(self.agent_position)
                 else:  # 通常時巡回
                     print(f"Patrollモード")
                     self.distance, self.prev_agent_positions, self.agent_position = (

@@ -45,8 +45,6 @@ class Simulation:
             Agent_handle = self.sim.getObject(f"/{object_name}/target")
             self.Agent_handles.append(Agent_handle)
             print(f"取得: {object_name} のtarget")
-            print(self.Drone_handles)
-            print(self.Agent_handles)
 
     def change_handles(self, sorted_idx):
         """
@@ -70,8 +68,6 @@ class Simulation:
             print(
                 f"Agentハンドルの更新: Agent[{j+1}] に old index {idx} のハンドルを割当"
             )
-            print(self.Drone_handles)
-            print(self.Agent_handles)
 
     def initial_setAgentpositions(self, Agent_positions):
         for i in range(Params["num_agents"]):

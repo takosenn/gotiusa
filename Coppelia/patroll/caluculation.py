@@ -24,7 +24,13 @@ def caluculate(
     else:
         tau_i_1 = 2
         tau_i_2 = 2
-    e_i_1 = tau_i_1 * np.linalg.norm(ro_i - Params["R"] + eta)
+    # Params["R"] may be a scalar or a per-agent list. Support both.
+    try:
+        R_j = Params["R"][j]
+    except Exception:
+        R_j = Params["R"]
+
+    e_i_1 = tau_i_1 * np.linalg.norm(ro_i - R_j + eta)
     e_i_2 = tau_i_2 * np.linalg.norm(ro_i * (omega_i - Params["Omega"] - fi))
 
     # --- e_i_1, e_i_2の時間積分 ---
@@ -37,7 +43,7 @@ def caluculate(
 
     # --- 制御プロトコルu_iの計算（時間積分したe_i_1, e_i_2を使用） ---
     # u_rが放射方向(targetに近づく離れる)の速度成分、u_thetaが接線方向の速度成分
-    u_r = -ro_i * omega_i**2 - eta - 7 * np.sign(ro_i - Params["R"] + eta)
+    u_r = -ro_i * omega_i**2 - eta - 7 * np.sign(ro_i - R_j + eta)
     u_theta = (
         (omega_i + Params["Omega"] + fi) * eta
         + zi * ro_i
@@ -45,7 +51,7 @@ def caluculate(
     )
 
     # u_r(放射方向)とu_theta(接線方向)の調整
-    if ro_i > 1.5 * Params["R"] or ro_i < 0.5 * Params["R"]:
+    if ro_i > 1.5 * R_j or ro_i < 0.5 * R_j:
         u_r = u_r * 1
     else:
         u_r = u_r * 1

@@ -75,6 +75,45 @@ class Siege:
         self.e_i_2 = [0, 0, 0, 0, 0, 0]
         self.fi = [0, 0, 0, 0, 0, 0]
 
+    def reorder(self, sorted_idx):
+        """sorted_idx の順に Siege の内部状態を並び替える
+
+        sorted_idx: list or iterable of indices mapping new positions -> old indices
+        """
+
+        def _reorder(lst):
+            # handle numpy arrays and lists of lists/ndarrays
+            try:
+                return [
+                    lst[i].copy() if hasattr(lst[i], "copy") else lst[i]
+                    for i in sorted_idx
+                ]
+            except Exception:
+                return [lst[i] for i in sorted_idx]
+
+        # reorder common internal state members
+        self.agent_positions = _reorder(self.agent_positions)
+        self.prev_agent_positions = np.array(_reorder(self.prev_agent_positions))
+        self.prev_prev_agent_positions = np.array(
+            _reorder(self.prev_prev_agent_positions)
+        )
+        self.relative_coordinates = _reorder(self.relative_coordinates)
+        self.prev_relative_coordinates = _reorder(self.prev_relative_coordinates)
+        self.agent_velocities = _reorder(self.agent_velocities)
+        self.ro_i = _reorder(self.ro_i)
+        self.prev_ro_i = _reorder(self.prev_ro_i)
+        self.eta = _reorder(self.eta)
+        self.theta = _reorder(self.theta)
+        self.prev_theta = _reorder(self.prev_theta)
+        self.alpha_i = _reorder(self.alpha_i)
+        self.alpha_i_minus = _reorder(self.alpha_i_minus)
+        self.omega_i = _reorder(self.omega_i)
+        self.omega_i_plus = _reorder(self.omega_i_plus)
+        self.omega_i_minus = _reorder(self.omega_i_minus)
+        self.e_i_1 = _reorder(self.e_i_1)
+        self.e_i_2 = _reorder(self.e_i_2)
+        self.fi = _reorder(self.fi)
+
     def animate(
         self,
         i,
@@ -119,19 +158,19 @@ class Siege:
             self.alpha_i[j], self.alpha_i_minus[j] = self.various.Angular_distance(
                 self.theta[j], self.theta[j_plus], self.theta[j_minus]
             )
-        ## --- 正規化: 全体合計が 2π になるよう一度だけスケール ---
-        # total = sum(self.alpha_i)
-        # if total == 0:
-        #    # 万が一全てゼロなら均等分配（安全策）
-        #    uniform = 2 * np.pi / self.num_agents
+        #    #--- 正規化: 全体合計が 2π になるよう一度だけスケール ---
+        #    total = sum(self.alpha_i)
+        #    if total == 0:
+        #        # 万が一全てゼロなら均等分配（安全策）
+        #        uniform = 2 * np.pi / self.num_agents
         #    for k in range(self.num_agents):
         #        self.alpha_i[k] = uniform
         #        self.alpha_i_minus[k] = uniform
-        # else:
+        #else:
         #    scale = 2 * np.pi / total
         #    for k in range(self.num_agents):
-        #        self.alpha_i[k] = self.alpha_i[k] * scale
-        #        self.alpha_i_minus[k] = self.alpha_i_minus[k] * scale
+        #       self.alpha_i[k] = self.alpha_i[k] * scale
+        #       self.alpha_i_minus[k] = self.alpha_i_minus[k] * scale
         for j in range(self.num_agents):
             j_plus = (j + 1) % self.num_agents
             j_minus = (j - 1) % self.num_agents
