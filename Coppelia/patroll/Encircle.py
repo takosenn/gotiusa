@@ -243,16 +243,16 @@ class Siege:
                 ).tolist()
 
         self.prev_target_position = np.copy(self.target_position)
-        ## CSV 保存
-        # save_csv_data(Japan_time, current_time, self.ro_i, "ro_i")
-        # save_csv_data(Japan_time, current_time, self.alpha_i, "alpha_i")
-        # save_csv_data(Japan_time, current_time, self.alpha_i_minus, "alpha_i_minus")
-        # save_csv_data(Japan_time, current_time, self.omega_i, "omega_i")
-        # save_csv_data(Japan_time, current_time, self.eta, "eta")
-        # save_csv_data(Japan_time, current_time, self.e_i_1, "e_i_1")
-        # save_csv_data(Japan_time, current_time, self.e_i_2, "e_i_2")
-        # save_csv_data(Japan_time, current_time, self.theta, "theta")
-        # save_csv_data(Japan_time, current_time, self.fi, "fi")
+        # CSV 保存
+        save_csv_data(Japan_time, current_time, self.ro_i, "ro_i")
+        save_csv_data(Japan_time, current_time, self.alpha_i, "alpha_i")
+        save_csv_data(Japan_time, current_time, self.alpha_i_minus, "alpha_i_minus")
+        save_csv_data(Japan_time, current_time, self.omega_i, "omega_i")
+        save_csv_data(Japan_time, current_time, self.eta, "eta")
+        save_csv_data(Japan_time, current_time, self.e_i_1, "e_i_1")
+        save_csv_data(Japan_time, current_time, self.e_i_2, "e_i_2")
+        save_csv_data(Japan_time, current_time, self.theta, "theta")
+        save_csv_data(Japan_time, current_time, self.fi, "fi")
 
         # 戻り値: (更新後の agent_positions, 直前の agent_positions, ro_i, theta)
         # こうすることで main.py 側の self.prev_agent_positions が正しく更新される。
