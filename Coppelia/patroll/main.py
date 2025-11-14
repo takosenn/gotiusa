@@ -64,7 +64,7 @@ class Main:
                 print(f"現在の経過時間：{current_time}")
 
                 # ターゲット位置を更新
-                self.target_position += np.array([-0.05, -0.05, 0], dtype=float)
+                self.target_position += np.array([0.05, 0.05, 0], dtype=float)
                 self.prev_target_position = np.copy(self.target_position)
 
                 # 距離判定
@@ -76,7 +76,7 @@ class Main:
                     # k が 100 を超えたら全て 2 に戻す。
                     if k <= 100:
                         # 各 Quadcopter の R 値（必要に応じて num_agents に合わせる）
-                        per_agent_R = [2, 2.2, 2.4, 2.6, 2.8, 3]
+                        per_agent_R = [2, 2.2, 2.4, 2.6, 2.8, 3.0]
                         Params["R"] = per_agent_R[: self.num_agents]
                     else:
                         # k が 100 を超えたら全て 2 にする
@@ -84,9 +84,9 @@ class Main:
                             Params["R"] = 2
                             print(f"Params['R'] を全て 2 に変更しました (k={k})")
                     # kが50増えるごとに Params['Omega'] を指定シーケンスで切り替える
-                    if k % 50 == 0:
+                    if k % 30 == 0:
                         # 三角波: 2,3,4,3,2,... を繰り返す
-                        omega_seq = [2, 3, 4, 3, 2]
+                        omega_seq = [2, 3, 4, 3,]
                         seq_index = (k // 50 - 1) % len(omega_seq)
                         Params["Omega"] = omega_seq[seq_index]
                         print(
@@ -107,7 +107,7 @@ class Main:
                         self.prev_target_position,
                         self.target_position,
                     )
-                    if k % 30 == 0:
+                    if k % 20 == 0:
                         sorted_idx = sorted(
                             range(self.num_agents), key=lambda j: self.theta[j]
                         )

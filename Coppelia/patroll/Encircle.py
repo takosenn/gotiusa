@@ -166,7 +166,7 @@ class Siege:
         #    for k in range(self.num_agents):
         #        self.alpha_i[k] = uniform
         #        self.alpha_i_minus[k] = uniform
-        #else:
+        # else:
         #    scale = 2 * np.pi / total
         #    for k in range(self.num_agents):
         #       self.alpha_i[k] = self.alpha_i[k] * scale
@@ -216,17 +216,43 @@ class Siege:
             self.prev_prev_agent_positions[j] = np.copy(self.prev_agent_positions[j])
             self.prev_relative_coordinates[j] = np.copy(self.relative_coordinates[j])
 
+        # エージェント間の衝突回避処理
+        min_distance = 0.5  # 最小距離[m]
+        for j in range(self.num_agents):
+            repulsion_force = np.zeros(3)
+            for k in range(self.num_agents):
+                if j != k:
+                    # エージェント間の距離ベクトル
+                    diff = np.array(self.agent_positions[j]) - np.array(
+                        self.agent_positions[k]
+                    )
+                    dist = np.linalg.norm(diff)
+
+                    # 距離が最小距離より近い場合、反発力を加える
+                    if dist < min_distance and dist > 1e-6:
+                        # 正規化された方向ベクトル
+                        direction = diff / dist
+                        # 反発力の大きさ（距離が近いほど強い）
+                        force_magnitude = (min_distance - dist) / min_distance
+                        repulsion_force += direction * force_magnitude * 0.5
+
+            # 反発力を位置に適用
+            if np.linalg.norm(repulsion_force) > 1e-6:
+                self.agent_positions[j] = (
+                    np.array(self.agent_positions[j]) + repulsion_force
+                ).tolist()
+
         self.prev_target_position = np.copy(self.target_position)
         ## CSV 保存
-        #save_csv_data(Japan_time, current_time, self.ro_i, "ro_i")
-        #save_csv_data(Japan_time, current_time, self.alpha_i, "alpha_i")
-        #save_csv_data(Japan_time, current_time, self.alpha_i_minus, "alpha_i_minus")
-        #save_csv_data(Japan_time, current_time, self.omega_i, "omega_i")
-        #save_csv_data(Japan_time, current_time, self.eta, "eta")
-        #save_csv_data(Japan_time, current_time, self.e_i_1, "e_i_1")
-        #save_csv_data(Japan_time, current_time, self.e_i_2, "e_i_2")
-        #save_csv_data(Japan_time, current_time, self.theta, "theta")
-        #save_csv_data(Japan_time, current_time, self.fi, "fi")
+        # save_csv_data(Japan_time, current_time, self.ro_i, "ro_i")
+        # save_csv_data(Japan_time, current_time, self.alpha_i, "alpha_i")
+        # save_csv_data(Japan_time, current_time, self.alpha_i_minus, "alpha_i_minus")
+        # save_csv_data(Japan_time, current_time, self.omega_i, "omega_i")
+        # save_csv_data(Japan_time, current_time, self.eta, "eta")
+        # save_csv_data(Japan_time, current_time, self.e_i_1, "e_i_1")
+        # save_csv_data(Japan_time, current_time, self.e_i_2, "e_i_2")
+        # save_csv_data(Japan_time, current_time, self.theta, "theta")
+        # save_csv_data(Japan_time, current_time, self.fi, "fi")
 
         # 戻り値: (更新後の agent_positions, 直前の agent_positions, ro_i, theta)
         # こうすることで main.py 側の self.prev_agent_positions が正しく更新される。

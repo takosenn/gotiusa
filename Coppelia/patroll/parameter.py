@@ -10,7 +10,7 @@ Params = {
     "Omega": 2,
     "distance_threshold": 10,
     "direction": 0.1,
-    "target_position": [20,20,2],
+    "target_position": [-10, -10, 2],
     "agent_position": [
         [5, 0, 2],
         [10, 5, 2],
