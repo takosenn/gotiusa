@@ -9,16 +9,16 @@ from datetime import datetime
 
 """現実時間の日本時間"""
 Japan_time = datetime.now()
-"""CSVのヘッダーを設定"""
-set_csv_header(Japan_time, "ro_i")
-set_csv_header(Japan_time, "theta")
-set_csv_header(Japan_time, "alpha_i")
-set_csv_header(Japan_time, "alpha_i_minus")
-set_csv_header(Japan_time, "omega_i")
-set_csv_header(Japan_time, "eta")
-set_csv_header(Japan_time, "e_i_1")
-set_csv_header(Japan_time, "e_i_2")
-set_csv_header(Japan_time, "fi")
+#"""CSVのヘッダーを設定"""
+#set_csv_header(Japan_time, "ro_i")
+#set_csv_header(Japan_time, "theta")
+#set_csv_header(Japan_time, "alpha_i")
+#set_csv_header(Japan_time, "alpha_i_minus")
+#set_csv_header(Japan_time, "omega_i")
+#set_csv_header(Japan_time, "eta")
+#set_csv_header(Japan_time, "e_i_1")
+#set_csv_header(Japan_time, "e_i_2")
+#set_csv_header(Japan_time, "fi")
 
 
 class Main:
