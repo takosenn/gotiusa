@@ -93,3 +93,7 @@ class Simulation:
     def settargetposition(self, target_pos_3d):
         # Coppeliasim側でtargetの緑の球(target)の位置同期
         self.sim.setObjectPosition(self.target_handle, -1, target_pos_3d)
+        try:
+            self.sim.setObjectPosition(self.target_Drone_handle, -1, target_pos_3d)
+        except Exception:
+            print("警告: target_Drone_handle に対する位置設定に失敗しました。")

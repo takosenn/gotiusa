@@ -9,16 +9,16 @@ from datetime import datetime
 
 """現実時間の日本時間"""
 Japan_time = datetime.now()
-#"""CSVのヘッダーを設定"""
-#set_csv_header(Japan_time, "ro_i")
-#set_csv_header(Japan_time, "theta")
-#set_csv_header(Japan_time, "alpha_i")
-#set_csv_header(Japan_time, "alpha_i_minus")
-#set_csv_header(Japan_time, "omega_i")
-#set_csv_header(Japan_time, "eta")
-#set_csv_header(Japan_time, "e_i_1")
-#set_csv_header(Japan_time, "e_i_2")
-#set_csv_header(Japan_time, "fi")
+# """CSVのヘッダーを設定"""
+# set_csv_header(Japan_time, "ro_i")
+# set_csv_header(Japan_time, "theta")
+# set_csv_header(Japan_time, "alpha_i")
+# set_csv_header(Japan_time, "alpha_i_minus")
+# set_csv_header(Japan_time, "omega_i")
+# set_csv_header(Japan_time, "eta")
+# set_csv_header(Japan_time, "e_i_1")
+# set_csv_header(Japan_time, "e_i_2")
+# set_csv_header(Japan_time, "fi")
 
 
 class Main:
@@ -76,8 +76,7 @@ class Main:
                     # k が 100 を超えたら全て 2 に戻す。
                     if k <= 100:
                         # 各 Quadcopter の R 値（必要に応じて num_agents に合わせる）
-                        per_agent_R = [2, 2.2, 2.4, 2.6, 2.8, 3.0]
-                        Params["R"] = per_agent_R[: self.num_agents]
+                        Params["R"] = Params["per_agent_R"][: self.num_agents]
                     else:
                         # k が 100 を超えたら全て 2 にする
                         if Params.get("R") != 2:
@@ -86,9 +85,8 @@ class Main:
                     # kが50増えるごとに Params['Omega'] を指定シーケンスで切り替える
                     if k % 30 == 0:
                         # 三角波: 2,3,4,3,2,... を繰り返す
-                        omega_seq = [2, 3, 4, 3]
-                        seq_index = (k // 50 - 1) % len(omega_seq)
-                        Params["Omega"] = omega_seq[seq_index]
+                        seq_index = (k // 50 - 1) % len(Params["omega_seq"])
+                        Params["Omega"] = Params["omega_seq"][seq_index]
                         print(
                             f"Params['Omega'] を {Params['Omega']} に変更しました (k={k})"
                         )
