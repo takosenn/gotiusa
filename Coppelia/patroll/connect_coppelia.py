@@ -83,12 +83,12 @@ class Simulation:
         for j in range(Params["num_agents"]):
             # Agent(target) の位置を更新
             self.sim.setObjectPosition(self.Agent_handles[j], -1, Agents_pos_3d[j])
-            # ドローン本体の位置も合わせて更新（ハンドルが対応している前提）
-            try:
-                self.sim.setObjectPosition(self.Drone_handles[j], -1, Agents_pos_3d[j])
-            except Exception:
-                # 念のため例外を捕まえてログだけ出す（実行を止めたくない）
-                print(f"警告: Drone_handles[{j}] に対する位置設定に失敗しました。")
+            ## ドローン本体の位置も合わせて更新（ハンドルが対応している前提）
+            #try:
+            #    self.sim.setObjectPosition(self.Drone_handles[j], -1, Agents_pos_3d[j])
+            #except Exception:
+            #    # 念のため例外を捕まえてログだけ出す（実行を止めたくない）
+            #    print(f"警告: Drone_handles[{j}] に対する位置設定に失敗しました。")
 
     def settargetposition(self, target_pos_3d):
         # Coppeliasim側でtargetの緑の球(target)の位置同期

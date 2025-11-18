@@ -10,11 +10,11 @@ def caluculate(
 ):
 
     # --- fi, zi の計算と表示 ---
-    fi = (Params["d_i"] * alpha_i - Params["d_i"] * alpha_i_minus) / (2 * Params["d_i"])
-    zi = (
-        Params["d_i"] * (omega_i_plus - omega_i)
-        - Params["d_i"] * (omega_i - omega_i_minus)
-    ) / (2 * Params["d_i"])
+    d_i_j = Params["d_i"][j]
+    fi = (d_i_j * alpha_i - d_i_j * alpha_i_minus) / (2 * d_i_j)
+    zi = (d_i_j * (omega_i_plus - omega_i) - d_i_j * (omega_i - omega_i_minus)) / (
+        2 * d_i_j
+    )
 
     # e_i_1, e_i_2の初期値は0、それ以降は式で計算
 
@@ -24,11 +24,8 @@ def caluculate(
     else:
         tau_i_1 = 2
         tau_i_2 = 2
-    # Params["R"] may be a scalar or a per-agent list. Support both.
-    try:
-        R_j = Params["R"][j]
-    except Exception:
-        R_j = Params["R"]
+    # Params["R"] is a per-agent list
+    R_j = Params["R"][j]
 
     e_i_1 = tau_i_1 * np.linalg.norm(ro_i - R_j + eta)
     e_i_2 = tau_i_2 * np.linalg.norm(ro_i * (omega_i - Params["Omega"] - fi))
