@@ -66,6 +66,7 @@ class Main:
             self.sim.initial_setAgentpositions(self.agent_position)
             time.sleep(2)
             k = 0
+            m = 0
             for i in range(Params["frames"]):
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 current_time = i * self.frame_time
@@ -78,6 +79,8 @@ class Main:
 
                 # 最小距離を取得
                 min_distance = min(self.distance)
+                # 最大距離を取得
+                max_distance = max(self.distance)
                 # Rの最大値を取得（リストの場合）
                 max_R = (
                     max(Params["R"]) if isinstance(Params["R"], list) else Params["R"]
@@ -106,7 +109,7 @@ class Main:
                     )
 
                 elif (
-                    min_distance > 2 * max_R
+                    max_distance > 5
                     and min_distance <= Params["distance_threshold"]
                 ):
                     # モード2: 直線配置（ターゲットの進行方向に垂直）
@@ -126,7 +129,8 @@ class Main:
                     )
                     if k % 10 == 0:
                         sorted_idx = sorted(
-                            range(self.num_agents), key=lambda j: self.theta[j],reverse = True
+                            range(self.num_agents),
+                            key=lambda j: self.theta[j],  # ,reverse = True
                         )
                         print(f"ハンドルを切り替える (sorted_idx={sorted_idx})")
                         # 切替: シミュレータ内ハンドルを入れ替え
@@ -182,28 +186,16 @@ class Main:
 
                 else:
                     # モード3: 円形包囲
-                    k += 1
-                    # k が 100 になるまでは各エージェントごとに R を設定し、
-                    # k が 100 を超えたら全て 2 に戻す。
-                    if k <= 100:
-                        # 各 Quadcopter の R 値（必要に応じて num_agents に合わせる）
-                        Params["R"] = Params["per_agent_R"][: self.num_agents]
-                    else:
-                        # k が 100 を超えたら全て 1 にする
-                        if Params.get("R") != Params["R_reset"]:
-                            Params["R"] = Params["R_reset"]
-                            print(
-                                f"Params['R'] を {Params['R_reset']} に変更しました (k={k})"
-                            )
+                    m += 1
                     # kが50増えるごとに Params['Omega'] を指定シーケンスで切り替える
-                    if k % 30 == 0:
+                    if m % 30 == 0:
                         # 三角波: 2,3,4,3,2,... を繰り返す
-                        seq_index = (k // 50 - 1) % len(Params["omega_seq"])
+                        seq_index = (m // 50 - 1) % len(Params["omega_seq"])
                         Params["Omega"] = Params["omega_seq"][seq_index]
                         print(
-                            f"Params['Omega'] を {Params['Omega']} に変更しました (k={k})"
+                            f"Params['Omega'] を {Params['Omega']} に変更しました (m={m})"
                         )
-                    print(f"Encircleモード (k={k})")
+                    print(f"Encircleモード (m={m})")
                     (
                         self.agent_position,
                         self.prev_agent_positions,
@@ -218,7 +210,7 @@ class Main:
                         self.prev_target_position,
                         self.target_position,
                     )
-                    if k % 20 == 0:
+                    if m % 20 == 0:
                         sorted_idx = sorted(
                             range(self.num_agents), key=lambda j: self.theta[j]
                         )

@@ -66,7 +66,7 @@ class LineFormation:
         spacing = 1.5  # メートル
 
         # 直線の中心点（ターゲットの現在位置から進行方向前方）
-        offset_distance = 1.5  # ターゲットからの距離
+        offset_distance = 3  # ターゲットからの距離
         line_center = self.target_position[:2] + target_direction * offset_distance
 
         # 各エージェントを直線上に配置し、ターゲットに向かって移動
