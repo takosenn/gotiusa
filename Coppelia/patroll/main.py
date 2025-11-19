@@ -3,6 +3,7 @@ from Encircle import Siege
 from LineFormation import LineFormation
 from connect_coppelia import Simulation
 from parameter import Params
+from various_calculation import Various
 import numpy as np
 import time
 from csv_save import set_csv_header
@@ -56,6 +57,7 @@ class Main:
             self.agent_position,
             self.distance,
         )
+        self.various = Various()
         self.theta = np.zeros(self.num_agents)
 
     def run(self):
@@ -108,10 +110,7 @@ class Main:
                         f"距離: {[f'{d:.2f}' for d in self.distance]}, 閾値: {Params['distance_threshold']}"
                     )
 
-                elif (
-                    max_distance > 5
-                    and min_distance <= Params["distance_threshold"]
-                ):
+                elif max_distance > 5 and min_distance <= Params["distance_threshold"]:
                     # モード2: 直線配置（ターゲットの進行方向に垂直）
                     k += 1
                     print(
@@ -130,41 +129,28 @@ class Main:
                     if k % 10 == 0:
                         sorted_idx = sorted(
                             range(self.num_agents),
-                            key=lambda j: self.theta[j],  # ,reverse = True
+                            key=lambda j: self.theta[j],
                         )
                         print(f"ハンドルを切り替える (sorted_idx={sorted_idx})")
+
                         # 切替: シミュレータ内ハンドルを入れ替え
                         self.sim.change_handles(sorted_idx)
 
-                        # --- 追加: アプリ側の状態も同じ順序に並び替える ---
-                        # agent_position
-                        if isinstance(self.agent_position, np.ndarray):
-                            self.agent_position = self.agent_position.tolist()
-                        self.agent_position = [
-                            self.agent_position[idx] for idx in sorted_idx
-                        ]
+                        # アプリ側の状態を同じ順序に並び替える
+                        (
+                            self.agent_position,
+                            self.prev_agent_positions,
+                            self.distance,
+                            self.theta,
+                        ) = self.various.reorder_agents(
+                            self.agent_position,
+                            self.prev_agent_positions,
+                            self.distance,
+                            self.theta,
+                            sorted_idx,
+                        )
 
-                        # prev_agent_positions
-                        try:
-                            self.prev_agent_positions = np.array(
-                                [self.prev_agent_positions[idx] for idx in sorted_idx]
-                            )
-                        except Exception:
-                            self.prev_agent_positions = np.array(
-                                [
-                                    self.prev_agent_positions[idx].tolist()
-                                    for idx in sorted_idx
-                                ]
-                            )
-
-                        # distance と theta
-                        self.distance = [self.distance[idx] for idx in sorted_idx]
-                        try:
-                            self.theta = [self.theta[idx] for idx in sorted_idx]
-                        except Exception:
-                            self.theta = list(self.theta)
-
-                        # Siege と Patroll の内部状態も並び替え
+                        # 内部クラスの状態も並び替え
                         try:
                             self.siege.reorder(sorted_idx)
                         except Exception as e:
@@ -215,38 +201,25 @@ class Main:
                             range(self.num_agents), key=lambda j: self.theta[j]
                         )
                         print(f"ハンドルを切り替える (sorted_idx={sorted_idx})")
+
                         # 切替: シミュレータ内ハンドルを入れ替え
                         self.sim.change_handles(sorted_idx)
 
-                        # --- 追加: アプリ側の状態も同じ順序に並び替える ---
-                        # agent_position
-                        if isinstance(self.agent_position, np.ndarray):
-                            self.agent_position = self.agent_position.tolist()
-                        self.agent_position = [
-                            self.agent_position[idx] for idx in sorted_idx
-                        ]
+                        # アプリ側の状態を同じ順序に並び替える
+                        (
+                            self.agent_position,
+                            self.prev_agent_positions,
+                            self.distance,
+                            self.theta,
+                        ) = self.various.reorder_agents(
+                            self.agent_position,
+                            self.prev_agent_positions,
+                            self.distance,
+                            self.theta,
+                            sorted_idx,
+                        )
 
-                        # prev_agent_positions
-                        try:
-                            self.prev_agent_positions = np.array(
-                                [self.prev_agent_positions[idx] for idx in sorted_idx]
-                            )
-                        except Exception:
-                            self.prev_agent_positions = np.array(
-                                [
-                                    self.prev_agent_positions[idx].tolist()
-                                    for idx in sorted_idx
-                                ]
-                            )
-
-                        # distance と theta
-                        self.distance = [self.distance[idx] for idx in sorted_idx]
-                        try:
-                            self.theta = [self.theta[idx] for idx in sorted_idx]
-                        except Exception:
-                            self.theta = list(self.theta)
-
-                        # Siege と Patroll の内部状態も並び替え
+                        # 内部クラスの状態も並び替え
                         try:
                             self.siege.reorder(sorted_idx)
                         except Exception as e:
