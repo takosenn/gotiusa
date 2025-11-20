@@ -63,10 +63,10 @@ class LineFormation:
         perpendicular_direction = np.array([-target_direction[1], target_direction[0]])
 
         # エージェント間の間隔
-        spacing = 1.5  # メートル
+        spacing = Params["LineFormation_spacing"]
 
         # 直線の中心点（ターゲットの現在位置から進行方向前方）
-        offset_distance = 3  # ターゲットからの距離
+        offset_distance = Params["LineFormation_offset_distance"]
         line_center = self.target_position[:2] + target_direction * offset_distance
 
         # 各エージェントを直線上に配置し、ターゲットに向かって移動
@@ -94,24 +94,30 @@ class LineFormation:
             move_direction = np.zeros(2)
 
             # 直線位置への移動成分
-            if to_line_norm > 0.1:  # まだ直線上にない場合
-                move_direction += (to_line / to_line_norm) * 0.5
+            if to_line_norm > Params["LineFormation_line_threshold"]:
+                move_direction += (to_line / to_line_norm) * Params[
+                    "LineFormation_line_weight"
+                ]
 
             # ターゲットへの接近成分（巡回時と同じ移動距離）
             if to_target_norm > 1e-6:
-                move_direction += (to_target / to_target_norm) * Params["LineFormation_direction"]
+                move_direction += (to_target / to_target_norm) * Params[
+                    "LineFormation_direction"
+                ]
 
             # 移動方向を正規化して、巡回時と同じ移動距離にする
             move_norm = np.linalg.norm(move_direction)
             if move_norm > Params["LineFormation_direction"]:
-                move_direction = (move_direction / move_norm) * Params["LineFormation_direction"]
+                move_direction = (move_direction / move_norm) * Params[
+                    "LineFormation_direction"
+                ]
 
             # 位置を更新（3D座標として）
             self.prev_agent_positions[j] = np.copy(self.agent_positions[j])
             self.agent_positions[j][:2] += move_direction
 
         # エージェント間の衝突回避
-        min_distance = 0.5
+        min_distance = Params["LineFormation_collision_distance"]
         for j in range(self.num_agents):
             repulsion_force = np.zeros(3)
             for k in range(self.num_agents):
@@ -121,7 +127,11 @@ class LineFormation:
                     if dist < min_distance and dist > 1e-6:
                         direction = diff / dist
                         force_magnitude = (min_distance - dist) / min_distance
-                        repulsion_force += direction * force_magnitude * 0.5
+                        repulsion_force += (
+                            direction
+                            * force_magnitude
+                            * Params["LineFormation_repulsion_force"]
+                        )
 
             if np.linalg.norm(repulsion_force) > 1e-6:
                 self.agent_positions[j] = self.agent_positions[j] + repulsion_force
