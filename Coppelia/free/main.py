@@ -1,6 +1,6 @@
 # これを実行するとシミュレーションスタート
 
-from parameter import frames, frame_time , initial_target_position , initial_agents_positions
+from parameter import Params
 from animation import Animation
 from connect_Coppelia import Simulation
 import time
@@ -13,27 +13,28 @@ class Main:
     def __init__(self):
         self.sim = Simulation()
         # Simulationのハンドルを取得してからAnimationに同じインスタンスを渡す
-        from parameter import num_agents
-
-        self.sim.get_handles(num_agents)
+        self.sim.get_handles(Params["num_agents"])
         self.ani = Animation()
         self.ani.sim = self.sim
-        self.initial_target_pos = initial_target_position
-        self.initial_agent_pos = []
-        for i in range(num_agents):
-            agent_pos = initial_agents_positions[i]
-            self.initial_agent_pos.append(agent_pos)
 
     def run(self):
         try:
             self.sim.connect()
             self.sim.start_simulation()
-            self.sim.initial_settargetposition(self.initial_target_pos)
-            self.sim.initial_setAgentpositions(self.initial_agent_pos)
-            for i in range(frames):
+
+            # CoppeliaSim から初期位置を取得
+            print("CoppeliaSim から初期位置を取得中...")
+            initial_target_pos, initial_agent_pos = self.sim.get_Drone_position()
+            print(f"Target初期位置: {initial_target_pos}")
+            print(f"Agent初期位置: {initial_agent_pos}")
+
+            for i in range(Params["frames"]):
                 print(f"現在のfor文を読んだ回数: {i}回目")
-                self.ani.animate(i)
-                time.sleep(frame_time)
+                # CoppeliaSim から現在の座標を取得
+                target_position, agent_positions = self.sim.get_Drone_position()
+                # 取得した座標を使って計算
+                self.ani.animate(i, target_position, agent_positions)
+                time.sleep(Params["frame_time"])
                 self.sim.step_simulation()
         except KeyboardInterrupt:
             print("ctrl+Cでシミュレーションが終了しました")

@@ -1,5 +1,6 @@
-from parameter import num_agents
-from coppeliasim_zmqremoteapi_client import RemoteAPIClient
+from parameter import Params
+import numpy as np
+from coppeliasim_zmqremoteapi_client import RemoteAPIClient  # type: ignore[import]
 import time
 
 
@@ -46,20 +47,51 @@ class Simulation:
             self.Agent_handles.append(Agent_handle)
             print(f"取得: {object_name} のtarget")
 
-    def initial_setAgentpositions(self, Agent_positions):
-        for i in range(num_agents):
-            self.sim.setObjectPosition(self.Drone_handles[i], -1, Agent_positions[i])
-            self.sim.setObjectPosition(self.Agent_handles[i], -1, Agent_positions[i])
-
-    def initial_settargetposition(self, target_position):
-        self.sim.setObjectPosition(self.target_Drone_handle, -1, target_position)
-        self.sim.setObjectPosition(self.target_handle, -1, target_position)
-
     def setAgentposition(self, j, Agents_pos_3d):
         # Coppeliasim側でAgentの緑の球(target)の位置同期
-        for j in range(num_agents):
+        for j in range(Params["num_agents"]):
             self.sim.setObjectPosition(self.Agent_handles[j], -1, Agents_pos_3d[j])
 
     def settargetposition(self, target_pos_3d):
         # Coppeliasim側でtargetの緑の球(target)の位置同期
         self.sim.setObjectPosition(self.target_handle, -1, target_pos_3d)
+
+    def get_Drone_position(self):
+        """座標を取得（CoppeliaSim または モーションキャプチャ）"""
+        if Params["use_mocap"]:
+            return self._get_position_from_mocap()
+        else:
+            return self._get_position_from_coppelia()
+
+    def _get_position_from_coppelia(self):
+        """CoppeliaSim から座標を取得"""
+        Agent_positions = np.zeros((Params["num_agents"], 3))
+        target_position = self.sim.getObjectPosition(self.target_handle, -1)
+        for agent_idx in range(Params["num_agents"]):
+            Agent_positions[agent_idx] = self.sim.getObjectPosition(
+                self.Agent_handles[agent_idx], -1
+            )
+        return target_position, Agent_positions
+
+    def _get_position_from_mocap(self):
+        """モーションキャプチャから座標を取得
+
+        Drone[0] -> target
+        Drone[1]~[6] -> Agent[0]~[5]
+
+        TODO: モーションキャプチャシステムとの接続を実装
+        """
+        # TODO: 実際のモーションキャプチャシステムから座標を取得する処理を実装
+        # 例: mocap_data = self.mocap_system.get_rigid_bodies()
+
+        Agent_positions = np.zeros((Params["num_agents"], 3))
+        target_position = np.zeros(3)
+
+        # TODO: 以下を実際のモーションキャプチャデータで置き換える
+        # target_position = mocap_data['Drone[0]']  # Drone[0] -> target
+        # for agent_idx in range(Params["num_agents"]):
+        #     Agent_positions[agent_idx] = mocap_data[f'Drone[{agent_idx+1}]']  # Drone[1]~[6] -> Agent[0]~[5]
+
+        raise NotImplementedError("モーションキャプチャからの座標取得は未実装です")
+
+        return target_position, Agent_positions

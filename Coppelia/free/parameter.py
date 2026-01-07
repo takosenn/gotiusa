@@ -1,26 +1,27 @@
 import numpy as np
 
-# --- パラメータ設定 ---
-num_agents = 6  # Agentの数6[台]
-center = (0, 0)  # targetの中心座標[m]
-radius = 5  # targetの軌道半径[m]
-frames = 10000  # アニメーションのフレーム数(小さくしすぎるとアニメーションがすぐに終わる)[frame]
-xlim = (-30, 30)  # 2Dアニメーションのx軸の範囲[m]
-ylim = (-30, 30)  # 2Dアニメーションのy軸の範囲[m]
-radius_limit = 8  # Agentの配置半径の制限(中心をtargetとして配置する)[m]
-R = 2  # targetとAgentの理想の距離(フォーメーションの半径)[m]
-d_i = 2 * np.pi / num_agents  # Agentiとその隣接Agenti+-の理想角度[rad]
-frame_time = 0.02  # 1フレームにかかる時間[s]
-fps = 1 / frame_time  # 1秒間に更新するフレーム数[frame]
-omega_target = 0.12  # target円運動の角速度0.12[rad/s]
-Omega = 2  # Agentの理想角速度2[rad/s]
+Params = {
+    # --- システム設定 ---
+    "use_mocap": False,  # True: モーションキャプチャ, False: CoppeliaSim
+    "save_csv": False,  # True: CSV保存する, False: CSV保存しない
+    # --- エージェント設定 ---
+    "num_agents": 6,  # Agentの数[台]
+    # --- ターゲット設定 ---
+    "radius": 5,  # targetの軌道半径[m]
+    "radius_limit": 8,  # Agentの配置半径の制限(中心をtargetとして配置する)[m]
+    "omega_target": 0.12,  # target円運動の角速度[rad/s]
+    # --- シミュレーション設定 ---
+    "frames": 10000,  # アニメーションのフレーム数[frame]
+    "frame_time": 0.02,  # 1フレームにかかる時間[s]
+    # --- 制御パラメータ ---
+    "R": 1,  # targetとAgentの理想の距離(フォーメーションの半径)[m]
+    "Omega": 2,  # Agentの理想角速度[rad/s]
+}
 
-initial_target_position = [0, radius, 2]
-initial_agents_positions = []
-for i in range(num_agents):
-    initial_agents_position = [
-        radius_limit * np.cos(i * np.pi / 3),
-        radius + radius_limit * np.sin(i * np.pi / 3),
-        2,
-    ]
-    initial_agents_positions.append(initial_agents_position)
+# 計算で求まるパラメータ
+Params["d_i"] = (
+    2 * np.pi / Params["num_agents"]
+)  # Agentiとその隣接Agenti+-の理想角度[rad]
+Params["fps"] = 1 / Params["frame_time"]  # 1秒間に更新するフレーム数[frame]
+
+# 初期位置はCoppeliaSimから取得するため、ここでは定義しない
