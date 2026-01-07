@@ -32,19 +32,11 @@ class Animation:
         self.prev_ro_i = [0.0] * Params["num_agents"]
         self.target_position = [0, 0, 0]
         self.prev_target_position = [0, 0, 0]
-        self.current_world_agent_positions = [
-            [0, 0, 0] for _ in range(Params["num_agents"])
-        ]
-        self.prev_world_agent_positions = [
-            [0, 0, 0] for _ in range(Params["num_agents"])
-        ]
-        self.prev_prev_world_agent_positions = [
-            [0, 0, 0] for _ in range(Params["num_agents"])
-        ]
+        self.current_world_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
+        self.prev_world_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
+        self.prev_prev_world_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
         self.local_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
-        self.prev_local_agent_positions = [
-            [0, 0, 0] for _ in range(Params["num_agents"])
-        ]
+        self.prev_local_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
         self.target_theta = 0  # ターゲットの絶対角度
         self.theta = [0.0] * Params["num_agents"]
         self.prev_theta = [0.0] * Params["num_agents"]
@@ -53,13 +45,10 @@ class Animation:
         self.omega_i_minus = [0.0] * Params["num_agents"]
         self.alpha_i = [0.0] * Params["num_agents"]
         self.alpha_i_minus = [0.0] * Params["num_agents"]
-        self.current_world_agent_velocities = [
-            [0, 0, 0] for _ in range(Params["num_agents"])
-        ]
+        self.current_world_agent_velocities = [[0, 0, 0] for _ in range(Params["num_agents"])]
         self.e_i_1 = [0.0] * Params["num_agents"]
         self.e_i_2 = [0.0] * Params["num_agents"]
         self.eta = [0.0] * Params["num_agents"]
-        self.relative_velocity = [[0, 0] for _ in range(Params["num_agents"])]
         self.fi = [0.0] * Params["num_agents"]
 
     def animate(self, i, target_position_from_sim, agent_positions_from_sim):
@@ -176,12 +165,8 @@ class Animation:
                 self.prev_world_agent_positions[j],
             )
 
-            # 相対速度（ワールド座標系）とローカル変換
-            relative_velocity_world = -self.target_velocity + agent_velocity[:2]
             cos_alpha = np.cos(self.theta[j])
             sin_alpha = np.sin(self.theta[j])
-            A_inv = np.array([[cos_alpha, sin_alpha], [-sin_alpha, cos_alpha]])
-            self.relative_velocity[j] = A_inv @ relative_velocity_world
 
             # 隣接の角速度
             self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
