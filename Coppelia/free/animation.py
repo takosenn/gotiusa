@@ -65,6 +65,10 @@ class Animation:
         self.e_i_2 = [0.0] * Params["num_agents"]
         self.eta = [0.0] * Params["num_agents"]
         self.fi = [0.0] * Params["num_agents"]
+        self.agent_index_mapping = list(range(Params["num_agents"]))  # theta順のインデックスマッピング
+        self.mapping_initialized = False  # マッピングが初期化されたか
+        self.sort_interval = 30  # theta順ソートの更新間隔（ステップ）
+        self.last_sort_step = -1  # 最後にソートを実行したステップ
 
     def animate(self, i, target_position_from_sim, agent_positions_from_sim):
         # CoppeliaSim から取得した座標を使用
@@ -148,15 +152,41 @@ class Animation:
                 self.theta[j], self.prev_theta[j]
             )
 
-        # raw alpha を全エージェント分計算（まだスケーリングはしない）
-        for j in range(Params["num_agents"]):
-            j_plus = (j + 1) % Params["num_agents"]
-            j_minus = (j - 1) % Params["num_agents"]
+        # theta値でエージェントをソートして、インデックスマッピングを作成（30ステップごと）
+        if not self.mapping_initialized or (i - self.last_sort_step) >= self.sort_interval:
+            theta_with_index = [(j, self.theta[j]) for j in range(Params["num_agents"])]
+            theta_with_index.sort(key=lambda x: x[1])  # theta値でソート（小さい順）
+            
+            # ソート結果をマッピングに格納
+            # self.agent_index_mapping[論理インデックス] = 実際のエージェントインデックス
+            self.agent_index_mapping = [agent_idx for agent_idx, _ in theta_with_index]
+            
+            if not self.mapping_initialized:
+                print("\n--- 円形フォーメーション: theta順のエージェント割り当て（初回） ---")
+            else:
+                print(f"\n--- ステップ{i}: theta順のエージェント割り当て（再ソート） ---")
+            
+            for logical_idx in range(Params["num_agents"]):
+                actual_idx = self.agent_index_mapping[logical_idx]
+                print(f"  論理Agent[{logical_idx}] = 実際のAgent[{actual_idx}], theta={self.theta[actual_idx]:.3f} rad")
+            print()
+            
+            self.mapping_initialized = True
+            self.last_sort_step = i
+
+        # raw alpha を全エージェント分計算（theta順に基づいて隣接関係を決定）
+        for logical_j in range(Params["num_agents"]):
+            actual_j = self.agent_index_mapping[logical_j]
+            logical_j_plus = (logical_j + 1) % Params["num_agents"]
+            logical_j_minus = (logical_j - 1) % Params["num_agents"]
+            actual_j_plus = self.agent_index_mapping[logical_j_plus]
+            actual_j_minus = self.agent_index_mapping[logical_j_minus]
+            
             alpha_raw, alpha_minus_raw = self.various.Angular_distance(
-                self.theta[j], self.theta[j_plus], self.theta[j_minus]
+                self.theta[actual_j], self.theta[actual_j_plus], self.theta[actual_j_minus]
             )
-            self.alpha_i[j] = alpha_raw
-            self.alpha_i_minus[j] = alpha_minus_raw
+            self.alpha_i[actual_j] = alpha_raw
+            self.alpha_i_minus[actual_j] = alpha_minus_raw
 
         # --- 正規化: 全体合計が 2π になるよう一度だけスケール ---
         total = sum(self.alpha_i)
@@ -173,56 +203,59 @@ class Animation:
                 self.alpha_i_minus[j] = self.alpha_i_minus[j] * scale
 
         # --- PHASE 2: 各エージェントについて制御入力を計算し位置更新 ---
-        for j in range(Params["num_agents"]):
-            j_plus = (j + 1) % Params["num_agents"]
-            j_minus = (j - 1) % Params["num_agents"]
+        for logical_j in range(Params["num_agents"]):
+            actual_j = self.agent_index_mapping[logical_j]
+            logical_j_plus = (logical_j + 1) % Params["num_agents"]
+            logical_j_minus = (logical_j - 1) % Params["num_agents"]
+            actual_j_plus = self.agent_index_mapping[logical_j_plus]
+            actual_j_minus = self.agent_index_mapping[logical_j_minus]
 
             # Agent のワールド速度（1ステップ差分）
             agent_velocity = self.various.Velocity(
-                self.current_world_agent_positions[j],
-                self.prev_world_agent_positions[j],
+                self.current_world_agent_positions[actual_j],
+                self.prev_world_agent_positions[actual_j],
             )
 
             # 隣接の角速度
-            self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
-            self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
+            self.omega_i_plus[actual_j] = np.copy(self.omega_i[actual_j_plus])
+            self.omega_i_minus[actual_j] = np.copy(self.omega_i[actual_j_minus])
 
             # caluculate に必要な引数を渡して制御入力を受け取る
-            u_r, u_theta, self.e_i_1[j], self.e_i_2[j], self.fi[j] = caluculate(
+            u_r, u_theta, self.e_i_1[actual_j], self.e_i_2[actual_j], self.fi[actual_j] = caluculate(
                 i,
-                j,
-                self.alpha_i[j],
-                self.alpha_i_minus[j],
-                self.omega_i_plus[j],
-                self.omega_i[j],
-                self.omega_i_minus[j],
-                self.ro_i[j],
-                self.eta[j],
+                actual_j,
+                self.alpha_i[actual_j],
+                self.alpha_i_minus[actual_j],
+                self.omega_i_plus[actual_j],
+                self.omega_i[actual_j],
+                self.omega_i_minus[actual_j],
+                self.ro_i[actual_j],
+                self.eta[actual_j],
             )
 
             # ローカル->ワールド変換して速度・位置更新
-            u_world_2d = self.various.coordinate_trans(self.theta[j], [u_r, u_theta])
+            u_world_2d = self.various.coordinate_trans(self.theta[actual_j], [u_r, u_theta])
             u_world = np.append(u_world_2d, 0)
 
             new_velocity = u_world * Params["frame_time"] + np.array(
-                self.current_world_agent_velocities[j]
+                self.current_world_agent_velocities[actual_j]
             )
-            self.current_world_agent_velocities[j] = new_velocity.tolist()
+            self.current_world_agent_velocities[actual_j] = new_velocity.tolist()
             updated_position = (
-                np.array(self.current_world_agent_positions[j])
+                np.array(self.current_world_agent_positions[actual_j])
                 + new_velocity * Params["frame_time"]
             )
-            self.current_world_agent_positions[j] = updated_position.tolist()
+            self.current_world_agent_positions[actual_j] = updated_position.tolist()
 
             # 前回値の更新
-            self.prev_ro_i[j] = np.copy(self.ro_i[j])
-            self.prev_theta[j] = np.copy(self.theta[j])
-            self.prev_local_agent_positions[j] = np.copy(self.local_agent_positions[j])
-            self.prev_prev_world_agent_positions[j] = np.copy(
-                self.prev_world_agent_positions[j]
+            self.prev_ro_i[actual_j] = np.copy(self.ro_i[actual_j])
+            self.prev_theta[actual_j] = np.copy(self.theta[actual_j])
+            self.prev_local_agent_positions[actual_j] = np.copy(self.local_agent_positions[actual_j])
+            self.prev_prev_world_agent_positions[actual_j] = np.copy(
+                self.prev_world_agent_positions[actual_j]
             )
-            self.prev_world_agent_positions[j] = np.copy(
-                self.current_world_agent_positions[j]
+            self.prev_world_agent_positions[actual_j] = np.copy(
+                self.current_world_agent_positions[actual_j]
             )
 
         self.prev_target_position = np.copy(self.target_position)
