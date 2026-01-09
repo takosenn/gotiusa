@@ -8,7 +8,7 @@ class LineFormation:
         self.sim = Simulation()
         self.agent_positions = []
         self.line_speed = 1.5  # 移動速度[m/s]
-        self.tolerance = 0.3  # 到達判定の許容誤差[m]
+        self.tolerance = 0.1  # 到達判定の許容誤差[m]
         self.distance_from_target = 2.0  # ターゲットからの距離[m]
         self.agent_spacing = 1.0  # エージェント間の距離[m]
         self.prev_target_position = None  # 前フレームのターゲット位置
