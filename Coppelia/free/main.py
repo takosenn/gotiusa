@@ -4,6 +4,7 @@ from parameter import Params
 from animation import Animation
 from connect_Coppelia import Simulation
 import time
+import numpy as np
 
 
 # import japanize_matplotlib      # type: ignore
@@ -32,14 +33,29 @@ class Main:
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 # CoppeliaSim から現在の座標を取得
                 target_position, agent_positions = self.sim.get_Drone_position()
+
+                # 全エージェントの相対距離の最小値を計算
+                min_ro_i = min(
+                    self.ani.various.Distance(
+                        np.array(agent_positions[j]) - np.array(target_position)
+                    )
+                    for j in range(Params["num_agents"])
+                )
+
                 # 取得した座標を使って計算
-                self.ani.animate(i, target_position, agent_positions)
+                if min_ro_i < 4:
+                    self.ani.animate(i, target_position, agent_positions)
                 time.sleep(Params["frame_time"])
                 self.sim.step_simulation()
         except KeyboardInterrupt:
-            print("ctrl+Cでシミュレーションが終了しました")
+            print("\nctrl+Cでシミュレーションが終了しました")
+        except Exception as e:
+            print(f"\nエラーが発生しました: {type(e).__name__}: {e}")
+            print("シミュレーションを停止します...")
         finally:
+            print("CoppeliaSim を停止中...")
             self.sim.stop_simulation()
+            print("シミュレーション終了")
 
 
 controller = Main()

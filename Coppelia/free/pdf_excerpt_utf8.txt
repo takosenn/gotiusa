@@ -1,51 +1,0 @@
-for updating the control parameters to solve the above
-Authorized licensed use limited to: Kansai University. Downloaded on May 07,2025 at 07:11:06 UTC from IEEE Xplore.  Restrictions apply. 
-1650
-IEEE TRANSACTIONS ON CONTROL OF NETWORK SYSTEMS, VOL. 11, NO. 3, SEPTEMBER 2024
-concerns:
-ue
-i =
-
-ue
-i1
-ue
-i2
-
-=
-
-−ω2
-i ρi −ηi
-(ωi + Ω + fi)ηi + ziρi
-
-+
-
-−ei1sign(ρi −Ri + ηi)
-ei2sign(fi + Ω −ωi)
-
-(21)
-and
-
-˙ei1 = τi1∥ρi −Ri + ηi∥1
-˙ei2 = τi2∥ρi(ωi −Ω −fi)∥1
-(22)
-where fi and zi are given in (13), and τi1 > 0 and τi2 > 0 are
-the constants.
-Denote e1 = [e11, e21, . . . , en1]T , and e2 = [e12, e22, . . . ,
-en2]T . Then, for system (8) with adaptive control protocol
-(21), the compact-form closed-loop system can be described
-as follows:
-⎧
-⎪
-⎪
-⎪
-⎪
-⎨
-⎪
-⎪
-⎪
-⎪
-⎩
-˙ρ = η
-˙ˆα = ω+ −ω
-˙η = −ae
-01 −η 

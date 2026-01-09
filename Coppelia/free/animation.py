@@ -27,16 +27,29 @@ class Animation:
         self.sim = Simulation()
         self.various = Various()
         self.initialized = False  # 初期化フラグ
+        # ターゲットの円運動パラメータ
+        self.target_radius = Params["radius"]  # 円運動の半径
+        self.target_omega = Params["omega_target"]  # 角速度
+        self.target_initial_angle = np.pi / 2  # 初期角度（π/2の位置）
+        self.target_initial_z = 0  # z座標の初期値（後で設定）
         # 初期値は仮の値で設定（最初のanimate呼び出しで実座標から初期化される）
         self.ro_i = [0.0] * Params["num_agents"]
         self.prev_ro_i = [0.0] * Params["num_agents"]
         self.target_position = [0, 0, 0]
         self.prev_target_position = [0, 0, 0]
-        self.current_world_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
-        self.prev_world_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
-        self.prev_prev_world_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
+        self.current_world_agent_positions = [
+            [0, 0, 0] for _ in range(Params["num_agents"])
+        ]
+        self.prev_world_agent_positions = [
+            [0, 0, 0] for _ in range(Params["num_agents"])
+        ]
+        self.prev_prev_world_agent_positions = [
+            [0, 0, 0] for _ in range(Params["num_agents"])
+        ]
         self.local_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
-        self.prev_local_agent_positions = [[0, 0, 0] for _ in range(Params["num_agents"])]
+        self.prev_local_agent_positions = [
+            [0, 0, 0] for _ in range(Params["num_agents"])
+        ]
         self.target_theta = 0  # ターゲットの絶対角度
         self.theta = [0.0] * Params["num_agents"]
         self.prev_theta = [0.0] * Params["num_agents"]
@@ -45,7 +58,9 @@ class Animation:
         self.omega_i_minus = [0.0] * Params["num_agents"]
         self.alpha_i = [0.0] * Params["num_agents"]
         self.alpha_i_minus = [0.0] * Params["num_agents"]
-        self.current_world_agent_velocities = [[0, 0, 0] for _ in range(Params["num_agents"])]
+        self.current_world_agent_velocities = [
+            [0, 0, 0] for _ in range(Params["num_agents"])
+        ]
         self.e_i_1 = [0.0] * Params["num_agents"]
         self.e_i_2 = [0.0] * Params["num_agents"]
         self.eta = [0.0] * Params["num_agents"]
@@ -59,7 +74,14 @@ class Animation:
         # 初回呼び出し時（i==0）に実座標から初期化
         if not self.initialized:
             print("CoppeliaSim から取得した実座標で初期化中...")
-            self.target_position = list(target_position_from_sim)
+            # ターゲットのz座標を取得（円運動でもz座標は保持）
+            self.target_initial_z = target_position_from_sim[2]
+            # ターゲットの初期位置を円運動の初期位置に設定
+            self.target_position = [
+                self.target_radius * np.cos(self.target_initial_angle),
+                self.target_radius * np.sin(self.target_initial_angle),
+                self.target_initial_z,
+            ]
             self.prev_target_position = self.target_position.copy()
 
             for j in range(Params["num_agents"]):
@@ -77,7 +99,7 @@ class Animation:
                 )
                 self.local_agent_positions[j] = local_pos
                 self.prev_local_agent_positions[j] = local_pos.copy()
-                distance = np.linalg.norm(local_pos)
+                distance = self.various.Distance(local_pos)
                 self.ro_i[j] = distance
                 self.prev_ro_i[j] = distance
 
@@ -92,8 +114,19 @@ class Animation:
             self.initialized = True
             print("初期化完了\n")
 
-        # CoppeliaSim から取得した target の位置を使用
-        self.target_position = list(target_position_from_sim)
+        # ターゲットの位置を更新
+        if Params["target_move"]:
+            # ターゲットを円運動させる
+            current_angle = self.target_initial_angle + self.target_omega * current_time
+            self.target_position = [
+                self.target_radius * np.cos(current_angle),
+                self.target_radius * np.sin(current_angle),
+                self.target_initial_z,
+            ]
+        else:
+            # ターゲットを静止させる（CoppeliaSim から取得した位置を使用）
+            self.target_position = list(target_position_from_sim)
+
         self.target_velocity = np.array(
             [
                 (self.target_position[0] - self.prev_target_position[0])
@@ -116,7 +149,7 @@ class Animation:
             self.local_agent_positions[j] = np.array(
                 self.current_world_agent_positions[j]
             ) - np.array(self.target_position)
-            self.ro_i[j] = np.linalg.norm(self.local_agent_positions[j])
+            self.ro_i[j] = self.various.Distance(self.local_agent_positions[j])
             self.theta[j] = self.various.Theta(self.local_agent_positions[j])
             self.prev_theta[j] = self.various.Theta(self.prev_local_agent_positions[j])
 
@@ -124,11 +157,9 @@ class Animation:
             self.eta[j] = (self.ro_i[j] - self.prev_ro_i[j]) / Params["frame_time"]
 
             # 角速度 omega_i
-            delta_theta = np.arctan2(
-                np.sin(self.theta[j] - self.prev_theta[j]),
-                np.cos(self.theta[j] - self.prev_theta[j]),
+            self.omega_i[j] = self.various.Angular_velocity(
+                self.theta[j], self.prev_theta[j]
             )
-            self.omega_i[j] = delta_theta / Params["frame_time"]
 
         # raw alpha を全エージェント分計算（まだスケーリングはしない）
         for j in range(Params["num_agents"]):
@@ -165,21 +196,9 @@ class Animation:
                 self.prev_world_agent_positions[j],
             )
 
-            cos_alpha = np.cos(self.theta[j])
-            sin_alpha = np.sin(self.theta[j])
-
             # 隣接の角速度
             self.omega_i_plus[j] = np.copy(self.omega_i[j_plus])
             self.omega_i_minus[j] = np.copy(self.omega_i[j_minus])
-
-            # ローカル基底
-            e_i_x = np.array(
-                [
-                    self.local_agent_positions[j][0] / self.ro_i[j],
-                    self.local_agent_positions[j][1] / self.ro_i[j],
-                ]
-            )
-            e_i_y = np.array([-e_i_x[1], e_i_x[0]])
 
             # caluculate に必要な引数を渡して制御入力を受け取る
             u_r, u_theta, self.e_i_1[j], self.e_i_2[j], self.fi[j] = caluculate(
@@ -195,9 +214,7 @@ class Animation:
             )
 
             # ローカル->ワールド変換して速度・位置更新
-            A = np.array([[cos_alpha, -sin_alpha], [sin_alpha, cos_alpha]])
-            u_local = np.array([u_r, u_theta])
-            u_world_2d = A @ u_local
+            u_world_2d = self.various.coordinate_trans(self.theta[j], [u_r, u_theta])
             u_world = np.append(u_world_2d, 0)
 
             new_velocity = u_world * Params["frame_time"] + np.array(

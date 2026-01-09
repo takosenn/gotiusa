@@ -7,6 +7,7 @@ Params = {
     # --- エージェント設定 ---
     "num_agents": 6,  # Agentの数[台]
     # --- ターゲット設定 ---
+    "target_move": True,  # True: targetを円運動させる, False: targetを静止させる
     "radius": 5,  # targetの軌道半径[m]
     "radius_limit": 8,  # Agentの配置半径の制限(中心をtargetとして配置する)[m]
     "omega_target": 0.12,  # target円運動の角速度[rad/s]

@@ -54,6 +54,11 @@ class Various:
         velocity = (np.array(current_pos) - np.array(prev_pos)) / Params["frame_time"]
         return velocity
 
+    def Distance(self, local_pos):
+        """ローカル座標系での位置ベクトルから相対距離を計算"""
+        distance = np.linalg.norm(local_pos)
+        return distance
+
     def coordinate_trans(self, theta_global, u):
         A = np.array(
             [
