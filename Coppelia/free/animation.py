@@ -27,7 +27,7 @@ class Animation:
         self.sim = Simulation()
         self.various = Various()
         self.initialized = False  # 初期化フラグ
-        # ターゲットの円運動パラメータ
+        # ターゲットの円運動パラメータ（レガシー・現在は未使用）
         self.target_radius = Params["radius"]  # 円運動の半径
         self.target_omega = Params["omega_target"]  # 角速度
         self.target_initial_angle = np.pi / 2  # 初期角度（π/2の位置）
@@ -74,14 +74,10 @@ class Animation:
         # 初回呼び出し時（i==0）に実座標から初期化
         if not self.initialized:
             print("CoppeliaSim から取得した実座標で初期化中...")
-            # ターゲットのz座標を取得（円運動でもz座標は保持）
+            # ターゲットのz座標を取得
             self.target_initial_z = target_position_from_sim[2]
-            # ターゲットの初期位置を円運動の初期位置に設定
-            self.target_position = [
-                self.target_radius * np.cos(self.target_initial_angle),
-                self.target_radius * np.sin(self.target_initial_angle),
-                self.target_initial_z,
-            ]
+            # ターゲットの初期位置をCoppeliaSimから取得した位置に設定
+            self.target_position = list(target_position_from_sim)
             self.prev_target_position = self.target_position.copy()
 
             for j in range(Params["num_agents"]):
@@ -114,18 +110,9 @@ class Animation:
             self.initialized = True
             print("初期化完了\n")
 
-        # ターゲットの位置を更新
-        if Params["target_move"]:
-            # ターゲットを円運動させる
-            current_angle = self.target_initial_angle + self.target_omega * current_time
-            self.target_position = [
-                self.target_radius * np.cos(current_angle),
-                self.target_radius * np.sin(current_angle),
-                self.target_initial_z,
-            ]
-        else:
-            # ターゲットを静止させる（CoppeliaSim から取得した位置を使用）
-            self.target_position = list(target_position_from_sim)
+        # ターゲットの位置を更新（CoppeliaSim から取得した位置を使用）
+        # main.pyで位置が更新されているため、そのまま使用
+        self.target_position = list(target_position_from_sim)
 
         self.target_velocity = np.array(
             [
@@ -254,5 +241,5 @@ class Animation:
 
         # Coppelia への同期
         self.sim.setAgentposition(j, self.current_world_agent_positions)
-        self.sim.settargetposition(self.target_position)
+        # ターゲット位置の反映はmain.pyで行うため、ここでは不要
         print("\n")
