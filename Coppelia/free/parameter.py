@@ -11,7 +11,7 @@ Params = {
     "radius": 5,  # targetの軌道半径[m]
     "radius_limit": 8,  # Agentの配置半径の制限(中心をtargetとして配置する)[m]
     "omega_target": 0.12,  # target円運動の角速度[rad/s]
-    "target_move_speed": 0.5,  # targetの[0,0]への移動速度[m/s]
+    "target_move_speed": 1.0,  # targetの[0,0]への移動速度[m/s]
     "target_goal_x": 0.0,  # targetの目標位置x座標[m]
     "target_goal_y": 0.0,  # targetの目標位置y座標[m]
     "target_tolerance": 0.1,  # target到達判定の許容誤差[m]
@@ -21,6 +21,9 @@ Params = {
     # --- 制御パラメータ ---
     "R": 1,  # targetとAgentの理想の距離(フォーメーションの半径)[m]
     "Omega": 2,  # Agentの理想角速度[rad/s]
+    # --- LineFormation設定 ---
+    "LineFormation_collision_distance": 0.6,  # 衝突回避を開始する距離[m]
+    "LineFormation_repulsion_force": 0.8,  # 反発力の強さ
 }
 
 # 計算で求まるパラメータ

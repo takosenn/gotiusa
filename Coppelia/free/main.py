@@ -3,6 +3,7 @@
 from parameter import Params
 from animation import Animation
 from patroll import Patroll
+from lineformation import LineFormation
 from connect_Coppelia import Simulation
 import time
 import numpy as np
@@ -18,16 +19,23 @@ class Main:
         self.sim.get_handles(Params["num_agents"])
         self.ani = Animation()
         self.patroll = Patroll()
+        self.line = LineFormation()
         self.ani.sim = self.sim
         self.patroll.sim = self.sim
+        self.line.sim = self.sim
 
         # ターゲットの[0,0]への移動パラメータ（Paramsから取得）
         self.target_move_speed = Params["target_move_speed"]  # 移動速度[m/s]
-        self.target_goal = np.array([Params["target_goal_x"], Params["target_goal_y"]])  # 目標位置[x, y]
+        self.target_goal = np.array(
+            [Params["target_goal_x"], Params["target_goal_y"]]
+        )  # 目標位置[x, y]
         self.target_reached_goal = False  # 目標位置に到達したか
         self.target_tolerance = Params["target_tolerance"]  # 到達判定の許容誤差[m]
         self.target_position = None  # ターゲットの現在位置
         self.target_initial_z = None  # ターゲットのz座標
+
+        # フォーメーション状態管理
+        self.line_formation_complete = False  # 直線フォーメーションが完成したか
 
     def run(self):
         try:
@@ -72,9 +80,17 @@ class Main:
                 )
 
                 # 取得した座標を使って計算
-                if min_ro_i >= 4:
+                if min_ro_i >= 5:
+                    # 距離が5m以上の場合は巡回
                     self.patroll.animate(agent_positions)
-                elif min_ro_i < 4:
+                    self.line_formation_complete = False  # 巡回に戻ったらリセット
+                elif not self.line_formation_complete:
+                    # 距離が5m未満で、直線フォーメーションが未完成の場合
+                    self.line_formation_complete = self.line.animate(
+                        target_position, agent_positions
+                    )
+                else:
+                    # 直線フォーメーションが完成したら円形フォーメーション
                     self.ani.animate(i, target_position, agent_positions)
                 time.sleep(Params["frame_time"])
                 self.sim.step_simulation()
@@ -93,9 +109,9 @@ class Main:
         current_pos_2d = np.array([self.target_position[0], self.target_position[1]])
         distance_to_goal = np.linalg.norm(current_pos_2d - self.target_goal)
 
-        print(
-            f"Target更新: 現在位置=[{current_pos_2d[0]:.3f}, {current_pos_2d[1]:.3f}], 目標までの距離={distance_to_goal:.3f}m"
-        )
+        # print(
+        #    f"Target更新: 現在位置=[{current_pos_2d[0]:.3f}, {current_pos_2d[1]:.3f}], 目標までの距離={distance_to_goal:.3f}m"
+        # )
 
         if distance_to_goal > self.target_tolerance:
             # 目標位置に向かって移動
@@ -119,9 +135,9 @@ class Main:
                     new_pos_2d[1],
                     self.target_initial_z,
                 ]
-                print(
-                    f"Target移動後: 新位置=[{self.target_position[0]:.3f}, {self.target_position[1]:.3f}]"
-                )
+                # print(
+                #    f"Target移動後: 新位置=[{self.target_position[0]:.3f}, {self.target_position[1]:.3f}]"
+                # )
         else:
             # 目標位置に到達済み（静止）
             self.target_position = [
