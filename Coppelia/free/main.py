@@ -16,7 +16,6 @@ class Main:
     def __init__(self):
         self.sim = Simulation()
         # Simulationのハンドルを取得してからAnimationに同じインスタンスを渡す
-        self.sim.get_handles(Params["num_agents"])
         self.ani = Animation()
         self.patroll = Patroll()
         self.line = LineFormation()
@@ -40,6 +39,7 @@ class Main:
     def run(self):
         try:
             self.sim.connect()
+            self.sim.get_handles(Params["num_agents"])
             self.sim.start_simulation()
 
             # CoppeliaSim から初期位置を取得
@@ -84,7 +84,7 @@ class Main:
                     # 距離が閾値より大きい場合は巡回
                     self.patroll.animate(agent_positions)
                     self.circle_formation_started = False  # 巡回に戻ったらリセット
-                elif min_ro_i <= 5 and not self.circle_formation_started:
+                elif min_ro_i <= 5 and not self.circle_formation_started:                    
                     # 距離が閾値以下で、円形フォーメーションがまだ始まっていない場合は直線
                     line_complete = self.line.animate(target_position, agent_positions)
                     if line_complete:

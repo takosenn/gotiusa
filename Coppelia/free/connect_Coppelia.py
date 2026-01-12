@@ -35,6 +35,7 @@ class Simulation:
         self.client.step()
 
     def get_handles(self, num_agents):
+        print("CoppeliaSim からハンドルを取得中...")
         self.target_handle = self.sim.getObject("/Quadcopter[0]/target")
         self.target_Drone_handle = self.sim.getObject("/Quadcopter[0]")
         print("取得: Quadcopter[0] のtarget")
