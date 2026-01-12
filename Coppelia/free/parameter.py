@@ -20,7 +20,7 @@ Params = {
     "frame_time": 0.02,  # 1フレームにかかる時間[s]
     # --- 制御パラメータ ---
     "R": 1,  # targetとAgentの理想の距離(フォーメーションの半径)[m]
-    "Omega": 2,  # Agentの理想角速度[rad/s]
+    "Omega": 3,  # Agentの理想角速度[rad/s]
     # --- LineFormation設定 ---
     "LineFormation_collision_distance": 0.6,  # 衝突回避を開始する距離[m]
     "LineFormation_repulsion_force": 0.8,  # 反発力の強さ

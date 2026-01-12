@@ -35,7 +35,7 @@ class Main:
         self.target_initial_z = None  # ターゲットのz座標
 
         # フォーメーション状態管理
-        self.line_formation_complete = False  # 直線フォーメーションが完成したか
+        self.circle_formation_started = False  # 円形フォーメーションが始まったか
 
     def run(self):
         try:
@@ -80,17 +80,17 @@ class Main:
                 )
 
                 # 取得した座標を使って計算
-                if min_ro_i >= 5:
-                    # 距離が5m以上の場合は巡回
+                if min_ro_i > 5:
+                    # 距離が閾値より大きい場合は巡回
                     self.patroll.animate(agent_positions)
-                    self.line_formation_complete = False  # 巡回に戻ったらリセット
-                elif not self.line_formation_complete:
-                    # 距離が5m未満で、直線フォーメーションが未完成の場合
-                    self.line_formation_complete = self.line.animate(
-                        target_position, agent_positions
-                    )
+                    self.circle_formation_started = False  # 巡回に戻ったらリセット
+                elif min_ro_i <= 5 and not self.circle_formation_started:
+                    # 距離が閾値以下で、円形フォーメーションがまだ始まっていない場合は直線
+                    line_complete = self.line.animate(target_position, agent_positions)
+                    if line_complete:
+                        self.circle_formation_started = True
                 else:
-                    # 直線フォーメーションが完成したら円形フォーメーション
+                    # それ以外は円形フォーメーション
                     self.ani.animate(i, target_position, agent_positions)
                 time.sleep(Params["frame_time"])
                 self.sim.step_simulation()
