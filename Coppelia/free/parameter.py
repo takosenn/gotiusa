@@ -3,7 +3,7 @@ import numpy as np
 Params = {
     # --- システム設定 ---
     "use_mocap": False,  # True: モーションキャプチャ, False: CoppeliaSim
-    "save_csv": False,  # True: CSV保存する, False: CSV保存しない
+    "save_csv": True,  # True: CSV保存する, False: CSV保存しない
     # --- エージェント設定 ---
     "num_agents": 6,  # Agentの数[台]
     # --- ターゲット設定 ---
@@ -27,9 +27,8 @@ Params = {
 }
 
 # 計算で求まるパラメータ
-Params["d_i"] = (
-    2 * np.pi / Params["num_agents"]
-)  # Agentiとその隣接Agenti+-の理想角度[rad]
+# 各エージェントの理想相対角距離[rad]（デフォルトは均等分配）
+Params["d_i"] = [np.pi/3 , np.pi/3 , np.pi/3 , np.pi/3 , np.pi/3 , np.pi/3 ]  # 6台の場合
 Params["fps"] = 1 / Params["frame_time"]  # 1秒間に更新するフレーム数[frame]
 
 # 初期位置はCoppeliaSimから取得するため、ここでは定義しない

@@ -5,6 +5,7 @@ from animation import Animation
 from patroll import Patroll
 from lineformation import LineFormation
 from connect_Coppelia import Simulation
+from csv_save import plot_csv_data
 import time
 import numpy as np
 
@@ -71,25 +72,49 @@ class Main:
                     # 更新後のターゲット位置を使用
                     target_position = self.target_position
 
-                # 全エージェントの相対距離の最小値を計算
-                min_ro_i = min(
-                    self.ani.various.Distance(
+                # 全エージェントの相対距離を計算
+                ro_i_list = []
+                for j in range(Params["num_agents"]):
+                    ro_i = self.ani.various.Distance(
                         np.array(agent_positions[j]) - np.array(target_position)
                     )
-                    for j in range(Params["num_agents"])
-                )
+                    ro_i_list.append(ro_i)
+                min_ro_i = min(ro_i_list)
+                max_ro_i = max(ro_i_list)
 
                 # 取得した座標を使って計算
                 if min_ro_i > 5:
                     # 距離が閾値より大きい場合は巡回
                     self.patroll.animate(agent_positions)
                     self.circle_formation_started = False  # 巡回に戻ったらリセット
-                elif min_ro_i <= 5 and not self.circle_formation_started:                    
+                elif min_ro_i <= 5 and not self.circle_formation_started:
                     # 距離が閾値以下で、円形フォーメーションがまだ始まっていない場合は直線
-                    line_complete = self.line.animate(target_position, agent_positions)
-                    if line_complete:
+                    Params["R"] = 2
+                    Params["d_i"] = [
+                        np.pi / 4,
+                        np.pi / 4,
+                        np.pi / 4,
+                        np.pi / 4,
+                        np.pi / 4,
+                        3 * np.pi / 4,
+                    ]  # 6台の場合
+                    Params["Omega"] = 0
+                    self.ani.animate(i, target_position, agent_positions)
+                    if max_ro_i <= 2.3:
                         self.circle_formation_started = True
+                        # 円形フォーメーション切り替え時にソートをリセット
+                        self.ani.mapping_initialized = False
                 else:
+                    Params["R"] = 1 
+                    Params["d_i"] = [
+                        np.pi / 3,
+                        np.pi / 3,
+                        np.pi / 3,
+                        np.pi / 3,
+                        np.pi / 3,
+                        np.pi / 3,
+                    ]  # 6台の場合
+                    Params["Omega"] = 2
                     # それ以外は円形フォーメーション
                     self.ani.animate(i, target_position, agent_positions)
                 time.sleep(Params["frame_time"])
@@ -103,6 +128,14 @@ class Main:
             print("CoppeliaSim を停止中...")
             self.sim.stop_simulation()
             print("シミュレーション終了")
+
+            # CSV保存が有効な場合、プロット機能を実行
+            if Params["save_csv"]:
+                print("\nCSVデータをプロット中...")
+                from animation import Japan_time
+
+                plot_csv_data(Japan_time)
+                print("プロット完了")
 
     def _update_target_position(self):
         """ターゲットを[0,0]に向けて移動させる"""

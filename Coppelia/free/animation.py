@@ -27,10 +27,6 @@ class Animation:
         self.sim = Simulation()
         self.various = Various()
         self.initialized = False  # 初期化フラグ
-        # ターゲットの円運動パラメータ（レガシー・現在は未使用）
-        self.target_radius = Params["radius"]  # 円運動の半径
-        self.target_omega = Params["omega_target"]  # 角速度
-        self.target_initial_angle = np.pi / 2  # 初期角度（π/2の位置）
         self.target_initial_z = 0  # z座標の初期値（後で設定）
         # 初期値は仮の値で設定（最初のanimate呼び出しで実座標から初期化される）
         self.ro_i = [0.0] * Params["num_agents"]
@@ -250,6 +246,7 @@ class Animation:
                 self.omega_i_minus[actual_j],
                 self.ro_i[actual_j],
                 self.eta[actual_j],
+                logical_j,  # 論理インデックス（theta順）を渡す
             )
 
             # ローカル->ワールド変換して速度・位置更新

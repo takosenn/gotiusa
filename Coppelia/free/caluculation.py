@@ -6,15 +6,35 @@ from DataStrage import e_i_1_integral, e_i_2_integral
 
 
 def caluculate(
-    i, j, alpha_i, alpha_i_minus, omega_i_plus, omega_i, omega_i_minus, ro_i, eta
+    i,
+    j,
+    alpha_i,
+    alpha_i_minus,
+    omega_i_plus,
+    omega_i,
+    omega_i_minus,
+    ro_i,
+    eta,
+    logical_j=None,
 ):
 
     # --- fi, zi の計算と表示 ---
-    fi = (Params["d_i"] * alpha_i - Params["d_i"] * alpha_i_minus) / (2 * Params["d_i"])
+    # logical_jが指定されている場合は論理インデックス（theta順）でd_iを参照
+    if logical_j is not None:
+        d_i_j = Params["d_i"][logical_j]  # 論理エージェントjの理想相対角距離
+        logical_j_minus = (logical_j - 1) % Params["num_agents"]
+        d_i_j_minus = Params["d_i"][
+            logical_j_minus
+        ]  # 論理エージェント(j-1)の理想相対角距離
+    else:
+        # 後方互換性のため、logical_jが指定されていない場合は実際のインデックスを使用
+        d_i_j = Params["d_i"][j]
+        d_i_j_minus = Params["d_i"][(j - 1) % Params["num_agents"]]
+
+    fi = (d_i_j_minus * alpha_i - d_i_j * alpha_i_minus) / (d_i_j + d_i_j_minus)
     zi = (
-        Params["d_i"] * (omega_i_plus - omega_i)
-        - Params["d_i"] * (omega_i - omega_i_minus)
-    ) / (2 * Params["d_i"])
+        d_i_j_minus * (omega_i_plus - omega_i) - d_i_j * (omega_i - omega_i_minus)
+    ) / (d_i_j + d_i_j_minus)
 
     # e_i_1, e_i_2の初期値は0、それ以降は式で計算
 
