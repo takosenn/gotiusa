@@ -100,7 +100,7 @@ class Main:
                     ]  # 6台の場合
                     Params["Omega"] = 0
                     self.ani.animate(i, target_position, agent_positions)
-                    if max_ro_i <= 2.3:
+                    if max_ro_i <= 2.5:
                         self.circle_formation_started = True
                         # 円形フォーメーション切り替え時にソートをリセット
                         self.ani.mapping_initialized = False

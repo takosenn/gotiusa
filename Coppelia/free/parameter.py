@@ -3,7 +3,7 @@ import numpy as np
 Params = {
     # --- システム設定 ---
     "use_mocap": False,  # True: モーションキャプチャ, False: CoppeliaSim
-    "save_csv": True,  # True: CSV保存する, False: CSV保存しない
+    "save_csv": False,  # True: CSV保存する, False: CSV保存しない
     # --- エージェント設定 ---
     "num_agents": 6,  # Agentの数[台]
     # --- ターゲット設定 ---
