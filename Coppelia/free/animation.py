@@ -3,7 +3,7 @@ from connect_Coppelia import Simulation
 from parameter import Params
 from various_calculation import Various
 from caluculation import caluculate
-from csv_save import set_csv_header, save_csv_data
+from csv_save import set_csv_header, save_csv_data, set_error_csv_header
 from datetime import datetime
 
 """現実時間の日本時間"""
@@ -20,6 +20,7 @@ if Params["save_csv"]:
     set_csv_header(Japan_time, "e_i_1")
     set_csv_header(Japan_time, "e_i_2")
     set_csv_header(Japan_time, "fi")
+    set_error_csv_header(Japan_time)  # 誤差データ用のヘッダーを追加
 
 
 class Animation:

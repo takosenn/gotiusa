@@ -70,7 +70,7 @@ class Simulation:
         target_position = self.sim.getObjectPosition(self.target_handle, -1)
         for agent_idx in range(Params["num_agents"]):
             Agent_positions[agent_idx] = self.sim.getObjectPosition(
-                self.Agent_handles[agent_idx], -1
+                self.Drone_handles[agent_idx], -1
             )
         return target_position, Agent_positions
 
@@ -96,3 +96,25 @@ class Simulation:
         raise NotImplementedError("モーションキャプチャからの座標取得は未実装です")
 
         return target_position, Agent_positions
+
+    def get_position_errors(self):
+        """Quadcopterの実際の位置とターゲットボールの位置の誤差を計算
+        
+        Returns:
+            target_error: Target Quadcopter の誤差 [x, y, z]
+            agent_errors: 各 Agent の誤差リスト [[x, y, z], ...]
+        """
+        # Target の誤差を計算
+        target_actual_pos = self.sim.getObjectPosition(self.target_Drone_handle, -1)
+        target_ball_pos = self.sim.getObjectPosition(self.target_handle, -1)
+        target_error = np.array(target_actual_pos) - np.array(target_ball_pos)
+        
+        # 各 Agent の誤差を計算
+        agent_errors = []
+        for agent_idx in range(Params["num_agents"]):
+            agent_actual_pos = self.sim.getObjectPosition(self.Drone_handles[agent_idx], -1)
+            agent_ball_pos = self.sim.getObjectPosition(self.Agent_handles[agent_idx], -1)
+            agent_error = np.array(agent_actual_pos) - np.array(agent_ball_pos)
+            agent_errors.append(agent_error)
+        
+        return target_error, agent_errors

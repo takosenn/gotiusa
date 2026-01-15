@@ -46,6 +46,102 @@ def save_csv_data(Japan_time, current_time, name, nam):
         )  # データをCSVに書き込む
 
 
+def set_error_csv_header(Japan_time):
+    """誤差データ用のCSVヘッダーを設定"""
+    # Target誤差用
+    with open(
+        f"name[target_error]{Japan_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv",
+        mode="a",
+        newline="",
+        encoding="utf-8",
+    ) as f:
+        writer = csv.writer(f)
+        writer.writerow(["Time", "Error_X", "Error_Y", "Error_Z", "Error_Norm"])
+    
+    # Agent誤差用（全Agentを1つのファイルに）
+    # 誤差ノルムのみ
+    with open(
+        f"name[agents_error_norm]{Japan_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv",
+        mode="a",
+        newline="",
+        encoding="utf-8",
+    ) as f:
+        writer = csv.writer(f)
+        header = ["Time"] + [f"Agent[{i}]" for i in range(Params["num_agents"])]
+        writer.writerow(header)
+    
+    # XYZ成分も含めた詳細版
+    with open(
+        f"name[agents_error_detail]{Japan_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv",
+        mode="a",
+        newline="",
+        encoding="utf-8",
+    ) as f:
+        writer = csv.writer(f)
+        header = ["Time"]
+        for i in range(Params["num_agents"]):
+            header.extend([f"Agent[{i}]_X", f"Agent[{i}]_Y", f"Agent[{i}]_Z", f"Agent[{i}]_Norm"])
+        writer.writerow(header)
+
+
+def save_error_csv_data(Japan_time, current_time, target_error, agent_errors):
+    """誤差データをCSVに保存
+    
+    Parameters:
+    -----------
+    Japan_time : datetime
+        CSVファイル名に使用する日時
+    current_time : float
+        現在のシミュレーション時間
+    target_error : np.ndarray
+        Targetの誤差 [x, y, z]
+    agent_errors : list of np.ndarray
+        各Agentの誤差リスト [[x, y, z], ...]
+    """
+    import numpy as np
+    
+    # Target誤差を保存
+    target_error_norm = np.linalg.norm(target_error)
+    with open(
+        f"name[target_error]{Japan_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv",
+        mode="a",
+        newline="",
+        encoding="utf-8",
+    ) as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            current_time,
+            target_error[0],
+            target_error[1],
+            target_error[2],
+            target_error_norm
+        ])
+    
+    # 全Agent誤差を1つのファイルに保存 (誤差ノルムのみ)
+    with open(
+        f"name[agents_error_norm]{Japan_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv",
+        mode="a",
+        newline="",
+        encoding="utf-8",
+    ) as f:
+        writer = csv.writer(f)
+        error_norms = [current_time] + [np.linalg.norm(agent_error) for agent_error in agent_errors]
+        writer.writerow(error_norms)
+    
+    # 全Agent誤差を1つのファイルに保存 (XYZ成分も含めた詳細版)
+    with open(
+        f"name[agents_error_detail]{Japan_time.strftime('%Y-%m-%d-%H-%M-%S')}.csv",
+        mode="a",
+        newline="",
+        encoding="utf-8",
+    ) as f:
+        writer = csv.writer(f)
+        row = [current_time]
+        for agent_error in agent_errors:
+            row.extend([agent_error[0], agent_error[1], agent_error[2], np.linalg.norm(agent_error)])
+        writer.writerow(row)
+
+
 def plot_csv_data(Japan_time, data_names=None):
     """
     実行終了後にCSVファイルを読み込んでプロットする

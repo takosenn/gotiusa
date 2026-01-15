@@ -3,7 +3,7 @@ import numpy as np
 Params = {
     # --- システム設定 ---
     "use_mocap": False,  # True: モーションキャプチャ, False: CoppeliaSim
-    "save_csv": False,  # True: CSV保存する, False: CSV保存しない
+    "save_csv": True,  # True: CSV保存する, False: CSV保存しない
     # --- エージェント設定 ---
     "num_agents": 6,  # Agentの数[台]
     # --- ターゲット設定 ---
@@ -19,7 +19,7 @@ Params = {
     "frames": 10000,  # アニメーションのフレーム数[frame]
     "frame_time": 0.02,  # 1フレームにかかる時間[s]
     # --- 制御パラメータ ---
-    "R": 1,  # targetとAgentの理想の距離(フォーメーションの半径)[m]
+    "R": 2,  # targetとAgentの理想の距離(フォーメーションの半径)[m]
     "Omega": 2,  # Agentの理想角速度[rad/s]
     # --- LineFormation設定 ---
     "LineFormation_collision_distance": 0.6,  # 衝突回避を開始する距離[m]
