@@ -99,7 +99,7 @@ class Simulation:
 
     def get_position_errors(self):
         """Quadcopterの実際の位置とターゲットボールの位置の誤差を計算
-        
+
         Returns:
             target_error: Target Quadcopter の誤差 [x, y, z]
             agent_errors: 各 Agent の誤差リスト [[x, y, z], ...]
@@ -108,13 +108,17 @@ class Simulation:
         target_actual_pos = self.sim.getObjectPosition(self.target_Drone_handle, -1)
         target_ball_pos = self.sim.getObjectPosition(self.target_handle, -1)
         target_error = np.array(target_actual_pos) - np.array(target_ball_pos)
-        
+
         # 各 Agent の誤差を計算
         agent_errors = []
         for agent_idx in range(Params["num_agents"]):
-            agent_actual_pos = self.sim.getObjectPosition(self.Drone_handles[agent_idx], -1)
-            agent_ball_pos = self.sim.getObjectPosition(self.Agent_handles[agent_idx], -1)
+            agent_actual_pos = self.sim.getObjectPosition(
+                self.Drone_handles[agent_idx], -1
+            )
+            agent_ball_pos = self.sim.getObjectPosition(
+                self.Agent_handles[agent_idx], -1
+            )
             agent_error = np.array(agent_actual_pos) - np.array(agent_ball_pos)
             agent_errors.append(agent_error)
-        
+
         return target_error, agent_errors

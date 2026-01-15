@@ -63,25 +63,32 @@ class Main:
                 print(f"現在のfor文を読んだ回数: {i}回目")
                 # CoppeliaSim から現在の座標を取得
                 target_position, agent_positions = self.sim.get_Drone_position()
-                
+
                 # 誤差を計算（毎フレーム）
                 target_error, agent_errors = self.sim.get_position_errors()
-                
+
                 # CSV保存が有効な場合、誤差データを保存
                 if Params["save_csv"]:
                     current_time = i * Params["frame_time"]
                     from animation import Japan_time
-                    save_error_csv_data(Japan_time, current_time, target_error, agent_errors)
-                
+
+                    save_error_csv_data(
+                        Japan_time, current_time, target_error, agent_errors
+                    )
+
                 # 10フレームごとに誤差を表示
                 if i % 10 == 0:
                     print(f"\n=== 位置誤差 (フレーム {i}) ===")
-                    print(f"Target誤差: [{target_error[0]:.4f}, {target_error[1]:.4f}, {target_error[2]:.4f}] m")
+                    print(
+                        f"Target誤差: [{target_error[0]:.4f}, {target_error[1]:.4f}, {target_error[2]:.4f}] m"
+                    )
                     print(f"Target誤差ノルム: {np.linalg.norm(target_error):.4f} m")
                     for j, agent_error in enumerate(agent_errors):
                         error_norm = np.linalg.norm(agent_error)
-                        print(f"Agent[{j}]誤差: [{agent_error[0]:.4f}, {agent_error[1]:.4f}, {agent_error[2]:.4f}] m (ノルム: {error_norm:.4f} m)")
-                    print("="*40 + "\n")
+                        print(
+                            f"Agent[{j}]誤差: [{agent_error[0]:.4f}, {agent_error[1]:.4f}, {agent_error[2]:.4f}] m (ノルム: {error_norm:.4f} m)"
+                        )
+                    print("=" * 40 + "\n")
 
                 # ターゲットの位置を更新（毎フレーム実行）
                 if Params["target_move"]:
@@ -124,7 +131,7 @@ class Main:
                         # 円形フォーメーション切り替え時にソートをリセット
                         self.ani.mapping_initialized = False
                 else:
-                    Params["R"] = 4 
+                    Params["R"] = 4
                     Params["d_i"] = [
                         np.pi / 3,
                         np.pi / 3,
