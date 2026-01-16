@@ -11,7 +11,7 @@ class Patroll:
         self.patrol_start_positions = np.array(
             [[0.0, 0.0], [5.0, 0.0], [7.5, 2.5], [7.5, 7.5], [2.5, 7.5], [0.0, 5.0]]
         )
-        self.patrol_speed = 1.5  # 移動速度[m/s]
+        self.patrol_speed = 1  # 移動速度[m/s]
         self.reached_start_position = [False] * Params[
             "num_agents"
         ]  # 各エージェントが巡回開始位置に到達したか

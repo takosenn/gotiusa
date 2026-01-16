@@ -20,8 +20,6 @@ class Simulation:
 
     def start_simulation(self):
         """シミュレーションを開始する"""
-        self.sim.stopSimulation()
-        time.sleep(1)  # 確実に停止するのを待つ
         self.sim.startSimulation()
         print("Simulationを開始")
 
@@ -32,7 +30,10 @@ class Simulation:
 
     def step_simulation(self):
         """シミュレーションを1ステップ進める（同期モード用）"""
-        self.client.step()
+        self.sim.step()
+
+    def get_simulation_time(self):
+        return self.sim.getSimulationTime()
 
     def get_handles(self, num_agents):
         print("CoppeliaSim からハンドルを取得中...")

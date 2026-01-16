@@ -5,6 +5,7 @@ from animation import Animation
 from patroll import Patroll
 from lineformation import LineFormation
 from connect_Coppelia import Simulation
+from various_calculation import Various
 from csv_save import plot_csv_data, save_error_csv_data
 import time
 import numpy as np
@@ -20,6 +21,7 @@ class Main:
         self.ani = Animation()
         self.patroll = Patroll()
         self.line = LineFormation()
+        self.various = Various()
         self.ani.sim = self.sim
         self.patroll.sim = self.sim
         self.line.sim = self.sim
@@ -36,12 +38,18 @@ class Main:
 
         # フォーメーション状態管理
         self.circle_formation_started = False  # 円形フォーメーションが始まったか
+        self.formation_switch_counter = (
+            0  # 円形フォーメーション切り替え条件のカウンター
+        )
 
     def run(self):
         try:
             self.sim.connect()
             self.sim.get_handles(Params["num_agents"])
             self.sim.start_simulation()
+
+            # 同期モード（ステップ実行）を有効にする
+            self.sim.client.setStepping(True)
 
             # CoppeliaSim から初期位置を取得
             print("CoppeliaSim から初期位置を取得中...")
@@ -59,10 +67,47 @@ class Main:
                 f"Target: 目標位置 = [{self.target_goal[0]:.3f}, {self.target_goal[1]:.3f}]\n"
             )
 
-            for i in range(Params["frames"]):
-                print(f"現在のfor文を読んだ回数: {i}回目")
+            # 時間ベースのシミュレーションループ
+            target_simulation_time = (
+                Params["frames"] * Params["frame_time"]
+            )  # 総シミュレーション時間[s]
+            print(
+                f"同期モードでシミュレーション開始（目標時間: {target_simulation_time:.1f}秒）\n"
+            )
+
+            i = 0  # フレームカウンター
+            current_sim_time = self.sim.sim.getSimulationTime()
+
+            while current_sim_time < target_simulation_time:
+                print(f"シミュレーション時間: {current_sim_time:.2f}秒 (フレーム: {i})")
+
                 # CoppeliaSim から現在の座標を取得
                 target_position, agent_positions = self.sim.get_Drone_position()
+
+                # 全エージェントの角度を計算
+                theta = []
+                for j in range(Params["num_agents"]):
+                    relative_pos = np.array(agent_positions[j]) - np.array(
+                        target_position
+                    )
+                    theta.append(self.various.Theta(relative_pos))
+
+                # theta順にソートして角距離を計算
+                theta_with_index = [(j, theta[j]) for j in range(Params["num_agents"])]
+                theta_with_index.sort(key=lambda x: x[1])  # theta値でソート（小さい順）
+
+                # 角距離alpha_iを計算
+                alpha_i = []
+                for idx in range(Params["num_agents"]):
+                    current_agent = theta_with_index[idx]
+                    next_agent = theta_with_index[(idx + 1) % Params["num_agents"]]
+
+                    diff = next_agent[1] - current_agent[1]
+                    if diff >= 0:
+                        alpha = diff
+                    else:
+                        alpha = diff + (2 * np.pi)
+                    alpha_i.append(alpha)
 
                 # 誤差を計算（毎フレーム）
                 target_error, agent_errors = self.sim.get_position_errors()
@@ -113,6 +158,7 @@ class Main:
                     # 距離が閾値より大きい場合は巡回
                     self.patroll.animate(agent_positions)
                     self.circle_formation_started = False  # 巡回に戻ったらリセット
+                    self.formation_switch_counter = 0  # カウンターもリセット
                 elif min_ro_i <= 10 and not self.circle_formation_started:
                     # 距離が閾値以下で、円形フォーメーションがまだ始まっていない場合は直線
                     Params["R"] = 4
@@ -126,12 +172,25 @@ class Main:
                     ]  # 6台の場合
                     Params["Omega"] = 0
                     self.ani.animate(i, target_position, agent_positions)
-                    if max_ro_i <= 4.5:
+                    # 条件が満たされた場合、カウンターを増やす
+                    if max_ro_i <= 4.1 and alpha_i[5] <= 3 * np.pi / 4:
+                        self.formation_switch_counter += 1
+                        print(
+                            f"円形フォーメーション切り替え条件カウント: {self.formation_switch_counter}/20"
+                        )
+                    else:
+                        self.formation_switch_counter = (
+                            0  # 条件が満たされなければリセット
+                        )
+
+                    # 20ステップ連続で条件が満たされたら切り替え
+                    if self.formation_switch_counter >= 20:
                         self.circle_formation_started = True
                         # 円形フォーメーション切り替え時にソートをリセット
                         self.ani.mapping_initialized = False
+                        print("円形フォーメーションに切り替えます")
                 else:
-                    Params["R"] = 4
+                    Params["R"] = 3
                     Params["d_i"] = [
                         np.pi / 3,
                         np.pi / 3,
@@ -140,17 +199,24 @@ class Main:
                         np.pi / 3,
                         np.pi / 3,
                     ]  # 6台の場合
-                    Params["Omega"] = 0.5
+                    Params["Omega"] = 0.2
                     # それ以外は円形フォーメーション
                     self.ani.animate(i, target_position, agent_positions)
-                time.sleep(Params["frame_time"])
+                # シミュレーションを1ステップ進める
                 self.sim.step_simulation()
+
+                # フレームカウンターとシミュレーション時間を更新
+                i += 1
+                current_sim_time = self.sim.sim.getSimulationTime()
+
         except KeyboardInterrupt:
             print("\nctrl+Cでシミュレーションが終了しました")
         except Exception as e:
             print(f"\nエラーが発生しました: {type(e).__name__}: {e}")
             print("シミュレーションを停止します...")
         finally:
+            print(f"\n同期モードでのシミュレーションが終了しました。")
+            print(f"最終シミュレーション時間: {self.sim.sim.getSimulationTime():.2f}秒")
             print("CoppeliaSim を停止中...")
             self.sim.stop_simulation()
             print("シミュレーション終了")

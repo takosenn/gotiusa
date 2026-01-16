@@ -66,7 +66,7 @@ class Animation:
             range(Params["num_agents"])
         )  # theta順のインデックスマッピング
         self.mapping_initialized = False  # マッピングが初期化されたか
-        self.sort_interval = 30  # theta順ソートの更新間隔（ステップ）
+        self.sort_interval = 200  # theta順ソートの更新間隔（ステップ）
         self.last_sort_step = -1  # 最後にソートを実行したステップ
 
     def animate(self, i, target_position_from_sim, agent_positions_from_sim):
@@ -251,6 +251,7 @@ class Animation:
             )
 
             # ローカル->ワールド変換して速度・位置更新
+            
             u_world_2d = self.various.coordinate_trans(
                 self.theta[actual_j], [u_r, u_theta]
             )
@@ -259,6 +260,11 @@ class Animation:
             new_velocity = u_world * Params["frame_time"] + np.array(
                 self.current_world_agent_velocities[actual_j]
             )
+            new_velocity_magnitude = np.linalg.norm(new_velocity)
+            if new_velocity_magnitude > 5:
+                new_velocity = (
+                    new_velocity / new_velocity_magnitude * 5
+                )
             self.current_world_agent_velocities[actual_j] = new_velocity.tolist()
             updated_position = (
                 np.array(self.current_world_agent_positions[actual_j])
